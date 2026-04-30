@@ -1,0 +1,8 @@
+# Node modules (very large folder, never push this)
+node_modules/
+
+# Environment variables (contains secrets!)
+.env
+
+# Prisma generated files
+# (each person generates their own)

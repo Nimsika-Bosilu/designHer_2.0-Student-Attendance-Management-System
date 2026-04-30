@@ -1,0 +1,97 @@
+// ==============================================
+// Prisma Schema — Database Models
+// ==============================================
+// This file tells Prisma the shape of our database.
+// Prisma reads this file and creates a "client"
+// that we use to talk to MySQL with JavaScript.
+// ==============================================
+
+// This is the datasource — it tells Prisma WHERE the database is.
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// This is the generator — it tells Prisma to create a JavaScript client.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==============================================
+// Model: User
+// Maps to the "users" table in MySQL
+// ==============================================
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(150)
+  password  String   @db.VarChar(255)
+  role      String   @default("teacher") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  classrooms  Classroom[]   // A user (teacher) can have many classrooms
+  attendances Attendance[]  // A user (teacher) can mark many attendances
+
+  @@map("users") // This tells Prisma: "This model maps to the 'users' table"
+}
+
+// ==============================================
+// Model: Classroom
+// Maps to the "classrooms" table in MySQL
+// ==============================================
+model Classroom {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  section   String?  @db.VarChar(50)  // The ? means this field is optional
+  teacherId Int      @map("teacher_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  teacher     User         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  students    Student[]    // A classroom can have many students
+  attendances Attendance[] // A classroom can have many attendance records
+
+  @@map("classrooms")
+}
+
+// ==============================================
+// Model: Student
+// Maps to the "students" table in MySQL
+// ==============================================
+model Student {
+  id                 Int      @id @default(autoincrement())
+  name               String   @db.VarChar(100)
+  email              String   @unique @db.VarChar(150)
+  registrationNumber String   @unique @map("registration_number") @db.VarChar(50)
+  classroomId        Int      @map("classroom_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  classroom   Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  attendances Attendance[] // A student can have many attendance records
+
+  @@map("students")
+}
+
+// ==============================================
+// Model: Attendance
+// Maps to the "attendance" table in MySQL
+// ==============================================
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  studentId   Int      @map("student_id")
+  classroomId Int      @map("classroom_id")
+  date        DateTime @db.Date
+  status      String   @db.VarChar(20)
+  markedBy    Int      @map("marked_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  marker    User      @relation(fields: [markedBy], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date], name: "unique_attendance") // One record per student per day
+  @@map("attendance")
+}
