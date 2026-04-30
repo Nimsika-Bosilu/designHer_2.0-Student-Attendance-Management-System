@@ -1,4 +1,4 @@
-﻿# 🚀 Student Attendance Management System — Backend API Guide
+# 🚀 Student Attendance Management System — Backend API Guide
 
 > **Day 2 of designHer 2.0 Bootcamp**
 > අද අපි Node.js, Express, සහ Prisma පාවිච්චි කරලා backend REST API එකක් හදන්නයි යන්නේ!
@@ -481,6 +481,37 @@ flowchart TD
     A --> C["classroomRepository.js\nimport prisma from db.js"]
     A --> D["studentRepository.js\nimport prisma from db.js"]
     A --> E["attendanceRepository.js\nimport prisma from db.js"]
+```
+
+### ❌ The Problem — The 5000-Line Nightmare
+
+අපිට `import` සහ `export` තිබ්බේ නැත්නම් මොකද වෙන්නේ කියලා හිතන්න. අපිට මුළු backend එකම — ඒ කියන්නේ database logic, user auth, students, teachers, routes ඔක්කොම — එකම `server.js` file එකක ලියන්න වෙනවා. ඒක පේළි 5000කට වඩා දිග වෙයි! Error එකක් හොයනවා කියන්නේ ලොකු වදයක් (nightmare) වෙනවා. අපිට මේ code එක පොඩි, පිළිවෙල files වලට කඩන්න ක්‍රමයක් ඕනේ.
+
+### ✅ The Solution — Modules (The "Locked Room" Analogy)
+
+Node.js වලදි, හැම `.js` file එකක්ම හරියට **"ඉබි යතුරු දාපු කාමරයක් (Locked Room)"** වගේ. 
+
+ඔයා `db.js` ඇතුලේ මොකක් හරි function එකක් හරි variable එකක් හරි හැදුවොත්, ඔයාගේ app එකේ අනිත් files වලට ඒක පේන්නේ නෑ, පාවිච්චි කරන්නත් බෑ. ඒක ඒ කාමරය ඇතුලෙම හිරවෙලා තියෙන්නේ.
+
+- **`export`** කියන්නේ දොරේ තියෙන පොඩි ජනේලයක් ඇරලා ඒ function එක එළියට දෙනවා වගේ වැඩක්. "මෙන්න, ඕන කෙනෙක්ට මේක පාවිච්චි කරන්න පුළුවන්."
+- **`import`** කියන්නේ වෙන file එකක් ඒ ජනේලේ ගාවට ඇවිත් ඒක ගන්නවා වගේ වැඩක්. "මට ඒ function එක ඕනේ!"
+
+**Exports ජාති දෙකක් තියෙනවා:**
+
+1. **Default Export (`export default`)**
+   මේක පාවිච්චි කරන්නේ file එකක share කරන්න **එක ප්‍රධානම දෙයක් (ONE main boss)** විතරක් තියෙනකොටයි.
+   *Example:* `db.js` එකෙන් export කරන්නේ `prisma` client එක විතරයි.
+   *How to import:* ඔයාට කැමති නමක් පාවිච්චි කරන්න පුළුවන්: `import myDatabase from "./db.js"`.
+
+2. **Named Export (`export { ... }`)**
+   මේක පාවිච්චි කරන්නේ එක file එකකින් **tools ගොඩක්** share කරනකොටයි.
+   *Example:* `authRepository.js` එකෙන් `findUser`, `createUser`, සහ `deleteUser` ඔක්කොම export කරනවා.
+   *How to import:* ඔයා අනිවාර්යයෙන්ම ඒ නම්ම curly braces ඇතුලේ පාවිච්චි කරන්න ඕනේ: `import { createUser } from "./authRepository.js"`.
+
+```mermaid
+flowchart LR
+    A["📦 db.js\n(The Locked Room)"] -->|"export default prisma\n(ජනේලෙන් එළියට දෙනවා)"| B["import prisma...\n(බාරගන්නවා)"]
+    C["authRepository.js\n(තව කාමරයක්)"] -->|"import prisma"| A
 ```
 
 ---

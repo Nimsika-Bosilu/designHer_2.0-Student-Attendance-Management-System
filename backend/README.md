@@ -483,6 +483,37 @@ flowchart TD
     A --> E["attendanceRepository.js\nimport prisma from db.js"]
 ```
 
+### ❌ The Problem — The 5000-Line Nightmare
+
+Imagine if we didn't have `import` and `export`. We would have to write the ENTIRE backend — database logic, user auth, students, teachers, routes — inside a single `server.js` file. It would be 5000 lines long! Finding a bug would be a nightmare. We need a way to split our code into smaller, organized files.
+
+### ✅ The Solution — Modules (The "Locked Room" Analogy)
+
+In Node.js, every `.js` file is like a **"Locked Room"**. 
+
+If you create a function or a variable inside `db.js`, the rest of your app cannot see it or use it. It is locked inside that room.
+
+- **`export`** is like opening a small window in the door and handing the function outside. "Here, anyone can use this."
+- **`import`** is another file standing at the window to receive it. "I need that function!"
+
+**The Two Types of Exports:**
+
+1. **Default Export (`export default`)**
+   Use this when a file has **ONE main boss** to share.
+   *Example:* `db.js` only exports the `prisma` client.
+   *How to import:* You can name it whatever you want: `import myDatabase from "./db.js"`.
+
+2. **Named Export (`export { ... }`)**
+   Use this when a file shares **multiple tools**.
+   *Example:* `authRepository.js` exports `findUser`, `createUser`, and `deleteUser`.
+   *How to import:* You MUST use the exact names in curly braces: `import { createUser } from "./authRepository.js"`.
+
+```mermaid
+flowchart LR
+    A["📦 db.js\n(The Locked Room)"] -->|"export default prisma\n(Hands it out the window)"| B["import prisma...\n(Receives it)"]
+    C["authRepository.js\n(Another Room)"] -->|"import prisma"| A
+```
+
 ---
 
 ## 5. 🔐 Step 4 — Auth Repository & Async/Await
