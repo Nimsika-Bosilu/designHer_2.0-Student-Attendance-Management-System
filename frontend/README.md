@@ -3,67 +3,53 @@
 > **Day 3 of designHer 2.0 Bootcamp**
 > Today we connect our React frontend to the backend API we built on Day 2!
 
-> 🎯 **Today's focus:** API Integration, State Management, and Authentication. We are NOT focused on building complex UI. We are focused on learning how React talks to a backend.
-
 ---
 
-## 📖 Table of Contents
+## 🗺️ The Big Picture — How Our Pages Connect
 
-1. [Architecture — The Full Picture](#1--architecture--the-full-picture)
-2. [Project Setup](#2--project-setup)
-3. [Step 1 — The Login Page & `useState`](#3--step-1--the-login-page--usestate)
-4. [Step 2 — Talking to the Backend: `fetch` vs `axios` & `async/await`](#4--step-2--talking-to-the-backend-fetch-vs-axios--asyncawait)
-5. [Step 3 — Loading Data on Page Load: `useEffect`](#5--step-3--loading-data-on-page-load-useeffect)
-6. [Step 4 — Authentication: JWT, localStorage & Protected Routes](#6--step-4--authentication-jwt-localstorage--protected-routes)
-7. [Step 5 — Building the Remaining Pages](#7--step-5--building-the-remaining-pages)
-8. ["Wait! Why didn't we use Axios in the Backend?"](#8--wait-why-didnt-we-use-axios-in-the-backend)
-9. [Running the App](#9--running-the-app)
-10. [Quick React & Axios Cheat Sheet](#10--quick-react--axios-cheat-sheet)
+```mermaid
+flowchart TD
+    A["🔑 Login Page\n/login"] -->|"Login success\nGet JWT token"| B["📊 Dashboard\n/dashboard"]
+    B --> C["🏫 Classrooms\n/classrooms"]
+    B --> D["👩‍🎓 Students\n/students"]
+    B --> E["📝 Attendance\n/attendance"]
+    F["🛡️ ProtectedRoute\nChecks for token"] --> B
+    F --> C
+    F --> D
+    F --> E
+```
 
----
-
-## 1. 🏗️ Architecture — The Full Picture
-
-Here is how ALL three layers work together:
+### How React Talks to Our Backend
 
 ```mermaid
 flowchart LR
-    A["🖥️ React Frontend\n(localhost:3000)\nWhat the user sees"] -->|"HTTP Requests\n(using Axios)"| B["⚙️ Express Backend\n(localhost:5000)\nThe API server"]
-    B -->|"Prisma ORM"| C["🐬 MySQL Database\nThe data storage"]
+    A["🖥️ React\n(localhost:5173)"] -->|"HTTP via Axios"| B["⚙️ Express\n(localhost:5000)"]
+    B -->|"Prisma ORM"| C["🐬 MySQL"]
 ```
 
-**The flow when a user logs in:**
+### Page-to-Endpoint Map
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant R as React (Frontend)
-    participant E as Express (Backend)
-    participant D as MySQL (Database)
-
-    U->>R: Types email + password, clicks "Login"
-    R->>E: POST /api/auth/login { email, password }
-    E->>D: Find user by email
-    D->>E: User found
-    E->>E: Check password with bcrypt
-    E->>E: Create JWT token
-    E->>R: { success: true, data: { token, user } }
-    R->>R: Save token in localStorage
-    R->>U: Redirect to Dashboard
-```
-
-### API Endpoints We Will Use Today
-
-| # | Method | URL | Who can use it | What it does |
-|---|--------|-----|---------------|-------------|
-| 1 | POST | `/api/auth/login` | Anyone | Login and get JWT token |
-| 2 | GET | `/api/classrooms` | Logged-in users | Get all classrooms |
-| 3 | GET | `/api/students` | Logged-in users | Get all students |
-| 4 | GET | `/api/attendance/classroom/:id?date=...` | Logged-in users | Get attendance by classroom and date |
+| Page | Method | Backend Endpoint | Auth? |
+|------|--------|-----------------|-------|
+| LoginPage | POST | `/api/auth/login` | No |
+| DashboardPage | GET | `/api/classrooms` + `/api/students` | Yes |
+| ClassroomsPage | GET | `/api/classrooms` | Yes |
+| StudentsPage | GET | `/api/students` | Yes |
+| AttendancePage | GET | `/api/attendance/classroom/:id?date=...` | Yes |
 
 ---
 
-## 2. 🛠️ Project Setup
+## Phase 1: The Foundation (Setup)
+
+### Why Split Code Into Folders? — The LEGO Analogy
+
+Imagine building a LEGO house. You don't throw ALL 500 pieces into one giant bag. You sort them: walls in one bag, roof pieces in another, doors in a third. That is exactly what our folders do:
+
+| Folder | What Goes Here | LEGO Analogy |
+|--------|---------------|-------------|
+| `api/` | The Axios config (base URL + token) | The **instruction manual** — one shared reference |
+| `components/` | Reusable pieces (Navbar, ProtectedRoute) | **Standard bricks** used in every room |
+| `pages/` | One file per screen | Each **room** of the house |
 
 ### Our Folder Structure
 
@@ -71,230 +57,226 @@ sequenceDiagram
 frontend/
 ├── src/
 │   ├── api/
-│   │   └── apiClient.js          ← Centralized Axios config (one place for the base URL + token)
+│   │   └── apiClient.js
 │   ├── components/
-│   │   ├── ProtectedRoute.jsx    ← Redirects to login if no token
-│   │   └── Navbar.jsx            ← Navigation bar + Logout button
+│   │   ├── ProtectedRoute.jsx
+│   │   └── Navbar.jsx
 │   ├── pages/
-│   │   ├── LoginPage.jsx         ← The login form
-│   │   ├── DashboardPage.jsx     ← Overview with stats
-│   │   ├── ClassroomsPage.jsx    ← List of classrooms
-│   │   ├── StudentsPage.jsx      ← List of students
-│   │   └── AttendancePage.jsx    ← Search attendance by date
-│   ├── App.jsx                   ← Route definitions
-│   ├── App.css                   ← All styles
-│   └── main.jsx                  ← Entry point
+│   │   ├── LoginPage.jsx
+│   │   ├── DashboardPage.jsx
+│   │   ├── ClassroomsPage.jsx
+│   │   ├── StudentsPage.jsx
+│   │   └── AttendancePage.jsx
+│   ├── App.jsx
+│   ├── App.css
+│   └── main.jsx
 ├── index.html
-├── package.json
-└── vite.config.js
+└── package.json
 ```
 
-**Why this structure?**
-
-| Folder | Purpose | Analogy |
-|--------|---------|---------|
-| `api/` | Holds the Axios configuration. One single place to set the backend URL and attach the JWT token. | Like the **phone** your app uses to call the backend. |
-| `components/` | Reusable pieces that appear on MULTIPLE pages (Navbar, ProtectedRoute). | Like **furniture** you put in every room. |
-| `pages/` | One file per screen the user sees. Each page is a complete view. | Like the individual **rooms** in a house. |
-
-### Install Dependencies
+### Install & Run
 
 ```bash
 cd frontend
 npm install
-```
-
-This installs: `react`, `react-dom`, `react-router-dom`, `axios`, and `vite`.
-
-### Start the Dev Server
-
-```bash
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
-
-> ⚠️ **Make sure your backend is also running** on `http://localhost:5000`. Open a SECOND terminal and run `npm run dev` in the `backend/` folder.
+> ⚠️ **Keep your backend running too!** Open a second terminal: `cd backend && npm run dev`
 
 ---
 
-## 3. 🏗️ Step 1 — The Login Page & `useState`
+## Phase 2: The Login Page (Build & Test)
 
-### ❌ The Problem — Variables Don't Update the Screen!
-
-Let's say you try to build a login form like this:
+### ❌ Problem — Normal Variables Don't Update the Screen!
 
 ```javascript
-// ❌ THIS DOES NOT WORK!
+// ❌ THIS DOES NOT WORK
 function LoginPage() {
   let email = "";
 
   function handleChange(event) {
     email = event.target.value;
-    console.log("email is now:", email); // ✅ This DOES print the new value!
+    console.log(email); // prints correctly...
   }
 
   return (
     <div>
-      <input type="email" onChange={handleChange} />
-      <p>You typed: {email}</p>  {/* ❌ This NEVER updates on screen! */}
+      <input onChange={handleChange} />
+      <p>You typed: {email}</p>  {/* NEVER updates! */}
     </div>
   );
 }
 ```
 
-You type "nimal@school.com" in the input. The `console.log` prints it. But the screen STILL shows an empty paragraph. **Why?!**
-
 ```mermaid
 flowchart TD
-    A["User types in the input"] --> B["handleChange() runs"]
-    B --> C["email variable changes\nto 'nimal@school.com'"]
-    C --> D["But React does NOT know\nthe variable changed!"]
-    D --> E["React does NOT re-render\nthe component"]
-    E --> F["Screen still shows\nempty paragraph ❌"]
+    A["User types 'nimal@school.com'"] --> B["let email = 'nimal@school.com'"]
+    B --> C["But React has NO IDEA\nthe variable changed"]
+    C --> D["Screen stays blank ❌"]
 ```
 
-**The core issue:** React only re-renders (repaints the screen) when you use its **special** state system. Normal `let` variables are invisible to React.
+### ✅ Solution — `useState` (The Megaphone)
 
-### ✅ The Solution — `useState`
-
-`useState` is React's way of saying: "I am watching this variable. When it changes, **re-render the screen!**"
+Think of `useState` like a **megaphone**. A normal `let` variable changes silently — nobody hears it. But `useState` SHOUTS: "Hey React! This value changed! Repaint the screen NOW!"
 
 ```javascript
 import { useState } from "react";
 
+const [email, setEmail] = useState("");
+//     ↑ value  ↑ megaphone     ↑ starting value
+```
+
+| Part | What It Is | Analogy |
+|------|-----------|---------|
+| `email` | The current value | The current announcement on the billboard |
+| `setEmail` | The updater function | The **megaphone** — shout to update the billboard |
+| `useState("")` | The initial value | The billboard starts empty |
+
+**Rule:** NEVER do `email = "new value"`. ALWAYS use `setEmail("new value")`.
+
+### The Impatient Friend — `async/await`
+
+JavaScript is like an **impatient friend**. You ask them to order food (call the API), but they don't wait — they immediately say "What's for dessert?" before the food arrives.
+
+```javascript
+// ❌ WITHOUT await — like the impatient friend
+function handleLogin() {
+  const response = axios.post("/auth/login", { email, password });
+  console.log(response); // undefined! The food hasn't arrived yet!
+}
+
+// ✅ WITH await — we FORCE the friend to wait
+async function handleLogin() {
+  const response = await axios.post("/auth/login", { email, password });
+  console.log(response.data); // { success: true, token: "..." } ✅
+}
+```
+
+| Keyword | What It Does | Analogy |
+|---------|-------------|---------|
+| `async` | Marks the function as "might need to wait" | Telling your friend "this will take a moment" |
+| `await` | STOPS and waits for the result | Grabbing your friend's arm: "SIT. WAIT." |
+
+### The Complete LoginPage — Line by Line
+
+Here is `src/pages/LoginPage.jsx`:
+
+```javascript
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../api/apiClient";
+```
+
+| Line | Why? |
+|------|------|
+| `import { useState }` | We need the Megaphone to track email, password, error, loading |
+| `import { useNavigate }` | We need to redirect the user to /dashboard after login |
+| `import apiClient` | Our centralized Axios (we build this in Phase 3) |
+
+```javascript
 function LoginPage() {
   const [email, setEmail] = useState("");
-  //     ↑ value    ↑ updater      ↑ initial value
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+```
 
-  function handleChange(event) {
-    setEmail(event.target.value); // Tell React: "email changed! Re-render!"
+| Line | Why? |
+|------|------|
+| `useState("")` for email/password | Track what the user types, start empty |
+| `useState("")` for error | If login fails, show the error message |
+| `useState(false)` for loading | Disable the button while the request is in progress |
+| `useNavigate()` | Returns a function we call later: `navigate("/dashboard")` |
+
+```javascript
+  async function handleLogin(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await apiClient.post("/auth/login", {
+        email: email,
+        password: password,
+      });
+
+      localStorage.setItem("token", response.data.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.data.user));
+      navigate("/dashboard");
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Something went wrong. Is the backend running?");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
-
-  return (
-    <div>
-      <input type="email" onChange={handleChange} />
-      <p>You typed: {email}</p>  {/* ✅ Updates instantly! */}
-    </div>
-  );
-}
 ```
 
-```mermaid
-flowchart TD
-    A["User types in the input"] --> B["handleChange() runs"]
-    B --> C["setEmail() is called"]
-    C --> D["React sees: 'State changed!'"]
-    D --> E["React RE-RENDERS\nthe component"]
-    E --> F["Screen shows the\nnew email ✅"]
-```
+| Line | Why? |
+|------|------|
+| `event.preventDefault()` | Stops the browser from refreshing the page when the form submits |
+| `setLoading(true)` | Show "Logging in..." on the button |
+| `setError("")` | Clear any old error message |
+| `await apiClient.post(...)` | Send email+password to the backend and WAIT for a response |
+| `localStorage.setItem("token", ...)` | Save the JWT token so we can use it on other pages |
+| `JSON.stringify(...)` | localStorage only stores strings, so we convert the user object |
+| `navigate("/dashboard")` | Redirect to the dashboard on success |
+| `catch (err)` | If the backend returns an error (wrong password, etc.), show it |
+| `finally { setLoading(false) }` | Re-enable the button whether login succeeded or failed |
 
-**The rule:**
+> 💡 **Locked Room Analogy (from Day 2):** `LoginPage.jsx` is a locked room. `export default LoginPage` at the bottom opens a window to hand the component out. `App.jsx` grabs it with `import LoginPage from "./pages/LoginPage"`.
 
-| ❌ Wrong | ✅ Right | Why |
-|---------|---------|-----|
-| `let email = ""` | `const [email, setEmail] = useState("")` | React can't see `let` changes |
-| `email = "new value"` | `setEmail("new value")` | `setEmail` triggers a re-render |
+### 🧪 TESTING STEP — Test the Login!
 
-### The Login Page File — `src/pages/LoginPage.jsx`
-
-Now look at our actual `LoginPage.jsx`. It uses `useState` for four things:
-
-```javascript
-const [email, setEmail] = useState("");       // What the user types in the email field
-const [password, setPassword] = useState(""); // What the user types in the password field
-const [error, setError] = useState("");       // Error message to show on screen
-const [loading, setLoading] = useState(false); // Is the login request in progress?
-```
-
-> 💡 **The Locked Room Analogy (from Day 2):** Remember every `.js` file is a "Locked Room." `LoginPage.jsx` is a locked room. At the bottom, `export default LoginPage` opens the window and hands the component outside. In `App.jsx`, `import LoginPage from "./pages/LoginPage"` grabs it through the window.
-
-Open `src/pages/LoginPage.jsx` to see the complete code. We will add the API call in the next step!
-
----
-
-## 4. 🔌 Step 2 — Talking to the Backend: `fetch` vs `axios` & `async/await`
-
-### ❌ Problem 1 — JavaScript is IMPATIENT (We learned this on Day 2!)
-
-Remember from Day 2? JavaScript does NOT wait for slow things like API calls. It runs the next line immediately:
-
-```javascript
-// ❌ THIS DOES NOT WORK!
-function handleLogin() {
-  const response = axios.post("http://localhost:5000/api/auth/login", {
-    email: "nimal@school.com",
-    password: "teacher123",
-  });
-
-  console.log(response); // ❌ undefined! The request hasn't finished yet!
-}
-```
+1. Make sure backend is running (`cd backend && npm run dev`).
+2. Open `http://localhost:5173` in your browser.
+3. **Open DevTools:** Press `F12` → Click the **Network** tab.
+4. Type `amara@school.com` / `admin123` and click Login.
+5. **Check the Network tab:** You should see a `login` request with status `200`.
+6. Click on the request → **Response** tab → You should see `{ "success": true, "data": { "token": "eyJ..." } }`.
+7. You should be redirected to `/dashboard`.
 
 ```mermaid
 flowchart LR
-    A["Line 1:\naxios.post() starts..."] --> B["Line 2:\nconsole.log(response)"]
-    B --> C["Result: undefined!\nThe request hasn't finished yet"]
-    A -.->|"200ms later..."| D["Backend responds!\nBut it's too late, we already moved on"]
+    A["Type email + password"] --> B["Click Login"]
+    B --> C["Check Network Tab"]
+    C --> D{"Status 200?"}
+    D -->|"Yes ✅"| E["Token received!\nRedirected to /dashboard"]
+    D -->|"No ❌"| F["Check: Is backend running?\nIs the password correct?"]
 ```
-
-### ✅ Solution — `async/await`
-
-```javascript
-// ✅ THIS WORKS!
-async function handleLogin() {
-  const response = await axios.post("http://localhost:5000/api/auth/login", {
-    email: "nimal@school.com",
-    password: "teacher123",
-  });
-
-  console.log(response.data); // ✅ { success: true, data: { token: "..." } }
-}
-```
-
-| Keyword | What it does |
-|---------|-------------|
-| `async` | Marks the function as asynchronous. Required to use `await` inside it. |
-| `await` | Tells JavaScript: **"STOP. Wait here until this finishes. Then continue."** |
 
 ---
 
-### ❌ Problem 2 — `fetch` is Messy!
+## Phase 3: The Central Phone (`apiClient.js`)
 
-JavaScript has a built-in tool called `fetch`. Let's try using it:
+### ❌ Problem — Repeating URLs and Headers EVERYWHERE
+
+Without a centralized client, EVERY page would look like this:
 
 ```javascript
-// Using fetch — it works, but look how ugly and verbose it is!
-async function handleLogin() {
-  const response = await fetch("http://localhost:5000/api/auth/login", {
-    method: "POST",                                    // You must manually specify the method
-    headers: { "Content-Type": "application/json" },   // You must manually set headers
-    body: JSON.stringify({ email, password }),          // You must manually convert to JSON string
-  });
+// ❌ In ClassroomsPage.jsx
+const token = localStorage.getItem("token");
+const response = await axios.get("http://localhost:5000/api/classrooms", {
+  headers: { Authorization: "Bearer " + token },
+});
 
-  const data = await response.json(); // You must manually parse the response!
-
-  if (!response.ok) {                // You must manually check for errors!
-    throw new Error(data.message);
-  }
-
-  console.log(data);
-}
+// ❌ In StudentsPage.jsx — SAME boilerplate again!
+const token = localStorage.getItem("token");
+const response = await axios.get("http://localhost:5000/api/students", {
+  headers: { Authorization: "Bearer " + token },
+});
 ```
 
-**Problems with `fetch`:**
+5 pages × 3 lines of boilerplate = 15 lines of repeated code. If the backend URL changes, you must update ALL 5 files!
 
-| # | Problem | fetch | axios |
-|---|---------|-------|-------|
-| 1 | Sending JSON data | Must wrap in `JSON.stringify()` | Just pass the object directly |
-| 2 | Reading JSON response | Must call `.json()` manually | Automatic — `response.data` is ready |
-| 3 | Setting Content-Type | Must set manually | Automatic |
-| 4 | Error handling | Does NOT throw on 404/500! | Throws automatically on 4xx/5xx |
-| 5 | Base URL | Must type the full URL every time | Set it once, reuse everywhere |
+### ✅ Solution — `apiClient.js`
 
-### ✅ Solution — Axios + Centralized `apiClient.js`
-
-Instead of repeating the full URL and headers in EVERY page, we create ONE shared Axios instance:
+Create ONE shared Axios instance. Set the base URL once. Auto-attach the token to every request.
 
 **`src/api/apiClient.js`:**
 
@@ -305,7 +287,6 @@ const apiClient = axios.create({
   baseURL: "http://localhost:5000/api",
 });
 
-// Automatically attach JWT token to EVERY request
 apiClient.interceptors.request.use(function (config) {
   const token = localStorage.getItem("token");
   if (token) {
@@ -317,172 +298,47 @@ apiClient.interceptors.request.use(function (config) {
 export default apiClient;
 ```
 
-**Now every page just does:**
-
-```javascript
-import apiClient from "../api/apiClient";
-
-// Clean! Short! No manual headers!
-const response = await apiClient.post("/auth/login", { email, password });
-const response = await apiClient.get("/classrooms"); // Token attached automatically!
-```
+| Line | Why? |
+|------|------|
+| `axios.create({ baseURL: ... })` | Creates a custom Axios with the backend URL baked in. Now we write `/classrooms` instead of the full URL. |
+| `interceptors.request.use(...)` | An interceptor runs **before every request**. Think of it as a helper who automatically puts a stamp (token) on every letter (request) before it is mailed. |
+| `localStorage.getItem("token")` | Reads the JWT token we saved during login. |
+| `config.headers.Authorization` | Attaches the token as `Bearer eyJ...` — exactly what our backend's `verifyToken` middleware expects. |
+| `export default apiClient` | Hands this configured Axios out through the Locked Room window. |
 
 ```mermaid
 flowchart TD
-    A["LoginPage.jsx"] -->|"import apiClient"| D["apiClient.js\n(Base URL + Auto Token)"]
+    A["LoginPage.jsx"] -->|"import apiClient"| D["📞 apiClient.js\nBase URL + Auto Token"]
     B["ClassroomsPage.jsx"] -->|"import apiClient"| D
     C["StudentsPage.jsx"] -->|"import apiClient"| D
-    D -->|"HTTP Request"| E["Express Backend\nlocalhost:5000"]
+    D -->|"Every request gets\nBearer token automatically"| E["Express Backend"]
 ```
 
-> 💡 **Locked Room:** `apiClient.js` is a locked room. It creates a configured Axios instance and `export default apiClient` hands it out the window. Every page file imports it through that window.
+**Now every page just writes:**
+
+```javascript
+const response = await apiClient.get("/classrooms"); // Clean! One line!
+```
 
 ---
 
-## 5. 🔄 Step 3 — Loading Data on Page Load: `useEffect`
+## Phase 4: The Bouncer (`ProtectedRoute.jsx`)
 
-### ❌ The Problem — The Infinite Loop DISASTER!
+### ❌ Problem — Users Can Cheat!
 
-You want to load classrooms when the page appears. So you call `axios.get()` directly inside the component:
-
-```javascript
-// ❌ DISASTER! DO NOT DO THIS!
-function ClassroomsPage() {
-  const [classrooms, setClassrooms] = useState([]);
-
-  // This code runs EVERY time the component renders
-  async function loadData() {
-    const response = await apiClient.get("/classrooms");
-    setClassrooms(response.data.data); // This triggers a re-render!
-  }
-  loadData(); // Calling it directly in the component body!
-
-  return <div>{classrooms.length} classrooms</div>;
-}
-```
-
-**What happens:**
+What if someone types `http://localhost:5173/dashboard` directly in the URL bar WITHOUT logging in? They have no token, but React will still try to show the Dashboard!
 
 ```mermaid
-flowchart TD
-    A["1. Component renders"] --> B["2. loadData() runs"]
-    B --> C["3. API response arrives"]
-    C --> D["4. setClassrooms() updates state"]
-    D --> E["5. React re-renders the component"]
-    E --> A
-    style A fill:#ff6b6b,color:white
-    style E fill:#ff6b6b,color:white
+flowchart LR
+    A["😈 User types\n/dashboard in URL"] --> B["Dashboard loads!\nBut no token..."]
+    B --> C["API calls fail\nwith 401 errors"]
 ```
 
-**It's an INFINITE LOOP!** Render → fetch → setState → render → fetch → setState → render... Your app sends THOUSANDS of requests per second and the browser freezes!
+### ✅ Solution — The Bouncer
 
-### ✅ The Solution — `useEffect`
+A `ProtectedRoute` is like a **bouncer at a club**. Before letting you into any page, the bouncer checks: "Do you have a wristband (token)?" If not, you get sent back to the entrance (login).
 
-`useEffect` tells React: **"Run this code ONLY at the right time, not on every render."**
-
-```javascript
-import { useState, useEffect } from "react";
-
-function ClassroomsPage() {
-  const [classrooms, setClassrooms] = useState([]);
-
-  // ✅ This runs ONCE when the component first appears
-  useEffect(function () {
-    async function loadData() {
-      const response = await apiClient.get("/classrooms");
-      setClassrooms(response.data.data);
-    }
-    loadData();
-  }, []); // <-- THIS EMPTY ARRAY IS THE KEY!
-
-  return <div>{classrooms.length} classrooms</div>;
-}
-```
-
-**The empty array `[]`** is called the **dependency array**. It tells React: "Run this effect only ONCE — when the component first mounts (appears on screen). Never again."
-
-```mermaid
-flowchart TD
-    A["1. Component renders\nfor the first time"] --> B["2. useEffect runs ONCE"]
-    B --> C["3. API response arrives"]
-    C --> D["4. setClassrooms() updates state"]
-    D --> E["5. React re-renders\nwith the new data"]
-    E --> F["6. useEffect does NOT\nrun again ✅"]
-    style F fill:#27ae60,color:white
-```
-
-| Code | When it runs |
-|------|-------------|
-| `useEffect(fn, [])` | **Once** — when component first appears (mount) |
-| `useEffect(fn, [id])` | When component mounts AND whenever `id` changes |
-| `useEffect(fn)` | ❌ **Every single render** — usually a mistake! |
-
----
-
-## 6. 🔐 Step 4 — Authentication: JWT, localStorage & Protected Routes
-
-### ❌ The Problem — 401 Unauthorized!
-
-You log in successfully. You navigate to the Dashboard. The Dashboard tries to fetch classrooms:
-
-```javascript
-const response = await apiClient.get("/classrooms");
-// ❌ 401 Unauthorized! The backend rejects the request!
-```
-
-```mermaid
-sequenceDiagram
-    participant R as React
-    participant E as Express Backend
-
-    R->>E: GET /api/classrooms (no token!)
-    E->>E: verifyToken middleware runs
-    E->>R: 401 — "Access denied. No token provided."
-```
-
-**Why?** On Day 2, we added `verifyToken` middleware to our routes. The backend demands a JWT token in the `Authorization` header. We are not sending one!
-
-### ✅ The Solution — localStorage + Auto-Attach Token
-
-**Step 1: Save the token when logging in** (`LoginPage.jsx`):
-
-```javascript
-const response = await apiClient.post("/auth/login", { email, password });
-
-// Save to localStorage (survives page refresh!)
-localStorage.setItem("token", response.data.data.token);
-localStorage.setItem("user", JSON.stringify(response.data.data.user));
-```
-
-**Step 2: Auto-attach it to every request** (`apiClient.js` — already done!):
-
-```javascript
-apiClient.interceptors.request.use(function (config) {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = "Bearer " + token;
-  }
-  return config;
-});
-```
-
-```mermaid
-sequenceDiagram
-    participant R as React
-    participant A as apiClient.js
-    participant E as Express Backend
-
-    R->>A: apiClient.get("/classrooms")
-    A->>A: Interceptor reads token from localStorage
-    A->>A: Attaches "Bearer eyJhb..." to headers
-    A->>E: GET /api/classrooms + Authorization header
-    E->>E: verifyToken ✅ Token is valid!
-    E->>R: 200 OK — { data: [classroom1, classroom2...] }
-```
-
-### The ProtectedRoute Component — `src/components/ProtectedRoute.jsx`
-
-But what if someone types `http://localhost:5173/dashboard` in the URL bar WITHOUT logging in? They have no token. They should be sent back to the login page!
+**`src/components/ProtectedRoute.jsx`:**
 
 ```javascript
 import { Navigate } from "react-router-dom";
@@ -491,12 +347,21 @@ function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    return <Navigate to="/login" />;  // Redirect to login!
+    return <Navigate to="/login" />;
   }
 
-  return children; // Show the actual page
+  return children;
 }
+
+export default ProtectedRoute;
 ```
+
+| Line | Why? |
+|------|------|
+| `{ children }` | Whatever page is wrapped inside ProtectedRoute (e.g., `<DashboardPage />`) |
+| `localStorage.getItem("token")` | Check if the user has a wristband (logged in) |
+| `<Navigate to="/login" />` | No wristband? Kick them to the login page! |
+| `return children` | Wristband found? Let them in — show the actual page |
 
 **In `App.jsx`, we wrap protected pages:**
 
@@ -508,182 +373,205 @@ function ProtectedRoute({ children }) {
 
 ```mermaid
 flowchart TD
-    A["User goes to /dashboard"] --> B{"ProtectedRoute:\nIs there a token\nin localStorage?"}
-    B -->|"Yes ✅"| C["Show DashboardPage"]
+    A["User goes to /dashboard"] --> B{"🛡️ ProtectedRoute:\nToken in localStorage?"}
+    B -->|"Yes ✅"| C["Show Dashboard"]
     B -->|"No ❌"| D["Redirect to /login"]
 ```
 
----
+### 🧪 TESTING STEP — Test the Bouncer
 
-## 7. 📄 Step 5 — Building the Remaining Pages
-
-Now that you understand `useState`, `useEffect`, `apiClient`, and `ProtectedRoute`, all remaining pages follow the **exact same pattern**:
-
-```
-1. Import useState, useEffect, apiClient, Navbar
-2. Create state variables with useState
-3. Fetch data inside useEffect (runs once)
-4. Display data in JSX (tables, cards, etc.)
-```
-
-Open each file in `src/pages/` to see the complete code:
-
-| File | What It Does | API Endpoint |
-|------|-------------|-------------|
-| `DashboardPage.jsx` | Shows classroom and student counts | `GET /classrooms` + `GET /students` |
-| `ClassroomsPage.jsx` | Lists all classrooms in a table | `GET /classrooms` |
-| `StudentsPage.jsx` | Lists all students in a table | `GET /students` |
-| `AttendancePage.jsx` | Search attendance by classroom ID + date | `GET /attendance/classroom/:id?date=...` |
-
-> 💡 **`Promise.all`** — In `DashboardPage.jsx`, we use `Promise.all([apiClient.get("/classrooms"), apiClient.get("/students")])` to fetch BOTH at the same time. This is faster than fetching one, waiting, then fetching the other.
+1. Open a new browser tab (or clear localStorage: DevTools → Application → Local Storage → Clear All).
+2. Type `http://localhost:5173/dashboard` directly.
+3. **Expected:** You should be immediately redirected to `/login`. The bouncer kicked you out! ✅
 
 ---
 
-## 8. 🤔 "Wait! Why didn't we use Axios in the Backend?"
+## Phase 5: The Dashboard (Build & Test)
 
-Great question! On Day 2, our Express backend did NOT use Axios. On Day 3, our React frontend DOES use Axios. Why?
+### ❌ Problem — The Infinite Loop DISASTER!
 
-> 📞 **The Phone Call Analogy:**
->
-> Think of HTTP communication like a **phone call**.
->
-> - **Express** is the person who **sits by the phone and WAITS for calls**. It is a **receiver** (server). It listens for incoming requests and responds to them.
-> - **Axios** is the **person who MAKES the call**. It is a **requester** (client). It sends requests to a server.
->
-> Our React app needs to CALL the backend → it uses **Axios**.
-> Our Express backend just WAITS for calls → it uses **Express** (not Axios).
+You want to load classrooms when the page appears. So you call the API directly:
 
-```mermaid
-flowchart LR
-    A["📱 React\n(The Caller)\nuses AXIOS to make requests"] -->|"HTTP Request"| B["📞 Express\n(The Receiver)\nuses EXPRESS to handle requests"]
-    B -->|"Prisma"| C["🗄️ Database"]
+```javascript
+// ❌ INFINITE LOOP — DO NOT DO THIS!
+function DashboardPage() {
+  const [classrooms, setClassrooms] = useState([]);
+
+  async function loadData() {
+    const res = await apiClient.get("/classrooms");
+    setClassrooms(res.data.data);
+  }
+  loadData(); // Runs on EVERY render!
+
+  return <p>{classrooms.length} classrooms</p>;
+}
 ```
-
-**When WOULD a backend use Axios?**
-
-Only if it needs to call **another external API**. For example:
-- Sending an SMS via Twilio API
-- Calling a payment gateway like Stripe
-- Fetching weather data from a third-party API
-
-Our backend only talks to its OWN database (using Prisma), so it doesn't need a "caller" tool like Axios.
-
-| Tool | Role | Used In | Why |
-|------|------|---------|-----|
-| **Express** | Receiver — listens for requests | Backend (Day 2) | The backend IS the server |
-| **Axios** | Requester — makes requests | Frontend (Day 3) | The frontend CALLS the server |
-| **Prisma** | Database communicator | Backend (Day 2) | Talks to MySQL directly |
-
----
-
-## 9. 🚀 Running the App
-
-### Quick Checklist
-
-- [x] MySQL running with `attendance_system_db` (from Day 1)
-- [x] Backend running on `http://localhost:5000` (from Day 2)
-- [x] All frontend files created
-
-### Start the Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173` in your browser.
-
-### Test Login
-
-Use the seed data from Day 1:
-
-| User | Email | Password |
-|------|-------|----------|
-| Admin | amara@school.com | admin123 |
-| Teacher | nimal@school.com | teacher123 |
-
-### Testing Flow
 
 ```mermaid
 flowchart TD
-    A["1. Open localhost:5173"] --> B["2. You see the Login page"]
-    B --> C["3. Login with amara@school.com / admin123"]
-    C --> D["4. Redirected to /dashboard"]
-    D --> E["5. Click 'Classrooms' in navbar"]
-    E --> F["6. See the classroom table"]
-    F --> G["7. Click 'Attendance'"]
-    G --> H["8. Search: Classroom ID=1, Date=2026-04-28"]
-    H --> I["9. See attendance records!"]
+    A["1. Component renders"] --> B["2. loadData() runs"]
+    B --> C["3. setClassrooms() called"]
+    C --> D["4. State changed → RE-RENDER!"]
+    D --> A
+    style A fill:#e74c3c,color:white
+    style D fill:#e74c3c,color:white
 ```
+
+**THOUSANDS of requests per second. Browser freezes. Backend crashes.** 💀
+
+### ✅ Solution — `useEffect` (The Once-a-Day Alarm)
+
+Think of `useEffect` like an **alarm clock**. You set it to ring ONCE in the morning. It does NOT ring every single second.
+
+```javascript
+useEffect(function () {
+  // This code runs ONCE when the page first appears
+  loadData();
+}, []); // ← THIS EMPTY ARRAY = "ring only once"
+```
+
+| Code | When It Runs | Analogy |
+|------|-------------|---------|
+| `useEffect(fn, [])` | **Once** — when page first appears | Alarm rings once in the morning |
+| `useEffect(fn, [id])` | When `id` changes | Alarm rings when a specific event happens |
+| `useEffect(fn)` | **Every render** — usually a bug! | Alarm ringing every second — disaster! |
+
+### The Complete DashboardPage — Line by Line
+
+```javascript
+import { useState, useEffect } from "react";
+import apiClient from "../api/apiClient";
+import Navbar from "../components/Navbar";
+```
+
+| Line | Why? |
+|------|------|
+| `useState` | Megaphone for stats and loading state |
+| `useEffect` | The alarm — fetch data only ONCE |
+| `apiClient` | The central phone with auto-token |
+| `Navbar` | The navigation bar component |
+
+```javascript
+const [stats, setStats] = useState({ classrooms: 0, students: 0 });
+const [loading, setLoading] = useState(true);
+```
+
+| Line | Why? |
+|------|------|
+| `stats` object | Holds both counts in one state variable |
+| `loading = true` | Start as loading — data hasn't arrived yet |
+
+```javascript
+useEffect(function () {
+  async function fetchStats() {
+    try {
+      const [classroomRes, studentRes] = await Promise.all([
+        apiClient.get("/classrooms"),
+        apiClient.get("/students"),
+      ]);
+      setStats({
+        classrooms: classroomRes.data.data.length,
+        students: studentRes.data.data.length,
+      });
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchStats();
+}, []);
+```
+
+| Line | Why? |
+|------|------|
+| `useEffect(..., [])` | Run ONCE when page appears — no infinite loop! |
+| `Promise.all([...])` | Fetch classrooms AND students at the SAME TIME — faster than one-by-one |
+| `setStats(...)` | Update both counts, triggering a re-render to show them |
+| `setLoading(false)` | Data arrived — stop showing "Loading..." |
+
+### 🧪 TESTING STEP — Test the Dashboard
+
+1. Login with `amara@school.com` / `admin123`.
+2. You should see the Dashboard with real numbers (e.g., "2 Classrooms", "4 Students").
+3. Open DevTools → Network tab. You should see TWO GET requests: `/classrooms` and `/students`, both with status `200`.
+4. Click "Classrooms" in the navbar → see the table. Click "Students" → see students.
+
+```mermaid
+flowchart TD
+    A["1. Login with admin"] --> B["2. Dashboard shows\nreal counts ✅"]
+    B --> C["3. Click Classrooms\nin navbar"]
+    C --> D["4. See classroom\ntable from database ✅"]
+    D --> E["5. Click Attendance"]
+    E --> F["6. Search:\nClassroom 1, Date 2026-04-28"]
+    F --> G["7. See attendance\nrecords ✅"]
+```
+
+---
+
+## 🤔 "Wait! Why Didn't We Use Axios in the Backend (Day 2)?"
+
+> 📞 **The Phone Call Analogy:**
+>
+> - **Express** is someone who **sits by the phone and WAITS for calls**. It is a **receiver** (server).
+> - **Axios** is someone who **picks up the phone and MAKES calls**. It is a **requester** (client).
+>
+> React needs to CALL the backend → uses **Axios**.
+> Express just WAITS for calls → uses **Express** (not Axios).
+
+```mermaid
+flowchart LR
+    A["📱 React + AXIOS\n(Makes the call)"] -->|"HTTP Request"| B["📞 Express\n(Answers the call)"]
+    B -->|"Prisma"| C["🗄️ Database"]
+```
+
+| Tool | Role | Used Where |
+|------|------|-----------|
+| **Express** | Receiver — listens for requests | Backend (Day 2) |
+| **Axios** | Requester — makes requests | Frontend (Day 3) |
+| **Prisma** | Database communicator | Backend (Day 2) |
+
+A backend would use Axios ONLY if it needs to call **another** API (e.g., Twilio for SMS, Stripe for payments). Ours only talks to its own database via Prisma.
+
+---
+
+## 📋 Quick React & Axios Cheat Sheet
+
+### React Hooks
+
+| Hook | Analogy | Example |
+|------|---------|---------|
+| `useState(init)` | **Megaphone** — shout when data changes | `const [name, setName] = useState("")` |
+| `useEffect(fn, [])` | **Alarm** — run code once on page load | Fetching data from API |
+| `useNavigate()` | **Teleporter** — jump to another page | `navigate("/dashboard")` |
+
+### Axios via apiClient
+
+| Method | Action | Example |
+|--------|--------|---------|
+| `apiClient.get(url)` | Read | `apiClient.get("/classrooms")` |
+| `apiClient.post(url, data)` | Create | `apiClient.post("/auth/login", { email, password })` |
+| `apiClient.put(url, data)` | Update | `apiClient.put("/students/1", { name: "New" })` |
+| `apiClient.delete(url)` | Delete | `apiClient.delete("/students/1")` |
+
+### localStorage
+
+| Method | Example |
+|--------|---------|
+| Save a string | `localStorage.setItem("token", "eyJ...")` |
+| Read a string | `localStorage.getItem("token")` |
+| Save an object | `localStorage.setItem("user", JSON.stringify(userObj))` |
+| Read an object | `JSON.parse(localStorage.getItem("user"))` |
+| Delete | `localStorage.removeItem("token")` |
 
 ### Common Errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Network Error` or blank screen | Backend is not running | Start backend: `cd backend && npm run dev` |
-| `401 Unauthorized` on dashboard | Token expired or missing | Login again |
-| `CORS error` in browser console | Backend CORS not enabled | Check `app.use(cors())` in backend `server.js` |
-| Page refreshes and goes to login | Token cleared from localStorage | Login again — this is expected after clearing storage |
-
----
-
-## 10. 📋 Quick React & Axios Cheat Sheet
-
-### React Hooks
-
-| Hook | What It Does | Example |
-|------|-------------|---------|
-| `useState(initial)` | Creates a state variable that triggers re-renders when changed | `const [name, setName] = useState("")` |
-| `useEffect(fn, [])` | Runs code ONCE when component appears (mount) | Fetching data on page load |
-| `useEffect(fn, [id])` | Runs code when `id` changes | Re-fetching when a filter changes |
-| `useNavigate()` | Returns a function to navigate to different pages | `navigate("/dashboard")` |
-
-### Axios Methods
-
-| Method | What It Does | Example |
-|--------|-------------|---------|
-| `apiClient.get(url)` | GET request — read data | `apiClient.get("/classrooms")` |
-| `apiClient.post(url, data)` | POST request — create data | `apiClient.post("/auth/login", { email, password })` |
-| `apiClient.put(url, data)` | PUT request — update data | `apiClient.put("/students/1", { name: "New Name" })` |
-| `apiClient.delete(url)` | DELETE request — remove data | `apiClient.delete("/students/1")` |
-
-### Axios Response Structure
-
-```javascript
-const response = await apiClient.get("/classrooms");
-
-// Our backend always returns: { success, message, data }
-response.data           // The full response body: { success: true, message: "...", data: [...] }
-response.data.data      // The actual data array: [classroom1, classroom2, ...]
-response.data.message   // The message string: "Classrooms retrieved successfully."
-response.status         // HTTP status code: 200
-```
-
-### localStorage Methods
-
-| Method | What It Does | Example |
-|--------|-------------|---------|
-| `localStorage.setItem(key, value)` | Save a string | `localStorage.setItem("token", "eyJ...")` |
-| `localStorage.getItem(key)` | Read a string | `localStorage.getItem("token")` |
-| `localStorage.removeItem(key)` | Delete an item | `localStorage.removeItem("token")` |
-
-> ⚠️ localStorage can ONLY store strings. To store an object, use `JSON.stringify()`. To read it back, use `JSON.parse()`.
-
-### JSX Patterns
-
-```javascript
-// Conditional rendering — show error only if it exists
-{error && <p className="error">{error}</p>}
-
-// Rendering a list — use .map() and always provide a key
-{students.map(function (student) {
-  return <tr key={student.id}><td>{student.name}</td></tr>;
-})}
-
-// Conditional text — show different button text based on state
-<button>{loading ? "Loading..." : "Submit"}</button>
-```
+| `Network Error` | Backend not running | `cd backend && npm run dev` |
+| `401 Unauthorized` | Token missing/expired | Login again |
+| `CORS error` | Backend CORS not enabled | Check `app.use(cors())` in server.js |
+| Infinite loop / browser freeze | Missing `[]` in useEffect | Add the empty dependency array |
 
 ---
 
