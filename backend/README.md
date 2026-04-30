@@ -465,6 +465,16 @@ export default prisma;
 
 > 💡 **`export default`** — This is how we share code between files in modern JavaScript (ESM). We create the Prisma client ONCE here, and `import` it in every file that needs to talk to the database.
 
+**Let's break down every line:**
+
+| Line | What It Does | Why We Need It |
+|------|-------------|----------------|
+| `import { PrismaClient } from "@prisma/client"` | Gets the Prisma tool from the package we installed | Think of it like taking a specific tool out of a toolbox. The `{ }` curly braces mean "I only want this ONE thing from the package." |
+| `const prisma = new PrismaClient()` | Creates a new connection to our database | `new` creates a fresh instance. This is like dialing the phone number to the database. We only want to do this ONCE for the whole app. |
+| `export default prisma` | Shares this connection with all other files | `export default` means "this is the MAIN thing this file provides." Other files can `import prisma from "./config/db.js"` to use it. |
+
+> ⚠️ **Why only ONE Prisma client?** Every `new PrismaClient()` opens a connection pool to the database. If every file created its own, you would quickly run out of connections and your database would crash. By creating it once and sharing it, we use just one efficient connection pool.
+
 ```mermaid
 flowchart TD
     A["db.js\n(Creates ONE Prisma client)"] --> B["authRepository.js\nimport prisma from db.js"]
@@ -642,6 +652,18 @@ export {
 | `prisma.user.findUnique()` | Find ONE record by a unique field | `SELECT * FROM users WHERE email = ?` |
 | `prisma.user.findMany()` | Find ALL matching records | `SELECT * FROM users` |
 | `prisma.user.create()` | Insert a new record | `INSERT INTO users VALUES (...)` |
+
+**Deep dive — what each function does and WHY:**
+
+**`findUserByEmail`** — We use `findUnique` instead of `findMany` because email is a `@unique` field in our Prisma schema. This means there can only be ONE user with that email. `findUnique` is faster because it stops searching after finding one match. Think of it like looking up a phone number — each person has only one, so you stop looking once you find it.
+
+**`findUserById`** — Same idea. The `id` is the primary key (`@id`), which is always unique. We use this later when the JWT token gives us a `userId` and we need to find that user's full info.
+
+**`createUser`** — The `data: { ... }` object tells Prisma exactly what values to put in each column. Notice we pass `hashedPassword`, NOT the plain password. The repository does not know HOW the password was hashed — that is the Service layer's job. The repository only saves what it receives.
+
+**`findAllUsers`** — The `select` option is crucial here. Without `select`, Prisma returns ALL fields including the password hash. By listing only `id: true, name: true, email: true, role: true, createdAt: true`, we explicitly tell Prisma: "Give me ONLY these fields, nothing else." This is a security best practice — never send more data than needed.
+
+**The `export { }` block** — Unlike `export default` (which exports ONE main thing), `export { }` exports MULTIPLE named things. Other files import them like: `import { findUserByEmail, createUser } from "../repositories/authRepository.js"`. The names must match exactly.
 
 > ⚠️ **Security:** In `findAllUsers`, we use `select` to choose which fields to return. We NEVER return the `password` field! If we did, anyone calling this API could see everyone's passwords.
 
@@ -899,6 +921,40 @@ flowchart TD
     E --> F["Return token + user info"]
 ```
 
+**Deep dive — understanding the Auth Service line by line:**
+
+**The imports:**
+- `import bcrypt from "bcrypt"` — This gives us the password hashing tool. We use `bcrypt` because it is specifically designed for passwords. It is slow ON PURPOSE — this makes it much harder for hackers to try millions of passwords quickly.
+- `import jwt from "jsonwebtoken"` — This gives us the JWT token tool. We use it to create and verify login tokens.
+- `import { findUserByEmail, createUser, findAllUsers } from "..."` — We import SPECIFIC functions from the repository using `{ }`. This is called a "named import." We only take what we need, like picking specific items from a shelf.
+
+**The `registerUser` function — key lines explained:**
+
+| Line | What It Does | Why This Way |
+|------|-------------|-------------|
+| `await findUserByEmail(email)` | Checks if someone already registered with this email | We check BEFORE creating. If we skip this and try to create a duplicate, the database throws an ugly error. It is better to check first and return a friendly message. |
+| `const saltRounds = 10` | Sets the strength of the hashing | Higher number = more secure but slower. 10 is the standard. Going above 12 makes registration noticeably slow for users. |
+| `await bcrypt.hash(password, saltRounds)` | Converts plain text password into a hash | `await` is needed because hashing is a CPU-heavy operation. The `10` rounds mean bcrypt will process the password 2^10 = 1024 times. This takes ~100ms — fast for a user, but painfully slow for a hacker trying millions of passwords. |
+| `return { success: true, data: { id, name, email, role } }` | Returns user info WITHOUT the password | We manually pick which fields to return. We NEVER include the password hash in any response, even though it is hashed. |
+
+**The `loginUser` function — key lines explained:**
+
+| Line | What It Does | Why This Way |
+|------|-------------|-------------|
+| `await bcrypt.compare(password, user.password)` | Compares typed password with stored hash | `bcrypt.compare` is the magic — it takes the plain text password, hashes it with the same salt that was used originally, and checks if the result matches. It returns `true` or `false`. You NEVER compare passwords by doing `password === user.password` — that would compare plain text with a hash and always fail! |
+| `const tokenPayload = { userId, role }` | The data we want to store INSIDE the token | We only put the minimum needed info. Do NOT put sensitive data like passwords or email here — anyone can decode a JWT and read the payload (it is only encoded, not encrypted). |
+| `jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "24h" })` | Creates the JWT token | Three arguments: (1) the data to store, (2) the secret key to sign it (from `.env`), (3) options like expiry time. The secret key is like a seal — only OUR server can create tokens with this seal. If anyone changes the token data, the seal breaks and `jwt.verify()` will reject it. |
+
+**The consistent response format:**
+
+Every function returns the same shape: `{ success, message, data }`. This is a design choice that makes the frontend developer's life easier. They always know what to expect:
+
+```
+success = true  → Everything worked. Check "data" for the result.
+success = false → Something went wrong. Check "message" for what happened.
+data = null     → No data to return (used in error cases).
+```
+
 > 💡 **Security tip:** We say "Invalid email or password" for BOTH wrong email and wrong password. This way, a hacker cannot tell if an email exists in our system. If we said "Email not found," the hacker would know which emails are registered.
 
 ---
@@ -1125,6 +1181,40 @@ export {
 
 > 💡 **Notice the pattern:** Every controller function does the same 3 things: (1) Read data from `req`, (2) Call the service, (3) Send `res` with the right status code. Always wrapped in `try/catch`.
 
+**Deep dive — understanding the Auth Controller line by line:**
+
+**`req.body` — The order slip from the customer:**
+
+When the frontend sends a POST request with JSON data, Express puts that data in `req.body`. Think of it like a customer handing a written order to a waiter:
+
+```
+Customer writes: { "name": "Nimal", "email": "nimal@school.com", "password": "teacher123" }
+Customer hands it to the waiter (Express)
+Waiter reads it from the order slip: req.body.name → "Nimal"
+```
+
+We use `const name = req.body.name` instead of destructuring `const { name } = req.body` to keep it explicit and easy to read for beginners.
+
+**The validation check `if (!name || !email || !password)`:**
+
+The `!` symbol means "NOT." In JavaScript, empty strings, `null`, and `undefined` are all "falsy" — they become `false` when checked. So `!name` is `true` when name is missing or empty. We check this BEFORE calling the service because:
+1. It is faster — no need to call the database for bad data.
+2. It gives a better error message — "Name is required" is more helpful than a confusing database error.
+
+**Why different status codes for different results?**
+
+| Situation | Status Code | Reason |
+|-----------|------------|--------|
+| Registration successful | `201 Created` | We created a new resource (user). `201` specifically means "something was created." |
+| Login successful | `200 OK` | We are just returning data, not creating anything new. |
+| Missing fields | `400 Bad Request` | The CLIENT made a mistake (sent incomplete data). 4xx codes always mean "the client did something wrong." |
+| Wrong password | `401 Unauthorized` | The CLIENT failed to prove their identity. |
+| Server crash | `500 Internal Server Error` | The SERVER had a problem. 5xx codes always mean "the server did something wrong." |
+
+**The `try/catch` wrapper:**
+
+Every controller function is wrapped in `try { ... } catch (error) { ... }`. The `try` block runs the normal code. If ANY line inside `try` throws an error (database down, bad query, etc.), JavaScript immediately jumps to the `catch` block. Without this, an unhandled error would crash the entire Node.js process, taking down the server for ALL users.
+
 ---
 
 ## 8. 🛡️ Step 7 — Auth Middleware: Protecting Routes
@@ -1231,6 +1321,23 @@ export {
   authorizeRoles,
 };
 ```
+
+**Deep dive — understanding the Auth Middleware line by line:**
+
+**`req.headers.authorization`** — HTTP headers are like the envelope of a letter. The letter content is `req.body`, but the envelope has extra information written on it. The `Authorization` header is where the client puts their JWT token. It follows the format `Bearer <token>` (with a space between "Bearer" and the token).
+
+**`authHeader.split(" ")[1]`** — This splits the string by the space character. Example: `"Bearer eyJhbG..."` becomes an array `["Bearer", "eyJhbG..."]`. We take index `[1]` to get just the token part. Think of it like splitting "Hello World" into ["Hello", "World"] and picking the second word.
+
+**`jwt.verify(token, process.env.JWT_SECRET)`** — This does three checks at once:
+1. Is the token format valid? (Not corrupted)
+2. Was it signed with OUR secret key? (Not created by someone else)
+3. Has it expired? (Not older than 24 hours)
+
+If ANY check fails, it throws an error, which our `catch` block handles by returning 401.
+
+**`req.user = decoded`** — This is the most important line. After verifying the token, we get back the decoded payload: `{ userId: 1, role: "admin" }`. We attach it to the `req` object so that the NEXT function in the chain (the controller) can read it. This is how the controller knows WHO is making the request without asking for a password again.
+
+**`authorizeRoles(...allowedRoles)`** — The `...` is called the "rest operator." It collects all arguments into an array. So `authorizeRoles("admin", "teacher")` makes `allowedRoles = ["admin", "teacher"]`. This function RETURNS another function (this pattern is called a "closure"). The inner function checks if `req.user.role` is in the allowed list using `.includes()`. If not, it returns 403 Forbidden.
 
 **How `verifyToken` works step by step:**
 
@@ -1455,6 +1562,12 @@ export { createClassroom, findAllClassrooms, findClassroomById, findClassroomsBy
 
 > 💡 **New Prisma concept: `include`** — This is like a JOIN in SQL. `include: { teacher: true }` means "also fetch the teacher for this classroom." Prisma handles the JOIN automatically!
 
+**Deep dive — understanding `include` and `select` together:**
+
+**`include: { teacher: { select: { id: true, name: true, email: true } } }`** — This tells Prisma: "When you fetch a classroom, also go to the `users` table and get the teacher's info. But I only want the teacher's id, name, and email — not their password or role." Without `include`, you would only get `teacherId: 3` (just a number). With `include`, you get the full teacher object nested inside the classroom.
+
+**Why do we use `include: { students: true }` in `findClassroomById`?** Because when you view ONE specific classroom, you want to see all the students in it. But when listing ALL classrooms, you don't need every student — that would be way too much data. This is a performance choice: only fetch what you need.
+
 ### Classroom Service (`src/services/classroomService.js`)
 
 ```javascript
@@ -1546,6 +1659,12 @@ export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTea
 
 > 💡 **`parseInt(req.params.id)`** — URL parameters are always strings. `"/5"` is a string `"5"`. We use `parseInt()` to convert it to a number `5`, because our database expects numbers for IDs.
 
+**Deep dive — `req.params` (URL Variables):**
+
+Look at the URL: `/api/classrooms/5`. How do we get that `5`? 
+In Express, we define the route with a colon: `/:id`. Express takes whatever is in that position and puts it in `req.params.id`. It is like a variable in the URL. If the URL is `/api/classrooms/apple`, then `req.params.id` would be `"apple"`. That is why `parseInt()` is so important — it converts the string `"5"` to a real number `5` so Prisma can find it in the database.
+
+
 ### Classroom Routes (`src/routes/classroomRoutes.js`)
 
 ```javascript
@@ -1561,6 +1680,21 @@ router.get("/teacher/:teacherId", verifyToken, getClassroomsByTeacher);
 
 export default router;
 ```
+
+**Deep dive — understanding Express Routes:**
+
+**`express.Router()`** — Think of this as a "mini-app." Instead of putting all 100 routes in our main `server.js` file (which would be a huge mess), we group them by category. The `classroomRoutes.js` file only handles classroom-related URLs. We then plug this mini-app into the main server later.
+
+**`router.get("/:id", ...)`** — The colon `:` creates a dynamic URL parameter. It means "match anything here."
+- `/api/classrooms/1` → Matches! `req.params.id` is 1
+- `/api/classrooms/99` → Matches! `req.params.id` is 99
+- `/api/classrooms/new` → Matches! (This is why order matters — put specific routes BEFORE dynamic ones)
+
+**The middleware chain:**
+Look at `router.post("/", verifyToken, authorizeRoles("admin"), createClassroom);`. Express runs these from left to right:
+1. First, `verifyToken` checks the wristband (JWT). If bad, stops here.
+2. Next, `authorizeRoles` checks if they are an admin. If they are a teacher, stops here.
+3. Finally, `createClassroom` does the actual database work.
 
 ---
 
@@ -1643,6 +1777,17 @@ async function getStudentsByClassroomId(classroomId) {
 export { createStudent, getAllStudents, getStudentById, getStudentsByClassroomId };
 ```
 
+**Deep dive — the "Early Return" pattern:**
+
+Look at `getStudentById`:
+```javascript
+if (!student) { return { success: false, ... }; }
+return { success: true, ... };
+```
+We do NOT use `else` here! Why? Because `return` immediately stops the function. If the student is not found, it returns the error and STOPS. If it doesn't stop, it just continues to the success line. 
+
+This is called the **"Early Return"** or "Bouncer" pattern. It is much cleaner than wrapping your whole function in giant `if / else` blocks. Think of it like a bouncer at a club door: if you don't have ID, he kicks you out immediately (`return`). If you do have ID, he doesn't need to say "else you can go in" — you just walk right past him!
+
 ### Student Controller (`src/controllers/studentController.js`)
 
 ```javascript
@@ -1695,6 +1840,18 @@ async function getStudentsByClassroom(req, res) {
 
 export { createStudent, getAllStudents, getStudentById, getStudentsByClassroom };
 ```
+
+**Deep dive — `import * as` syntax:**
+
+At the top of the controller, we used: `import * as studentService from "../services/studentService.js";`
+
+Earlier in Auth, we used: `import { loginUser, registerUser } from ...`
+
+What is the difference?
+- `{ loginUser }` means "go into the file, grab only this exact function, and bring it here."
+- `* as studentService` means "grab EVERYTHING exported from that file, and put it all inside a big box named `studentService`."
+
+When we want to use a function, we open the box: `studentService.createStudent(...)`. We use this when a file exports a lot of things and we want to keep them organized under one clear name. It makes it obvious that `createStudent` is coming from the service layer, not some local function.
 
 ### Student Routes (`src/routes/studentRoutes.js`)
 
@@ -1833,6 +1990,22 @@ async function getAttendanceByStudentId(studentId) {
 export { markAttendance, markBulkAttendance, getAttendanceByClassroomAndDate, getAttendanceByStudentId };
 ```
 
+**Deep dive — understanding the Bulk Attendance logic:**
+
+**Why bulk attendance?** A teacher doesn't mark attendance one by one by clicking 30 separate buttons. They mark the whole class at once on a grid and hit "Save." The frontend sends an array (a list) of records.
+
+**The `for` loop:**
+```javascript
+for (let i = 0; i < attendanceList.length; i++) {
+  const item = attendanceList[i];
+  const result = await markAttendance(...);
+}
+```
+This is a standard loop, but notice the `await` inside it. This means the loop PAUSES for each student, waits for the database to finish saving that student, and then moves to the next one. 
+
+**The two arrays (`results` and `errors`):**
+If student #5 fails (maybe they were already marked present today), we do NOT want to crash the whole loop and skip students 6 through 30! Instead, we put the failed student in the `errors` array, and keep going. At the end, we return both lists so the frontend can show the teacher: "29 saved successfully, but Nimal failed."
+
 **Bulk attendance flow:**
 
 ```mermaid
@@ -1909,6 +2082,20 @@ export { markAttendance, markBulkAttendance, getAttendanceByClassroom, getAttend
 > 💡 **`req.user.userId`** — The `verifyToken` middleware puts the decoded JWT data into `req.user`. So `req.user.userId` is the ID of the logged-in teacher. We use this for the `markedBy` field automatically — the teacher doesn't need to send it!
 
 > 💡 **`req.query.date`** — For the URL `/api/attendance/classroom/1?date=2026-04-28`, `req.query.date` equals `"2026-04-28"`. The `?` in a URL starts the "query string."
+
+**Deep dive — `req.params` vs `req.query` vs `req.body`:**
+
+This is the #1 confusion for beginners! When do you use which?
+
+| Express code | Where is the data? | Analogy | When to use it |
+|--------------|-------------------|---------|----------------|
+| `req.body` | In the hidden POST request data | The envelope contents | Sending large data (creating a user, passwords, bulk arrays) |
+| `req.params` | Part of the URL path itself (`/users/5`) | The room number on a door | Identifying a SPECIFIC resource (Get user #5, delete post #10) |
+| `req.query` | After the `?` in the URL (`?date=today`) | The filter options on a shopping site | Searching, filtering, or sorting a LIST of things (Show attendance for THIS date) |
+
+In `getAttendanceByClassroom(req, res)`:
+- We need to know WHICH classroom. That is a specific resource. So we use `req.params.classroomId` (from the URL `/classroom/1`).
+- We need to FILTER by date. So we use `req.query.date` (from `?date=2026-04-28`).
 
 ### Attendance Routes (`src/routes/attendanceRoutes.js`)
 
@@ -2060,6 +2247,19 @@ app.listen(PORT, function () {
 | `app.use(express.json())` | Makes Express understand JSON bodies (`req.body`) |
 | `app.use("/api/auth", authRoutes)` | All routes in `authRoutes` start with `/api/auth` |
 | `app.listen(PORT, ...)` | Starts the server on port 5000 |
+
+**Deep dive — The magical `app.use()`:**
+
+In Express, `app.use()` is how you add things to the global middleware pipeline. Every single request that hits your server goes through this pipeline from top to bottom.
+
+**`app.use(cors())`**
+Think of CORS like a bouncer at a club who hates people from other neighborhoods. If the React frontend (living at `localhost:3000`) tries to talk to the Express backend (`localhost:5000`), the browser blocks it because they are from different "neighborhoods" (ports). `cors()` tells the browser: "It is fine, let everyone in."
+
+**`app.use(express.json())`**
+By default, Express is dumb. If a frontend sends `{ "name": "Nimal" }` in a POST request, Express just sees a confusing stream of raw text bytes. `express.json()` intercepts the request, reads the raw text, converts it into a neat JavaScript object, and attaches it to `req.body`. Without this line, `req.body` will always be `undefined`, and your app will break!
+
+**`app.use("/api/auth", authRoutes)`**
+This mounts our "mini-apps" (routers). It tells Express: "If the URL starts with `/api/auth`, stop looking here and hand the request over to the `authRoutes` file to deal with it." This keeps `server.js` perfectly clean no matter how big our app gets!
 
 ### How Frontend Will Talk to This Backend
 
