@@ -6,7 +6,7 @@
 // It just finds or creates user records.
 // ==============================================
 
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // -----------------------------------------------
 // Find a user by their email address
@@ -68,7 +68,7 @@ async function findAllUsers() {
   return users;
 }
 
-module.exports = {
+export {
   findUserByEmail,
   findUserById,
   createUser,

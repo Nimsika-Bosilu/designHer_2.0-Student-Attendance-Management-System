@@ -340,15 +340,18 @@ npm install --save-dev nodemon
 
 ### Update package.json scripts
 
-Open `package.json` and change the `"scripts"` section to:
+Open `package.json` and change the `"scripts"` section to include `"type": "module"` and the dev/start scripts:
 
 ```json
-"scripts": {
-  "dev": "nodemon src/server.js",
-  "start": "node src/server.js"
-}
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  }
 ```
 
+- `"type": "module"` — Allows us to use modern `import`/`export` syntax instead of the older `require()`.
 - `npm run dev` — Runs the server with nodemon (auto-restart)
 - `npm start` — Runs the server normally (for production)
 
@@ -425,7 +428,7 @@ flowchart LR
 
 ```javascript
 // In your code, use it like this:
-require("dotenv").config(); // Load .env file
+import "dotenv/config"; // Load .env file
 
 const secret = process.env.JWT_SECRET;   // Reads from .env
 const dbUrl = process.env.DATABASE_URL;  // Reads from .env
@@ -591,13 +594,13 @@ Create `src/config/db.js`:
 
 ```javascript
 // Import PrismaClient from the Prisma package
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 
 // Create a new Prisma client instance
 const prisma = new PrismaClient();
 
 // Export it so other files can use it
-module.exports = prisma;
+export default prisma;
 ```
 
 > 💡 We create the Prisma client in ONE file and import it everywhere. This way, we have only ONE connection to the database.
@@ -773,7 +776,7 @@ This file ONLY talks to the database. It does not know about HTTP or passwords.
 Create the file `src/repositories/authRepository.js`:
 
 ```javascript
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // Find a user by their email address
 async function findUserByEmail(email) {
@@ -823,7 +826,7 @@ async function findAllUsers() {
   return users;
 }
 
-module.exports = {
+export {
   findUserByEmail,
   findUserById,
   createUser,
@@ -851,14 +854,14 @@ This file handles the **business logic**: hashing passwords, comparing passwords
 Create the file `src/services/authService.js`:
 
 ```javascript
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const authRepository = require("../repositories/authRepository");
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { findUserByEmail, createUser, findAllUsers } from "../repositories/authRepository.js";
 
 // Register a new user
 async function registerUser(name, email, password, role) {
   // Step 1: Check if email already exists
-  const existingUser = await authRepository.findUserByEmail(email);
+  const existingUser = await findUserByEmail(email);
   if (existingUser) {
     return {
       success: false,
@@ -872,7 +875,7 @@ async function registerUser(name, email, password, role) {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   // Step 3: Save to database
-  const newUser = await authRepository.createUser(name, email, hashedPassword, role);
+  const newUser = await createUser(name, email, hashedPassword, role);
 
   // Step 4: Return success (without password!)
   return {
@@ -890,7 +893,7 @@ async function registerUser(name, email, password, role) {
 // Login a user
 async function loginUser(email, password) {
   // Step 1: Find user by email
-  const user = await authRepository.findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user) {
     return {
       success: false,
@@ -936,7 +939,7 @@ async function loginUser(email, password) {
 
 // Get all users (for admin)
 async function getAllUsers() {
-  const users = await authRepository.findAllUsers();
+  const users = await findAllUsers();
   return {
     success: true,
     message: "Users retrieved successfully.",
@@ -944,7 +947,7 @@ async function getAllUsers() {
   };
 }
 
-module.exports = {
+export {
   registerUser,
   loginUser,
   getAllUsers,
@@ -985,7 +988,7 @@ This file handles HTTP: reads the request, calls the service, sends the response
 Create the file `src/controllers/authController.js`:
 
 ```javascript
-const authService = require("../services/authService");
+import { registerUser, loginUser, getAllUsers } from "../services/authService.js";
 
 // POST /api/auth/register
 async function register(req, res) {
@@ -1003,7 +1006,7 @@ async function register(req, res) {
       });
     }
 
-    const result = await authService.registerUser(name, email, password, role);
+    const result = await registerUser(name, email, password, role);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -1034,7 +1037,7 @@ async function login(req, res) {
       });
     }
 
-    const result = await authService.loginUser(email, password);
+    const result = await loginUser(email, password);
 
     if (!result.success) {
       return res.status(401).json(result);
@@ -1054,7 +1057,7 @@ async function login(req, res) {
 // GET /api/auth/users (admin only)
 async function getUsers(req, res) {
   try {
-    const result = await authService.getAllUsers();
+    const result = await getAllUsers();
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get users error:", error);
@@ -1087,7 +1090,7 @@ async function getMe(req, res) {
   }
 }
 
-module.exports = {
+export {
   register,
   login,
   getUsers,
@@ -1127,7 +1130,7 @@ flowchart LR
 Create the file `src/middlewares/authMiddleware.js`:
 
 ```javascript
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 // Checks if the user has a valid JWT token
 function verifyToken(req, res, next) {
@@ -1184,7 +1187,7 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
-module.exports = {
+export {
   verifyToken,
   authorizeRoles,
 };
@@ -1225,38 +1228,38 @@ This file defines the URLs for auth and connects them to the controller.
 Create the file `src/routes/authRoutes.js`:
 
 ```javascript
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const authController = require("../controllers/authController");
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { register, login, getUsers, getMe } from "../controllers/authController.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // Public routes (no login needed)
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+router.post("/register", register);
+router.post("/login", login);
 
 // Protected routes (login needed)
-router.get("/me", verifyToken, authController.getMe);
+router.get("/me", verifyToken, getMe);
 
 // Admin only route
-router.get("/users", verifyToken, authorizeRoles("admin"), authController.getUsers);
+router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
 
-module.exports = router;
+export default router;
 ```
 
 **How route protection works:**
 
 ```
 // Public — anyone can access:
-router.post("/login", controller.login);
+router.post("/login", login);
 
 // Protected — must be logged in:
-router.get("/me", verifyToken, controller.getMe);
+router.get("/me", verifyToken, getMe);
 //                 ↑ middleware runs first
 
 // Admin only — must be logged in AND be admin:
-router.get("/users", verifyToken, authorizeRoles("admin"), controller.getUsers);
-//                   ↑ check token   ↑ check role          ↑ then run controller
+router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
+//                   ↑ check token   ↑ check role          ↑ then run function
 ```
 
 ### Request Lifecycle — Full Picture
@@ -1296,7 +1299,7 @@ Now we follow the same pattern: Repository → Service → Controller → Routes
 ### Classroom Repository (`src/repositories/classroomRepository.js`)
 
 ```javascript
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // Create a new classroom
 async function createClassroom(name, section, teacherId) {
@@ -1355,7 +1358,7 @@ async function findClassroomsByTeacherId(teacherId) {
   return classrooms;
 }
 
-module.exports = {
+export {
   createClassroom,
   findAllClassrooms,
   findClassroomById,
@@ -1375,7 +1378,7 @@ module.exports = {
 ### Classroom Service (`src/services/classroomService.js`)
 
 ```javascript
-const classroomRepository = require("../repositories/classroomRepository");
+import * as classroomRepository from "../repositories/classroomRepository.js";
 
 async function createClassroom(name, section, teacherId) {
   if (!name || !teacherId) {
@@ -1431,7 +1434,7 @@ async function getClassroomsByTeacherId(teacherId) {
   };
 }
 
-module.exports = {
+export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,
@@ -1442,7 +1445,7 @@ module.exports = {
 ### Classroom Controller (`src/controllers/classroomController.js`)
 
 ```javascript
-const classroomService = require("../services/classroomService");
+import * as classroomService from "../services/classroomService.js";
 
 // POST /api/classrooms
 async function createClassroom(req, res) {
@@ -1520,7 +1523,7 @@ async function getClassroomsByTeacher(req, res) {
   }
 }
 
-module.exports = {
+export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,
@@ -1533,25 +1536,25 @@ module.exports = {
 ### Classroom Routes (`src/routes/classroomRoutes.js`)
 
 ```javascript
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const classroomController = require("../controllers/classroomController");
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher } from "../controllers/classroomController.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // Admin only: create a new classroom
-router.post("/", verifyToken, authorizeRoles("admin"), classroomController.createClassroom);
+router.post("/", verifyToken, authorizeRoles("admin"), createClassroom);
 
 // Any logged-in user: get all classrooms
-router.get("/", verifyToken, classroomController.getAllClassrooms);
+router.get("/", verifyToken, getAllClassrooms);
 
 // Any logged-in user: get one classroom
-router.get("/:id", verifyToken, classroomController.getClassroomById);
+router.get("/:id", verifyToken, getClassroomById);
 
 // Any logged-in user: get a teacher's classrooms
-router.get("/teacher/:teacherId", verifyToken, classroomController.getClassroomsByTeacher);
+router.get("/teacher/:teacherId", verifyToken, getClassroomsByTeacher);
 
-module.exports = router;
+export default router;
 ```
 
 ---
@@ -1561,7 +1564,7 @@ module.exports = router;
 ### Student Repository (`src/repositories/studentRepository.js`)
 
 ```javascript
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 async function createStudent(name, email, registrationNumber, classroomId) {
   const student = await prisma.student.create({
@@ -1601,7 +1604,7 @@ async function findStudentsByClassroomId(classroomId) {
   return students;
 }
 
-module.exports = {
+export {
   createStudent,
   findAllStudents,
   findStudentById,
@@ -1612,7 +1615,7 @@ module.exports = {
 ### Student Service (`src/services/studentService.js`)
 
 ```javascript
-const studentRepository = require("../repositories/studentRepository");
+import * as studentRepository from "../repositories/studentRepository.js";
 
 async function createStudent(name, email, registrationNumber, classroomId) {
   if (!name || !email || !registrationNumber || !classroomId) {
@@ -1668,7 +1671,7 @@ async function getStudentsByClassroomId(classroomId) {
   };
 }
 
-module.exports = {
+export {
   createStudent,
   getAllStudents,
   getStudentById,
@@ -1679,7 +1682,7 @@ module.exports = {
 ### Student Controller (`src/controllers/studentController.js`)
 
 ```javascript
-const studentService = require("../services/studentService");
+import * as studentService from "../services/studentService.js";
 
 // POST /api/students
 async function createStudent(req, res) {
@@ -1757,7 +1760,7 @@ async function getStudentsByClassroom(req, res) {
   }
 }
 
-module.exports = {
+export {
   createStudent,
   getAllStudents,
   getStudentById,
@@ -1768,25 +1771,25 @@ module.exports = {
 ### Student Routes (`src/routes/studentRoutes.js`)
 
 ```javascript
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const studentController = require("../controllers/studentController");
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { createStudent, getAllStudents, getStudentById, getStudentsByClassroom } from "../controllers/studentController.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // Admin or Teacher: create a new student
-router.post("/", verifyToken, authorizeRoles("admin", "teacher"), studentController.createStudent);
+router.post("/", verifyToken, authorizeRoles("admin", "teacher"), createStudent);
 
 // Any logged-in user: get all students
-router.get("/", verifyToken, studentController.getAllStudents);
+router.get("/", verifyToken, getAllStudents);
 
 // Any logged-in user: get one student
-router.get("/:id", verifyToken, studentController.getStudentById);
+router.get("/:id", verifyToken, getStudentById);
 
 // Any logged-in user: get students in a classroom
-router.get("/classroom/:classroomId", verifyToken, studentController.getStudentsByClassroom);
+router.get("/classroom/:classroomId", verifyToken, getStudentsByClassroom);
 
-module.exports = router;
+export default router;
 ```
 
 ---
@@ -1798,7 +1801,7 @@ This is the most important system. Teachers use it every day to mark attendance.
 ### Attendance Repository (`src/repositories/attendanceRepository.js`)
 
 ```javascript
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // Mark attendance for ONE student
 async function createAttendance(studentId, classroomId, date, status, markedBy) {
@@ -1855,7 +1858,7 @@ async function findExistingAttendance(studentId, date) {
   return existing;
 }
 
-module.exports = {
+export {
   createAttendance,
   findAttendanceByClassroomAndDate,
   findAttendanceByStudentId,
@@ -1870,7 +1873,7 @@ module.exports = {
 ### Attendance Service (`src/services/attendanceService.js`)
 
 ```javascript
-const attendanceRepository = require("../repositories/attendanceRepository");
+import * as attendanceRepository from "../repositories/attendanceRepository.js";
 
 // Mark attendance for one student
 async function markAttendance(studentId, classroomId, date, status, markedBy) {
@@ -1977,7 +1980,7 @@ async function getAttendanceByStudentId(studentId) {
   };
 }
 
-module.exports = {
+export {
   markAttendance,
   markBulkAttendance,
   getAttendanceByClassroomAndDate,
@@ -2003,7 +2006,7 @@ flowchart TD
 ### Attendance Controller (`src/controllers/attendanceController.js`)
 
 ```javascript
-const attendanceService = require("../services/attendanceService");
+import * as attendanceService from "../services/attendanceService.js";
 
 // POST /api/attendance
 async function markAttendance(req, res) {
@@ -2094,7 +2097,7 @@ async function getAttendanceByStudent(req, res) {
   }
 }
 
-module.exports = {
+export {
   markAttendance,
   markBulkAttendance,
   getAttendanceByClassroom,
@@ -2109,25 +2112,25 @@ module.exports = {
 ### Attendance Routes (`src/routes/attendanceRoutes.js`)
 
 ```javascript
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const attendanceController = require("../controllers/attendanceController");
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { markAttendance, markBulkAttendance, getAttendanceByClassroom, getAttendanceByStudent } from "../controllers/attendanceController.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // Teacher or Admin: mark attendance for one student
-router.post("/", verifyToken, authorizeRoles("admin", "teacher"), attendanceController.markAttendance);
+router.post("/", verifyToken, authorizeRoles("admin", "teacher"), markAttendance);
 
 // Teacher or Admin: mark attendance for many students at once
-router.post("/bulk", verifyToken, authorizeRoles("admin", "teacher"), attendanceController.markBulkAttendance);
+router.post("/bulk", verifyToken, authorizeRoles("admin", "teacher"), markBulkAttendance);
 
 // Any logged-in user: get attendance for a classroom on a date
-router.get("/classroom/:classroomId", verifyToken, attendanceController.getAttendanceByClassroom);
+router.get("/classroom/:classroomId", verifyToken, getAttendanceByClassroom);
 
 // Any logged-in user: get attendance history for a student
-router.get("/student/:studentId", verifyToken, attendanceController.getAttendanceByStudent);
+router.get("/student/:studentId", verifyToken, getAttendanceByStudent);
 
-module.exports = router;
+export default router;
 ```
 
 ---
@@ -2164,17 +2167,17 @@ This is the main file. It brings everything together.
 
 ```javascript
 // Step 1: Load environment variables (MUST be first!)
-require("dotenv").config();
+import "dotenv/config";
 
 // Step 2: Import packages
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
 
 // Step 3: Import our route files
-const authRoutes = require("./routes/authRoutes");
-const classroomRoutes = require("./routes/classroomRoutes");
-const studentRoutes = require("./routes/studentRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
+import authRoutes from "./routes/authRoutes.js";
+import classroomRoutes from "./routes/classroomRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
 
 // Step 4: Create the Express app
 const app = express();
@@ -2214,7 +2217,7 @@ app.listen(PORT, function () {
 
 | Line | What It Does |
 |------|-------------|
-| `require("dotenv").config()` | Loads `.env` file into `process.env`. MUST be first! |
+| `import "dotenv/config"` | Loads `.env` file into `process.env`. MUST be first! |
 | `const app = express()` | Creates a new Express application |
 | `app.use(cors())` | Allows cross-origin requests (fixes CORS errors) |
 | `app.use(express.json())` | Makes Express understand JSON bodies (`req.body`) |
@@ -2812,6 +2815,7 @@ For reference, here is the complete `package.json` with all dependencies:
   "version": "1.0.0",
   "description": "REST API for designHer 2.0 Student Attendance Management System",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"

@@ -6,7 +6,7 @@
 // before saving to the database.
 // ==============================================
 
-const attendanceRepository = require("../repositories/attendanceRepository");
+import * as attendanceRepository from "../repositories/attendanceRepository.js";
 
 // -----------------------------------------------
 // Mark attendance for one student
@@ -99,7 +99,7 @@ async function markBulkAttendance(attendanceList, markedBy) {
 
   return {
     success: true,
-    message: `Attendance processed. ${results.length} saved, ${errors.length} errors.`,
+    message: results.length + " saved, " + errors.length + " errors.",
     data: {
       saved: results,
       errors: errors,
@@ -144,7 +144,7 @@ async function getAttendanceByStudentId(studentId) {
   };
 }
 
-module.exports = {
+export {
   markAttendance,
   markBulkAttendance,
   getAttendanceByClassroomAndDate,

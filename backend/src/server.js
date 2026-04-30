@@ -8,17 +8,17 @@
 
 // Step 1: Load environment variables from .env file
 // This MUST be the very first thing we do!
-require("dotenv").config();
+import "dotenv/config";
 
 // Step 2: Import packages
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
 
 // Step 3: Import our route files
-const authRoutes = require("./routes/authRoutes");
-const classroomRoutes = require("./routes/classroomRoutes");
-const studentRoutes = require("./routes/studentRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
+import authRoutes from "./routes/authRoutes.js";
+import classroomRoutes from "./routes/classroomRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
 
 // Step 4: Create the Express app
 const app = express();

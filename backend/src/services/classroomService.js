@@ -5,7 +5,7 @@
 // It validates data and uses the repository.
 // ==============================================
 
-const classroomRepository = require("../repositories/classroomRepository");
+import * as classroomRepository from "../repositories/classroomRepository.js";
 
 // -----------------------------------------------
 // Create a new classroom
@@ -76,7 +76,7 @@ async function getClassroomsByTeacherId(teacherId) {
   };
 }
 
-module.exports = {
+export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,

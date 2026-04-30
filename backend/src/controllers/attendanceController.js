@@ -2,7 +2,7 @@
 // Attendance Controller — Handles HTTP for Attendance
 // ==============================================
 
-const attendanceService = require("../services/attendanceService");
+import * as attendanceService from "../services/attendanceService.js";
 
 // -----------------------------------------------
 // POST /api/attendance
@@ -116,7 +116,7 @@ async function getAttendanceByStudent(req, res) {
   }
 }
 
-module.exports = {
+export {
   markAttendance,
   markBulkAttendance,
   getAttendanceByClassroom,

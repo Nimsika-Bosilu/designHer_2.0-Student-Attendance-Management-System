@@ -5,7 +5,7 @@
 // It validates data and uses the repository.
 // ==============================================
 
-const studentRepository = require("../repositories/studentRepository");
+import * as studentRepository from "../repositories/studentRepository.js";
 
 // -----------------------------------------------
 // Create a new student
@@ -81,7 +81,7 @@ async function getStudentsByClassroomId(classroomId) {
   };
 }
 
-module.exports = {
+export {
   createStudent,
   getAllStudents,
   getStudentById,

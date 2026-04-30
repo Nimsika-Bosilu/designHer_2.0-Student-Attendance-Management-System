@@ -7,16 +7,16 @@
 // It uses jsonwebtoken to create login tokens.
 // ==============================================
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const authRepository = require("../repositories/authRepository");
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { findUserByEmail, createUser, findAllUsers } from "../repositories/authRepository.js";
 
 // -----------------------------------------------
 // Register a new user
 // -----------------------------------------------
 async function registerUser(name, email, password, role) {
   // Step 1: Check if a user with this email already exists
-  const existingUser = await authRepository.findUserByEmail(email);
+  const existingUser = await findUserByEmail(email);
   if (existingUser) {
     return {
       success: false,
@@ -30,7 +30,7 @@ async function registerUser(name, email, password, role) {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   // Step 3: Save the new user to the database
-  const newUser = await authRepository.createUser(name, email, hashedPassword, role);
+  const newUser = await createUser(name, email, hashedPassword, role);
 
   // Step 4: Return success (but do NOT return the password!)
   return {
@@ -50,7 +50,7 @@ async function registerUser(name, email, password, role) {
 // -----------------------------------------------
 async function loginUser(email, password) {
   // Step 1: Find the user by email
-  const user = await authRepository.findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user) {
     return {
       success: false,
@@ -100,7 +100,7 @@ async function loginUser(email, password) {
 // Get all users (for admin)
 // -----------------------------------------------
 async function getAllUsers() {
-  const users = await authRepository.findAllUsers();
+  const users = await findAllUsers();
   return {
     success: true,
     message: "Users retrieved successfully.",
@@ -108,7 +108,7 @@ async function getAllUsers() {
   };
 }
 
-module.exports = {
+export {
   registerUser,
   loginUser,
   getAllUsers,

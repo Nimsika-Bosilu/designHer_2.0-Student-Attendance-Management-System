@@ -6,7 +6,7 @@
 // to do the actual work.
 // ==============================================
 
-const authService = require("../services/authService");
+import { registerUser, loginUser, getAllUsers } from "../services/authService.js";
 
 // -----------------------------------------------
 // POST /api/auth/register
@@ -30,7 +30,7 @@ async function register(req, res) {
     }
 
     // Call the service to register the user
-    const result = await authService.registerUser(name, email, password, role);
+    const result = await registerUser(name, email, password, role);
 
     // If registration failed (e.g., email already exists)
     if (!result.success) {
@@ -69,7 +69,7 @@ async function login(req, res) {
     }
 
     // Call the service to login
-    const result = await authService.loginUser(email, password);
+    const result = await loginUser(email, password);
 
     // If login failed (wrong email or password)
     if (!result.success) {
@@ -94,7 +94,7 @@ async function login(req, res) {
 // -----------------------------------------------
 async function getUsers(req, res) {
   try {
-    const result = await authService.getAllUsers();
+    const result = await getAllUsers();
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get users error:", error);
@@ -131,7 +131,7 @@ async function getMe(req, res) {
   }
 }
 
-module.exports = {
+export {
   register,
   login,
   getUsers,

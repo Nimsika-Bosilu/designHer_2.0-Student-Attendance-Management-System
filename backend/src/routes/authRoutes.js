@@ -5,27 +5,27 @@
 // It connects each URL to the right controller function.
 // ==============================================
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
 // Import controller
-const authController = require("../controllers/authController");
+import { register, login, getUsers, getMe } from "../controllers/authController.js";
 
 // Import middleware
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // -----------------------------------------------
 // Public routes (no login needed)
 // -----------------------------------------------
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+router.post("/register", register);
+router.post("/login", login);
 
 // -----------------------------------------------
 // Protected routes (login needed)
 // -----------------------------------------------
-router.get("/me", verifyToken, authController.getMe);
+router.get("/me", verifyToken, getMe);
 
 // Admin only route
-router.get("/users", verifyToken, authorizeRoles("admin"), authController.getUsers);
+router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
 
-module.exports = router;
+export default router;

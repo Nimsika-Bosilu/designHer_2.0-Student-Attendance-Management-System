@@ -2,7 +2,7 @@
 // Classroom Controller — Handles HTTP for Classrooms
 // ==============================================
 
-const classroomService = require("../services/classroomService");
+import * as classroomService from "../services/classroomService.js";
 
 // -----------------------------------------------
 // POST /api/classrooms
@@ -95,7 +95,7 @@ async function getClassroomsByTeacher(req, res) {
   }
 }
 
-module.exports = {
+export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,

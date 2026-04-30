@@ -5,7 +5,7 @@
 // classrooms. It ONLY talks to the database.
 // ==============================================
 
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // -----------------------------------------------
 // Create a new classroom
@@ -76,7 +76,7 @@ async function findClassroomsByTeacherId(teacherId) {
   return classrooms;
 }
 
-module.exports = {
+export {
   createClassroom,
   findAllClassrooms,
   findClassroomById,

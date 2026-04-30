@@ -6,7 +6,7 @@
 // If no, the request is rejected with 401.
 // ==============================================
 
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 // -----------------------------------------------
 // verifyToken — Checks if the user is logged in
@@ -79,7 +79,7 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
-module.exports = {
+export {
   verifyToken,
   authorizeRoles,
 };

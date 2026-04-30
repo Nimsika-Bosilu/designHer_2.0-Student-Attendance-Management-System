@@ -7,10 +7,10 @@
 // ==============================================
 
 // Import PrismaClient from the Prisma package
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 
 // Create a new Prisma client instance
 const prisma = new PrismaClient();
 
 // Export it so other files can use it
-module.exports = prisma;
+export default prisma;

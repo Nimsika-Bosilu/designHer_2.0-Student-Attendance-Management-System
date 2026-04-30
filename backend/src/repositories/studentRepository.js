@@ -5,7 +5,7 @@
 // students. It ONLY talks to the database.
 // ==============================================
 
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // -----------------------------------------------
 // Create a new student
@@ -67,7 +67,7 @@ async function findStudentsByClassroomId(classroomId) {
   return students;
 }
 
-module.exports = {
+export {
   createStudent,
   findAllStudents,
   findStudentById,

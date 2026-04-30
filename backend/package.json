@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "REST API for designHer 2.0 Student Attendance Management System",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"

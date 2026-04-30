@@ -5,7 +5,7 @@
 // attendance records. It ONLY talks to the database.
 // ==============================================
 
-const prisma = require("../config/db");
+import prisma from "../config/db.js";
 
 // -----------------------------------------------
 // Mark attendance for ONE student
@@ -81,7 +81,7 @@ async function findExistingAttendance(studentId, date) {
   return existing;
 }
 
-module.exports = {
+export {
   createAttendance,
   findAttendanceByClassroomAndDate,
   findAttendanceByStudentId,

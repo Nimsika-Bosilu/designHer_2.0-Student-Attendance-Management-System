@@ -2,29 +2,34 @@
 // Student Routes — /api/students
 // ==============================================
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
 // Import controller
-const studentController = require("../controllers/studentController");
+import {
+  createStudent,
+  getAllStudents,
+  getStudentById,
+  getStudentsByClassroom,
+} from "../controllers/studentController.js";
 
 // Import middleware
-const { verifyToken, authorizeRoles } = require("../middlewares/authMiddleware");
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 // -----------------------------------------------
 // All student routes need login (verifyToken)
 // -----------------------------------------------
 
 // Admin or Teacher: create a new student
-router.post("/", verifyToken, authorizeRoles("admin", "teacher"), studentController.createStudent);
+router.post("/", verifyToken, authorizeRoles("admin", "teacher"), createStudent);
 
 // Any logged-in user: get all students
-router.get("/", verifyToken, studentController.getAllStudents);
+router.get("/", verifyToken, getAllStudents);
 
 // Any logged-in user: get one student by ID
-router.get("/:id", verifyToken, studentController.getStudentById);
+router.get("/:id", verifyToken, getStudentById);
 
 // Any logged-in user: get students in a classroom
-router.get("/classroom/:classroomId", verifyToken, studentController.getStudentsByClassroom);
+router.get("/classroom/:classroomId", verifyToken, getStudentsByClassroom);
 
-module.exports = router;
+export default router;

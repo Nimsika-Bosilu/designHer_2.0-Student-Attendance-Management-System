@@ -2,7 +2,7 @@
 // Student Controller — Handles HTTP for Students
 // ==============================================
 
-const studentService = require("../services/studentService");
+import * as studentService from "../services/studentService.js";
 
 // -----------------------------------------------
 // POST /api/students
@@ -98,7 +98,7 @@ async function getStudentsByClassroom(req, res) {
   }
 }
 
-module.exports = {
+export {
   createStudent,
   getAllStudents,
   getStudentById,
