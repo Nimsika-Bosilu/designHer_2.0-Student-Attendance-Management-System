@@ -10,20 +10,35 @@
 // This MUST be the very first thing we do!
 import "dotenv/config";
 
-// Step 2: Import packages
+// Step 2: Validate required environment variables (Fail-Fast!)
+// If any are missing, stop the server immediately with a clear message.
+const requiredEnvVars = ["DATABASE_URL", "JWT_SECRET"];
+const missingVars = requiredEnvVars.filter(function (varName) {
+  return !process.env[varName];
+});
+
+if (missingVars.length > 0) {
+  console.error("❌ Missing required environment variables:");
+  console.error("   " + missingVars.join(", "));
+  console.error("");
+  console.error("   Please check your .env file!");
+  process.exit(1); // Stop the server immediately
+}
+
+// Step 3: Import packages
 import express from "express";
 import cors from "cors";
 
-// Step 3: Import our route files
+// Step 4: Import our route files
 import authRoutes from "./routes/authRoutes.js";
 import classroomRoutes from "./routes/classroomRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 
-// Step 4: Create the Express app
+// Step 5: Create the Express app
 const app = express();
 
-// Step 5: Add middleware
+// Step 6: Add middleware
 // -----------------------------------------------
 // cors() — Allows the React frontend to talk to this backend
 // Without this, the browser will BLOCK the requests!
@@ -37,7 +52,7 @@ app.use(cors());
 // -----------------------------------------------
 app.use(express.json());
 
-// Step 6: Connect routes
+// Step 7: Connect routes
 // All auth routes start with /api/auth
 app.use("/api/auth", authRoutes);
 
@@ -50,7 +65,7 @@ app.use("/api/students", studentRoutes);
 // All attendance routes start with /api/attendance
 app.use("/api/attendance", attendanceRoutes);
 
-// Step 7: A simple test route
+// Step 8: A simple test route
 // Visit http://localhost:5000/ to check if the server is running
 app.get("/", function (req, res) {
   res.json({
@@ -60,7 +75,7 @@ app.get("/", function (req, res) {
   });
 });
 
-// Step 8: Start the server
+// Step 9: Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, function () {
   console.log("");

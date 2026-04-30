@@ -1400,6 +1400,16 @@ sequenceDiagram
 
 Now we follow the exact same pattern: Repository → Service → Controller → Routes. From here on, you already know the theory. Let's code!
 
+**📂 Files we will create in this step:**
+
+```
+src/
+├── repositories/classroomRepository.js   (Layer 1 — Database)
+├── services/classroomService.js           (Layer 2 — Logic)
+├── controllers/classroomController.js     (Layer 3 — HTTP)
+└── routes/classroomRoutes.js              (Layer 4 — URLs)
+```
+
 ### Classroom Repository (`src/repositories/classroomRepository.js`)
 
 ```javascript
@@ -1556,6 +1566,16 @@ export default router;
 
 ## 11. 👩‍🎓 Step 10 — Building the Student System
 
+**📂 Files we will create in this step:**
+
+```
+src/
+├── repositories/studentRepository.js     (Layer 1 — Database)
+├── services/studentService.js             (Layer 2 — Logic)
+├── controllers/studentController.js       (Layer 3 — HTTP)
+└── routes/studentRoutes.js                (Layer 4 — URLs)
+```
+
 ### Student Repository (`src/repositories/studentRepository.js`)
 
 ```javascript
@@ -1697,6 +1717,16 @@ export default router;
 ## 12. 📝 Step 11 — Building the Attendance System
 
 This is the most important system. Teachers use it every day to mark attendance.
+
+**📂 Files we will create in this step:**
+
+```
+src/
+├── repositories/attendanceRepository.js   (Layer 1 — Database)
+├── services/attendanceService.js           (Layer 2 — Logic)
+├── controllers/attendanceController.js     (Layer 3 — HTTP)
+└── routes/attendanceRoutes.js              (Layer 4 — URLs)
+```
 
 ### Attendance Repository (`src/repositories/attendanceRepository.js`)
 
@@ -1924,36 +1954,82 @@ flowchart LR
 
 ### Now Let's Create the Server File
 
+But first, one more problem to solve...
+
+### ❌ The Problem — Silent Failures from Missing .env Variables
+
+Imagine a student forgets to add `JWT_SECRET` to their `.env` file. What happens?
+
+```mermaid
+flowchart TD
+    A["Student runs: npm run dev"] --> B["Server starts successfully! ✅"]
+    B --> C["Student thinks everything is fine 😊"]
+    C --> D["Student tries to login..."]
+    D --> E["💥 CRASH: secretOrPrivateKey\nmust have a value"]
+    E --> F["😱 Student spends 30 minutes\ndebugging the wrong file"]
+```
+
+The server starts fine because it doesn't need `JWT_SECRET` at startup — it only needs it when someone actually tries to login. This means the error appears **much later**, in a completely different part of the code. Very confusing for beginners!
+
+### ✅ The Solution — Fail-Fast Validation
+
+**Fail-Fast** means: "If something is wrong, fail IMMEDIATELY with a clear error message." Don't wait until later when it will be confusing.
+
+We add a check at the very top of `server.js`. If required environment variables are missing, the server refuses to start and tells you exactly what is wrong:
+
+```mermaid
+flowchart TD
+    A["Server starts"] --> B{"Are all .env\nvariables present?"}
+    B -->|"Yes ✅"| C["Continue starting...\nServer runs normally"]
+    B -->|"No ❌"| D["console.error: Missing variables!"]
+    D --> E["process.exit(1)\nServer stops immediately"]
+    E --> F["Student sees the error RIGHT AWAY\nand knows exactly what to fix ✅"]
+```
+
 Create `src/server.js`:
 
 ```javascript
 // Step 1: Load environment variables (MUST be first!)
 import "dotenv/config";
 
-// Step 2: Import packages
+// Step 2: Validate required environment variables (Fail-Fast!)
+const requiredEnvVars = ["DATABASE_URL", "JWT_SECRET"];
+const missingVars = requiredEnvVars.filter(function (varName) {
+  return !process.env[varName];
+});
+
+if (missingVars.length > 0) {
+  console.error("❌ Missing required environment variables:");
+  console.error("   " + missingVars.join(", "));
+  console.error("");
+  console.error("   Please check your .env file!");
+  process.exit(1); // Stop the server immediately
+}
+
+// Step 3: Import packages
 import express from "express";
 import cors from "cors";
 
-// Step 3: Import our route files
+// Step 4: Import our route files
 import authRoutes from "./routes/authRoutes.js";
 import classroomRoutes from "./routes/classroomRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 
-// Step 4: Create the Express app
+// Step 5: Create the Express app
 const app = express();
 
-// Step 5: Add middleware
+// Step 6: Add middleware
 app.use(cors());          // Allow React frontend to connect
 app.use(express.json());  // Parse JSON request bodies
 
-// Step 6: Connect routes
+// Step 7: Connect routes
 app.use("/api/auth", authRoutes);
 app.use("/api/classrooms", classroomRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
-// Step 7: Test route
+// Step 8: Test route
 app.get("/", function (req, res) {
   res.json({
     success: true,
@@ -1962,7 +2038,7 @@ app.get("/", function (req, res) {
   });
 });
 
-// Step 8: Start the server
+// Step 9: Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, function () {
   console.log("");
