@@ -79,12 +79,19 @@ function MarkAttendancePage() {
     });
 
     try {
-      await apiClient.post("/attendance/bulk", {
+      const response = await apiClient.post("/attendance/bulk", {
         attendanceList: records
       });
       
-      setMessage("✅ Attendance marked successfully!");
-      setStudents([]); // Clear the table on success
+      const responseMessage = response.data.message;
+      const errors = response.data.data ? response.data.data.errors : [];
+      
+      if (errors && errors.length > 0) {
+        setMessage("⚠️ " + responseMessage);
+      } else {
+        setMessage("✅ Attendance marked successfully!");
+        setStudents([]); // Clear the table on full success
+      }
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setMessage("❌ " + err.response.data.message);
