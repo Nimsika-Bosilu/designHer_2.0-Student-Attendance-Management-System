@@ -53,10 +53,19 @@ frontend/
 
 > ⚠️ **What could go wrong?**
 > If you put a "Page" file inside the `components` folder, React won't crash, but you will get very confused later. Stick to the LEGO bags!
+> 
+> If your backend is on a different port than 5000, you will get a CORS error. Open apiClient.js and change the baseURL port.
 
 ### Step 1: Initialize the Project
 
 Run these exact commands in your terminal to set up the React app using Vite:
+
+> 🚨 DO THIS FIRST — before creating any files:
+> npm create vite@latest frontend -- --template react
+> cd frontend
+> npm install axios react-router-dom
+>
+> If you skip this, NOTHING will work. Every import will fail.
 
 ```bash
 # Create the Vite project
@@ -153,6 +162,8 @@ export default apiClient;
 
 > ⚠️ **What could go wrong?**
 > If you spell `Authorization` wrong (like `Auth` or `authorisation`), the backend will reject every request with a `401 Unauthorized` error because it can't find the token!
+> 
+> If you see 'Cannot find module axios', you forgot to run npm install axios. Stop the server, run it, then restart.
 
 ---
 
@@ -420,6 +431,12 @@ flowchart TD
 
 JavaScript is an **impatient friend**. You ask it to call the API, but it doesn't wait — it moves on immediately. `await` grabs their arm: "SIT. WAIT for the backend."
 
+| Situation | Code | What happens |
+|-----------|------|-------------|
+| Without await | `const res = apiClient.post(...)` | res is undefined. JS moved on. |
+| With await | `const res = await apiClient.post(...)` | JS waits. res has real data. |
+| Rule | Always use await before apiClient calls | Never skip it. |
+
 #### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
@@ -500,6 +517,8 @@ export default LoginPage;
 
 > ⚠️ **What could go wrong?**
 > If you get `ERR_CONNECTION_REFUSED`, your backend (Port 5000) is not running!
+> 
+> If the login form submits but nothing happens, open F12 Network tab. If you see ERR_CONNECTION_REFUSED, your backend is not running.
 
 ---
 
@@ -624,6 +643,8 @@ export default DashboardPage;
 
 > ⚠️ **What could go wrong?**
 > Forgetting the `[]` array at the end of `useEffect` is the #1 mistake beginners make. Your computer fans will spin up as your app sends 10,000 requests to the backend!
+> 
+> If you see 'Cannot read properties of undefined (reading length)', the API returned something unexpected. Check F12 Network tab — look at the actual response JSON.
 
 ---
 
@@ -786,6 +807,26 @@ This is the big one! Instead of marking students one by one, we fetch a whole cl
 
 #### UX Upgrade (Dropdowns)
 We don't want teachers typing a random Classroom ID (like `12`). They won't remember it! Instead, we fetch all classrooms on page load and put them in a `<select>` dropdown.
+
+#### How attendanceData Works — Dynamic Keys Explained
+
+Normal objects have fixed keys:
+  `const obj = { name: "Nimal" }`  // "name" is hardcoded
+
+Dynamic keys let us use a VARIABLE as the key:
+  `const studentId = 1`
+  `const obj = { [studentId]: "present" }`
+  // Result: `{ 1: "present" }`
+
+So when a teacher clicks "Present" for student 3:
+  `handleStatusChange(3, "present")`
+  // attendanceData becomes: `{ 1: "present", 2: "present", 3: "present" }`
+
+When they click "Absent" for student 2:
+  `handleStatusChange(2, "absent")`
+  // attendanceData becomes: `{ 1: "present", 2: "absent", 3: "present" }`
+
+Each student gets their OWN slot in the object, identified by their ID.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -995,6 +1036,8 @@ export default MarkAttendancePage;
 
 > ⚠️ **What could go wrong?**
 > If you don't use `parseInt()` when sending `classroomId` and `studentId` to the backend, Prisma will throw an error because it expects numbers, but HTML inputs always return strings!
+> 
+> If attendance submits but the backend returns an error, check that every record in attendanceList has studentId, classroomId, date, and status. One missing field breaks the whole submission.
 
 ---
 
