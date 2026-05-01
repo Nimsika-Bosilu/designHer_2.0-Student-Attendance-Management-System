@@ -59,10 +59,27 @@ This allows our computer to understand and run JavaScript outside of a web brows
 - 📥 **Download:** [nodejs.org](https://nodejs.org/) (Download the "LTS" version)
 - *Check if it works:* Open your computer's terminal (or command prompt) and type `node -v`. It should print a version number!
 
-### 3. XAMPP (The Database Server)
-We need a place to store our data. XAMPP gives us a local MySQL database server.
-- 📥 **Download:** [apachefriends.org/download.html](https://www.apachefriends.org/download.html)
-- *How to use:* Open the XAMPP Control Panel and click **"Start"** next to **MySQL**.
+### 3. MySQL Database
+We need a place to securely store our students' data. We will install the native MySQL server and **MySQL Workbench** (a great visual tool to see your database tables).
+
+**🪟 Windows:**
+1. Download the [MySQL Installer for Windows](https://dev.mysql.com/downloads/installer/).
+2. Run the installer and choose the **"Developer Default"** or **"Full"** setup (this automatically includes MySQL Workbench).
+3. Follow the prompts to configure it and set a root password (write this password down!).
+
+**🍎 Mac:**
+1. Download the [MySQL Community Server DMG](https://dev.mysql.com/downloads/mysql/) and the [MySQL Workbench DMG](https://dev.mysql.com/downloads/workbench/) for macOS.
+2. Install both applications. During the MySQL Server installation, choose the standard setup and set your root password.
+3. Open MySQL Workbench to connect to your local server!
+
+**🐧 Ubuntu / Debian Linux:**
+Open your terminal and run the following commands to install the server and the visual workbench tool:
+```bash
+sudo apt update
+sudo apt install mysql-server mysql-workbench
+sudo systemctl start mysql.service
+```
+*(Note: After installation, you may need to run `sudo mysql_secure_installation` to set your root password).*
 
 ---
 
