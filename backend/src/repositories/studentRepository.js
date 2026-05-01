@@ -67,9 +67,33 @@ async function findStudentsByClassroomId(classroomId) {
   return students;
 }
 
+// -----------------------------------------------
+// Get all students for a specific teacher
+// -----------------------------------------------
+async function findStudentsByTeacherId(teacherId) {
+  const students = await prisma.student.findMany({
+    where: {
+      classroom: {
+        teacherId: teacherId,
+      },
+    },
+    include: {
+      classroom: {
+        select: {
+          id: true,
+          name: true,
+          section: true,
+        },
+      },
+    },
+  });
+  return students;
+}
+
 export {
   createStudent,
   findAllStudents,
   findStudentById,
   findStudentsByClassroomId,
+  findStudentsByTeacherId,
 };

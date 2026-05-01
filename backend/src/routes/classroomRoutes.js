@@ -11,6 +11,7 @@ import {
   getAllClassrooms,
   getClassroomById,
   getClassroomsByTeacher,
+  updateClassroom,
 } from "../controllers/classroomController.js";
 
 // Import middleware
@@ -31,5 +32,8 @@ router.get("/:id", verifyToken, getClassroomById);
 
 // Any logged-in user: get classrooms for a specific teacher
 router.get("/teacher/:teacherId", verifyToken, getClassroomsByTeacher);
+
+// Admin only: update a classroom (rename or reassign teacher)
+router.put("/:id", verifyToken, authorizeRoles("admin"), updateClassroom);
 
 export default router;

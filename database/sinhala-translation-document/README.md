@@ -1,11 +1,11 @@
-# 📚 Student Attendance Management System — Database Guide
+# 📚 Student Attendance Management System — Database Guide (දත්ත සමුදාය)
 
-> **designHer Bootcamp එකේ Day 1**
-> අද අපි මුල ඉඳන්ම MySQL database එකක් design කරලා build කරන විදිහ ඉගෙනගන්නවා!
+> **Day 1 of designHer Bootcamp**
+> අද අපි මුල සිටම MySQL Database එකක් design කරලා හදන විදිහ ඉගෙන ගනිමු!
 
 ---
 
-## 📖 Table of Contents
+## 📖 Table of Contents (පටුන)
 
 1. [Project Overview & Tech Stack](#1--project-overview--tech-stack)
 2. [Introduction to Databases](#2--introduction-to-databases)
@@ -19,127 +19,127 @@
 
 ## 1. 🎯 Project Overview & Tech Stack
 
-### What are we building? (අපි මොකක්ද මේ හදන්නේ?)
+### අපි මොකක්ද මේ හදන්නේ?
 
-අපි හදන්නේ **Student Attendance Management System** එකක්. මේක හරියට digital attendance register එකක් වගේ කියලා හිතන්න.
+අපි හදන්නේ **Student Attendance Management System** එකක් (සිසුන්ගේ පැමිණීම සටහන් කරන පද්ධතියක්). මේක හරියට ඩිජිටල් attendance register එකක් වගේ.
 
-- **Admins** ලට classrooms සහ teacher accounts හදන්න පුළුවන්.
-- **Teachers** ලව classrooms වලට assign කරනවා. එයාලට students ලව add කරන්න පුළුවන්.
-- **Teachers** ලා හැමදාම attendance mark කරනවා — Present, Absent, හෝ Late.
-- එක student කෙනෙක්ට දවසකට තියෙන්න පුළුවන් **එක** attendance record එකයි.
+- **Admins** ලට පුළුවන් classrooms සහ teacher accounts හදන්න.
+- **Teachers** ලව classrooms වලට assign කරනවා. එයාලට පුළුවන් students ලව add කරන්න.
+- **Teachers** හැමදාම attendance mark කරනවා — Present, Absent, හෝ Late විදිහට.
+- එක student කෙනෙකුට දවසකට තියෙන්න පුළුවන් **එක** attendance record එකක් විතරයි.
 
-### Our Tech Stack (අපේ Tech Stack එක)
+### අපේ Tech Stack එක
 
-මේ දවස් 3 ඇතුලත, අපි මේ technologies එකට පාවිච්චි කරනවා:
+මේ දවස් 3 ඇතුළත, අපි මේ technologies එකට පාවිච්චි කරනවා:
 
 ```mermaid
 flowchart LR
-    A["🖥️ React\n(Frontend)"] -->|"requests යවනවා"| B["⚙️ Node.js & Express\n(Backend API)"]
+    A["🖥️ React\n(Frontend)"] -->|"sends requests"| B["⚙️ Node.js & Express\n(Backend API)"]
     B -->|"uses"| C["🔷 Prisma ORM\n(Query Builder)"]
     C -->|"reads/writes"| D["🐬 MySQL\n(Database)"]
 ```
 
-**How does this flow work? (මේක වැඩ කරන්නේ කොහොමද?)**
+**මේ flow එක වැඩ කරන්නේ කොහොමද?**
 
-| Layer | What it does | Simple Analogy |
+| Layer | කරන්නේ මොකක්ද? | Simple Analogy (උදාහරණයක්) |
 |-------|-------------|----------------|
-| **React** | User interface එක. ඔයාට පේන සහ ඔයා click කරන දේවල්. | Restaurant එකක තියෙන *menu card* එක වගේ. |
-| **Node.js & Express** | Backend server එක. එයා requests භාරගෙන responses යවනවා. | ඔයාගේ order එක කුස්සියට අරන් යන *waiter* වගේ. |
-| **Prisma ORM** | Node.js එකට ලේසියෙන් database එකත් එක්ක කතා කරන්න උදව් කරන tool එකක්. | Waiter සහ chef (කෝකියා) අතර ඉන්න *translator* (පරිවර්තකයා) කෙනෙක් වගේ. |
-| **MySQL** | Database එක. අපේ ඔක්කොම data ස්ථිරවම (permanently) store කරන්නේ මෙතන. | ඔක්කොම කළමනා තියාගෙන ඉන්න *කුස්සියේ ගබඩාව (storage room)* වගේ. |
+| **React** | මේක තමයි User Interface එක. ඔයාට පේන සහ click කරන දේවල්. | Restaurant එකක තියෙන *menu card* එක වගේ. |
+| **Node.js & Express** | මේක තමයි Backend Server එක. මේක requests අරගෙන responses යවනවා. | ඔයාගේ order එක කුස්සියට අරන් යන *waiter* වගේ. |
+| **Prisma ORM** | Node.js එකට ලේසියෙන්ම database එකත් එක්ක කතා කරන්න උදව් කරන tool එකක්. | Waiter සහ chef අතර ඉන්න *translator* කෙනෙක් වගේ. |
+| **MySQL** | මේක තමයි Database එක. මේකේ අපේ ඔක්කොම data permanent විදිහට store කරනවා. | හැම බඩුම තියලා තියෙන *kitchen storage room* එක වගේ. |
 
-> **අද (Day 1)**, අපි අවධානය යොමු කරන්නේ **MySQL Database** layer එක ගැන විතරයි. අපි tables design කරනවා, data ඇතුලත් කරනවා, සහ queries ලියනවා.
+> **අද (Day 1)**, අපි focus කරන්නේ **MySQL Database** layer එක ගැන විතරයි. අපි tables design කරනවා, data add කරනවා, සහ queries ලියනවා.
 
 ---
 
-## 2. 🗄️ Introduction to Databases
+## 2. 🗄️ Introduction to Databases (දත්ත සමුදාය යනු කුමක්ද?)
 
-### What is a Database? (Database එකක් කියන්නේ මොකක්ද?)
+### Database එකක් කියන්නේ මොකක්ද?
 
-Database එකක් කියන්නේ අපි data පිළිවෙලකට (organized විදිහට) **store කරන** තැනක්. මේක හරියට server එකක save කරලා තියෙන **ලොකු Excel file එකක්** වගේ කියලා හිතන්න.
+Database එකක් කියන්නේ අපි מסודර විදිහට **data store කරන** තැනක්. මේක හරියට server එකක save කරපු **ලොකු Excel file එකක්** වගේ කියලා හිතන්න.
 
-### What is a Relational Database? (Relational Database එකක් කියන්නේ මොකක්ද?)
+### Relational Database එකක් කියන්නේ මොකක්ද?
 
-**Relational database** එකක් data store කරන්නේ **tables** විදිහටයි. මේ tables එකිනෙකට **connect කරන්න (සම්බන්ධ කරන්න)** පුළුවන්. MySQL කියන්නේ relational database එකක්.
+**Relational database** එකක data store කරන්නේ **tables** විදිහට. මේ tables එකිනෙකට **connect** (related) කරන්න පුළුවන්. MySQL කියන්නේ relational database එකක්.
 
-### What is a Table? (Table එකක් කියන්නේ මොකක්ද?)
+### Table එකක් කියන්නේ මොකක්ද?
 
-Table එකක් පේන්නේ හරියට spreadsheet එකක් වගේ. ඒකෙ **rows** සහ **columns** තියෙනවා.
+Table එකක් පේන්නේ හරියට spreadsheet එකක් වගේ. ඒකේ **rows** සහ **columns** තියෙනවා.
 
 | id | name | email |
 |----|------|-------|
 | 1 | Nimal | nimal@school.com |
 | 2 | Sanduni | sanduni@school.com |
 
-- හැම **column** එකක්ම මොකක් හරි information වර්ගයක් (උදාහරණයක් විදිහට `name`, `email`).
-- හැම **row** එකක්ම එක record එකක් (උදාහරණයක් විදිහට එක teacher කෙනෙක්).
+- හැම **column** එකක්ම යම්කිසි තොරතුරු වර්ගයක් (උදා: `name`, `email`).
+- හැම **row** එකක්ම එක record එකක් (උදා: එක teacher කෙනෙක්).
 
-### What is a Primary Key (PK)? (Primary Key එකක් කියන්නේ මොකක්ද?)
+### Primary Key (PK) කියන්නේ මොකක්ද?
 
-Primary Key එකක් කියන්නේ හැම row එකකටම තියෙන **unique ID** එකක්. කවදාවත් rows දෙකකට එකම Primary Key එක තියෙන්න බෑ.
+Primary Key කියන්නේ හැම row එකකටම තියෙන **unique ID** එකක්. කිසිම rows දෙකකට එකම Primary Key එකක් තියෙන්න බෑ.
 
-> 🎯 **Analogy:** ඔයාගේ **National ID Card number (ජාතික හැඳුනුම්පත් අංකය)** ගැන හිතන්න. හැම කෙනෙක්ටම තියෙන්නේ වෙනස් අංකයක්. ඒක තමයි Primary Key එකක් කියන්නේ.
+> 🎯 **Analogy:** ඔයාගේ **ජාතික හැඳුනුම්පත් අංකය** (NIC) ගැන හිතන්න. හැම කෙනාටම තියෙන්නේ වෙනස් එකක්. ඒක Primary Key එකක්.
 
 අපේ tables වල, `id` column එක තමයි Primary Key එක.
 
-### What is a Foreign Key (FK)? (Foreign Key එකක් කියන්නේ මොකක්ද?)
+### Foreign Key (FK) කියන්නේ මොකක්ද?
 
-Foreign Key එකක් කියන්නේ වෙන table එකක Primary Key එකට **point කරන (පෙන්වන)** column එකකට. ඒකෙන් tables දෙකක් අතර **connection එකක්** හදනවා.
+Foreign Key එකක් කියන්නේ වෙනත් table එකක තියෙන Primary Key එකකට **point කරන** column එකකට. මේකෙන් tables දෙකක් අතර **connection** එකක් හැදෙනවා.
 
-> 🎯 **Analogy:** ඔයාගේ school ID card එකේ "Class" කියලා field එකක් තියෙනවා. ඒ class name එකෙන් ඉස්කෝලේ තියෙන ඇත්ත class එකකට **point කරනවා**. ඒක තමයි Foreign Key එකක් කියන්නේ.
+> 🎯 **Analogy:** ඔයාගේ school ID card එකේ "Class" කියලා තැනක් තියෙනවා. ඒ class name එක ඉස්කෝලේ තියෙන ඇත්තම class එකකට **point කරනවා**. ඒක Foreign Key එකක්.
 
-**Example:** `students` table එකේ `classroom_id` column එකක් තියෙනවා. මේකෙන් `classrooms` table එකේ `id` එකට point කරනවා. දැන් අපි දන්නවා මොන student ඉන්නේ මොන classroom එකේද කියලා.
+**Example:** `students` table එකේ `classroom_id` කියලා column එකක් තියෙනවා. මේක point කරන්නේ `classrooms` table එකේ `id` එකට. දැන් අපිට පුළුවන් කොයි student ද කොයි classroom එකේද ඉන්නේ කියලා හොයාගන්න.
 
 ---
 
 ## 3. 🔗 Understanding Relationships (Crow's Foot Notation)
 
-අපේ database design එක බලන්න කලින්, database diagram එකක් **කියවන්නේ කොහොමද** කියලා ඉගෙනගනිමු.
+අපි database design එක බලන්න කලින්, database diagram එකක් **කියවන්නේ** කොහොමද කියලා ඉගෙන ගමු.
 
-අපි පාවිච්චි කරන්නේ **Crow's Foot Notation** කියලා ක්‍රමයක්. ඒකෙන් පෙන්නනවා tables එකිනෙකට connect වෙලා තියෙන්නේ කොහොමද කියලා.
+අපි මේකට පාවිච්චි කරන්නේ **Crow's Foot Notation**. මේකෙන් පෙන්නනවා tables connect වෙලා තියෙන්නේ කොහොමද කියලා.
 
-### The Three Types of Relationships (සම්බන්ධතා වර්ග 3)
+### Relationships වර්ග 3
 
 #### 1️⃣ One-to-One (1:1)
 
-Table A එකේ තියෙන එක record එකක් Table B එකේ තියෙන **හරියටම එක** record එකකට connect වෙනවා.
+Table A එකේ එක record එකක්, Table B එකේ **හරියටම එක** record එකකට connect වෙනවා.
 
-> 🎯 **Analogy:** එක මනුස්සයෙක්ට තියෙන්නේ **එක** passport එකයි. එක passport එකක් අයිති **එක** මනුස්සයෙක්ට විතරයි.
+> 🎯 **Analogy:** එක පුද්ගලයෙකුට තියෙන්නේ **එක** passport එකයි. එක passport එකක් අයිති වෙන්නේ **එක** පුද්ගලයෙකුට විතරයි.
 
 #### 2️⃣ One-to-Many (1:N)
 
-Table A එකේ තියෙන එක record එකක් Table B එකේ තියෙන **ගොඩක් (many)** records වලට connect වෙනවා.
+Table A එකේ එක record එකක්, Table B එකේ **ගොඩක්** records වලට connect වෙනවා.
 
-> 🎯 **Analogy:** එක **අම්මා කෙනෙක්ට** ළමයි **ගොඩක්** ඉන්න පුළුවන්. හැබැයි හැම ළමයෙක්ටම ඉන්නේ **එක** අම්මා කෙනෙක් විතරයි.
+> 🎯 **Analogy:** එක **අම්මා** කෙනෙකුට **ළමයි ගොඩක්** ඉන්න පුළුවන්. හැබැයි හැම ළමයෙකුටම ඉන්නේ **එක** අම්මා කෙනෙක් විතරයි.
 
-මේක තමයි **ගොඩක්ම පාවිච්චි වෙන** relationship එක. අපි මේක අපේ system එකේ ගොඩක් පාවිච්චි කරනවා!
+මේක තමයි **ගොඩක්ම පාවිච්චි වෙන** relationship එක. අපි අපේ system එකේ මේක ගොඩක් පාවිච්චි කරනවා!
 
 #### 3️⃣ Many-to-Many (M:N)
 
-Table A එකේ තියෙන ගොඩක් records Table B එකේ තියෙන **ගොඩක්** records වලට connect වෙනවා.
+Table A එකේ records ගොඩක්, Table B එකේ records **ගොඩක්** එක්ක connect වෙනවා.
 
-> 🎯 **Analogy:** එක **student** කෙනෙක්ට clubs **ගොඩකට** යන්න පුළුවන්. එක **club** එකක students ලා **ගොඩක්** ඉන්න පුළුවන්.
+> 🎯 **Analogy:** එක **student** කෙනෙකුට **clubs ගොඩකට** යන්න පුළුවන්. එක **club** එකක **students ලා ගොඩක්** ඉන්න පුළුවන්.
 
-> 💡 Database එකකදි, අපි Many-to-Many handle කරන්නේ මේ දෙක මැදට **තුන්වෙනි table එකක්** (junction table කියලා කියනවා) හදලයි.
+> 💡 Database එකකදී, අපි Many-to-Many handle කරන්නේ මැදින් **තව තුන්වෙනි table එකක්** හදලා (මේකට කියන්නේ junction table කියලා).
 
-### How to Read Crow's Foot Symbols (Crow's Foot සලකුණු කියවන්නේ කොහොමද)
+### Crow's Foot Symbols කියවන්නේ කොහොමද
 
-| Symbol | Meaning |
+| Symbol | තේරුම |
 |--------|---------|
-| `\|\|` (තනි ඉරක්) | **One** (හරියටම එකයි) |
-| `o\|` | **Zero or One** (බිංදුවක් හෝ එකයි) |
-| `\|{` or `}o` | **One or Many** (එකක් හෝ ගොඩක්) |
-| `o{` | **Zero or Many** (බිංදුවක් හෝ ගොඩක්) |
+| `\|\|` (තනි ඉර) | **එකයි** (හරියටම එකයි) |
+| `o\|` | **බිංදුවයි හෝ එකයි** |
+| `\|{` හෝ `}o` | **එකයි හෝ ගොඩක්** |
+| `o{` | **බිංදුවයි හෝ ගොඩක්** |
 
-ඔයාට `||--o{` කියලා පෙනුණොත් ඒකේ තේරුම: **One** connects to **Zero or Many** කියන එකයි.
+ඔයා `||--o{` දැක්කොත් ඒකේ තේරුම: **එකක්**, **බිංදුවකට හෝ ගොඩකට** connect වෙනවා කියන එකයි.
 
 ---
 
 ## 4. 📊 Database Design (ERD)
 
-ERD කියන්නේ **Entity-Relationship Diagram**. ඒක අපේ database design එක පෙන්නන පින්තූරයක් වගේ.
+ERD කියන්නේ **Entity-Relationship Diagram** කියන එකට. මේකෙන් අපේ database design එකේ පින්තූරයක් පෙන්නනවා.
 
-මෙන්න අපේ Attendance System එකේ ERD එක:
+මේ තියෙන්නේ අපේ Attendance System එකේ ERD එක:
 
 ```mermaid
 erDiagram
@@ -186,41 +186,41 @@ erDiagram
     }
 ```
 
-### Relationships in Our System Explained (අපේ System එකේ Relationships තේරුම් ගනිමු)
+### අපේ System එකේ Relationships විස්තර කිරීම
 
-| Relationship | Meaning |
+| Relationship | තේරුම |
 |-------------|---------|
-| **users → classrooms** | එක teacher කෙනෙක්ට classrooms **ගොඩක්** උගන්වන්න පුළුවන්. හැම classroom එකකටම ඉන්නේ **එක** teacher කෙනයි. |
-| **classrooms → students** | එක classroom එකක students ලා **ගොඩක්** ඉන්න පුළුවන්. හැම student කෙනෙක්ම අයිති **එක** classroom එකකටයි. |
-| **students → attendance** | එක student කෙනෙක්ට attendance records **ගොඩක්** තියෙන්න පුළුවන් (දවසකට එක ගානේ). හැම attendance record එකක්ම අයිති **එක** student කෙනෙක්ටයි. |
-| **classrooms → attendance** | එක classroom එකක attendance records **ගොඩක්** තියෙන්න පුළුවන්. හැම record එකක්ම අයිති **එක** classroom එකකටයි. |
-| **users → attendance** | එක teacher කෙනෙක්ට attendance records **ගොඩක්** mark කරන්න පුළුවන්. හැම record එකක්ම mark කරන්නේ **එක** teacher කෙනෙක්. |
+| **users → classrooms** | එක teacher කෙනෙකුට classrooms **ගොඩක්** උගන්වන්න පුළුවන්. හැම classroom එකකටම ඉන්නේ **එක** teacher කෙනයි. |
+| **classrooms → students** | එක classroom එකක students ලා **ගොඩක්** ඉන්න පුළුවන්. හැම student කෙනෙක්ම අයිති වෙන්නේ **එක** classroom එකකට විතරයි. |
+| **students → attendance** | එක student කෙනෙකුට attendance records **ගොඩක්** තියෙන්න පුළුවන් (දවසකට එක ගානේ). හැම attendance record එකක්ම අයිති වෙන්නේ **එක** student කෙනෙකුට විතරයි. |
+| **classrooms → attendance** | එක classroom එකක attendance records **ගොඩක්** තියෙන්න පුළුවන්. හැම record එකක්ම අයිති වෙන්නේ **එක** classroom එකකට විතරයි. |
+| **users → attendance** | එක teacher කෙනෙකුට attendance records **ගොඩක්** mark කරන්න පුළුවන්. හැම record එකක්ම mark කරන්නේ **එක** teacher කෙනෙක් විතරයි. |
 
 ---
 
-## 5. 🛠️ Step-by-Step Table Creation
+## 5. 🛠️ Step-by-Step Table Creation (පියවරෙන් පියවර Tables සෑදීම)
 
 > 💡 **මේ section එක පාවිච්චි කරන්නේ කොහොමද:**
 > 1. **MySQL Workbench** open කරන්න.
-> 2. පල්ලෙහා තියෙන හැම code block එකක්ම copy කරගන්න.
-> 3. ඒක paste කරලා run කරන්න ⚡ (lightning bolt) button එක click කරන්න.
-> 4. හැම line එකකින්ම මොකක්ද කරන්නේ කියලා තේරුම් ගන්න පල්ලෙහා තියෙන විස්තරය කියවන්න.
+> 2. පල්ලෙහා තියෙන හැම code block එකක්ම copy කරන්න.
+> 3. ඒක paste කරලා ⚡ lightning bolt button එක click කරලා run කරන්න.
+> 4. ඒ හැම line එකකින්ම මොකක්ද කරන්නේ කියලා තේරුම් ගන්න පල්ලෙහා තියෙන විස්තරය කියවන්න.
 
-### Step 0: Create and Select the Database
+### Step 0: Database එක හදලා Select කිරීම
 
 ```sql
 CREATE DATABASE IF NOT EXISTS attendance_system_db;
 USE attendance_system_db;
 ```
 
-| Line | What it does |
+| Line | කරන්නේ මොකක්ද? |
 |------|-------------|
-| `CREATE DATABASE IF NOT EXISTS attendance_system_db;` | `attendance_system_db` කියලා අලුත් database එකක් හදනවා. `IF NOT EXISTS` කෑල්ලෙන් කියන්නේ: මේක දැනටමත් නැත්නම් විතරක් හදන්න කියන එකයි. මේකෙන් errors එන එක නවත්තනවා. |
-| `USE attendance_system_db;` | MySQL එකට කියනවා: "මට දැන් මේ database එක ඇතුලේ වැඩ කරන්න ඕනේ." මින්පස්සේ run කරන ඔක්කොම commands run වෙන්නේ `attendance_system_db` එක ඇතුලෙයි. |
+| `CREATE DATABASE IF NOT EXISTS attendance_system_db;` | `attendance_system_db` කියලා අලුත් database එකක් හදනවා. `IF NOT EXISTS` කෑල්ලෙන් කියන්නේ: මේක දැනටමත් නැත්නම් විතරක් හදන්න කියලා. මේකෙන් errors එන එක වළක්වනවා. |
+| `USE attendance_system_db;` | MySQL එකට කියනවා: "මට දැන් මේ database එක ඇතුලේ වැඩ කරන්න ඕනේ" කියලා. මින්පස්සේ දෙන ඔක්කොම commands run වෙන්නේ `attendance_system_db` ඇතුළේ. |
 
 ---
 
-### Step 1: Create the `users` Table
+### Step 1: `users` Table එක හැදීම
 
 ```sql
 CREATE TABLE users (
@@ -233,20 +233,20 @@ CREATE TABLE users (
 );
 ```
 
-**Line-by-line explanation (පේළියෙන් පේළියට විස්තර කිරීම):**
+**Line-by-line විස්තරය:**
 
-| Line | What it does |
+| Line | කරන්නේ මොකක්ද? |
 |------|-------------|
-| `id INT AUTO_INCREMENT PRIMARY KEY` | `id` column එකක් හදනවා. `INT` = පූර්ණ සංඛ්‍යාවක්. `AUTO_INCREMENT` = MySQL එකෙන් ඉබේම ඊළඟ අංකය දෙනවා (1, 2, 3...). `PRIMARY KEY` = මේක තමයි හැම row එකකටම තියෙන unique ID එක. |
-| `name VARCHAR(100) NOT NULL` | `name` column එකක් හදනවා. `VARCHAR(100)` = අකුරු 100ක් දක්වා තියෙන text එකක්. `NOT NULL` = මේ field එක හිස්ව තියන්න **බෑ**. |
-| `email VARCHAR(150) NOT NULL UNIQUE` | `UNIQUE` = users ලා දෙන්නෙක්ට එකම email එක තියෙන්න බෑ. |
-| `password VARCHAR(255) NOT NULL` | Password එක store කරනවා. අපි `VARCHAR(255)` පාවිච්චි කරන්නේ hash කරපු passwords ගොඩක් දිග නිසයි. |
+| `id INT AUTO_INCREMENT PRIMARY KEY` | `id` column එකක් හදනවා. `INT` = පූර්ණ සංඛ්‍යා (whole numbers). `AUTO_INCREMENT` = MySQL එකෙන් ඉබේම ඊළඟ අංකය දෙනවා (1, 2, 3...). `PRIMARY KEY` = මේක තමයි හැම row එකකටම තියෙන unique ID එක. |
+| `name VARCHAR(100) NOT NULL` | `name` column එකක් හදනවා. `VARCHAR(100)` = අකුරු 100ක් දක්වා ලියන්න පුළුවන්. `NOT NULL` = මේ field එක හිස්ව (empty) තියන්න **බෑ**. |
+| `email VARCHAR(150) NOT NULL UNIQUE` | `UNIQUE` = users දෙන්නෙකුට එකම email එක තියෙන්න බෑ. |
+| `password VARCHAR(255) NOT NULL` | Password එක store කරනවා. අපි `VARCHAR(255)` පාවිච්චි කරන්නේ hashed passwords ගොඩක් දිග නිසා. |
 | `role ENUM('admin', 'teacher') NOT NULL DEFAULT 'teacher'` | `ENUM` = value එක වෙන්න පුළුවන් `'admin'` හෝ `'teacher'` **විතරයි**. වෙන මුකුත් බෑ. `DEFAULT 'teacher'` = role එකක් දුන්නේ නැත්නම්, ඒක ඉබේම `'teacher'` වෙනවා. |
-| `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP` | Record එක හදපු වෙලාව store කරනවා. `DEFAULT CURRENT_TIMESTAMP` = MySQL එකෙන් ඉබේම දැනට තියෙන දවසයි වෙලාවයි save කරනවා. |
+| `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP` | මේ record එක හැදුවේ කවදද කියලා store කරනවා. `DEFAULT CURRENT_TIMESTAMP` = MySQL එකෙන් ඉබේම දැනට තියෙන දවස සහ වෙලාව save කරනවා. |
 
 ---
 
-### Step 2: Create the `classrooms` Table
+### Step 2: `classrooms` Table එක හැදීම
 
 ```sql
 CREATE TABLE classrooms (
@@ -259,20 +259,20 @@ CREATE TABLE classrooms (
 );
 ```
 
-**Line-by-line explanation:**
+**Line-by-line විස්තරය:**
 
-| Line | What it does |
+| Line | කරන්නේ මොකක්ද? |
 |------|-------------|
 | `id INT AUTO_INCREMENT PRIMARY KEY` | කලින් වගේමයි — හැම classroom එකකටම unique ID එකක්. |
 | `name VARCHAR(100) NOT NULL` | Classroom එකේ නම (උදා: "Batch 2026 - Web Development"). |
-| `section VARCHAR(50)` | අමතර section විස්තර (උදා: "Morning", "Evening"). මෙතන `NOT NULL` නැති නිසා මේක හිස්ව තියන්න **පුළුවන්**. |
-| `teacher_id INT NOT NULL` | මේ classroom එකට දාලා ඉන්න teacher ගේ `id` එක store කරනවා. |
-| `FOREIGN KEY (teacher_id) REFERENCES users(id)` | මේකෙන් MySQL එකට කියනවා: "මේ `teacher_id` value එක අනිවාර්යයෙන්ම `users` table එකේ `id` column එකේ **තියෙන්නම ඕනේ**." මේක තමයි tables දෙක අතර තියෙන **connection** එක. |
-| `ON DELETE CASCADE` | `users` table එකෙන් teacher කෙනෙක්ව delete කරොත්, එයාගේ classrooms ඔක්කොමත් **ඉබේම delete වෙනවා**. |
+| `section VARCHAR(50)` | අමතර section info එකක් (උදා: "Morning", "Evening"). `NOT NULL` නැති නිසා මේක හිස්ව තියන්න **පුළුවන්**. |
+| `teacher_id INT NOT NULL` | මේ classroom එකට assign කරලා ඉන්න teacher ගේ `id` එක මේකේ store කරනවා. |
+| `FOREIGN KEY (teacher_id) REFERENCES users(id)` | මේකෙන් MySQL එකට කියනවා: "මේ `teacher_id` එක අනිවාර්යයෙන්ම `users` table එකේ `id` column එකේ **තියෙන්නම ඕනේ**" කියලා. මේක තමයි tables දෙක අතර තියෙන **connection** එක. |
+| `ON DELETE CASCADE` | `users` table එකෙන් teacher කෙනෙක්ව delete කරොත්, එයාලගේ classrooms ඔක්කොම **ඉබේම delete වෙනවා**. |
 
 ---
 
-### Step 3: Create the `students` Table
+### Step 3: `students` Table එක හැදීම
 
 ```sql
 CREATE TABLE students (
@@ -286,20 +286,20 @@ CREATE TABLE students (
 );
 ```
 
-**Line-by-line explanation:**
+**Line-by-line විස්තරය:**
 
-| Line | What it does |
+| Line | කරන්නේ මොකක්ද? |
 |------|-------------|
-| `id INT AUTO_INCREMENT PRIMARY KEY` | හැම student කෙනෙක්ටම unique ID එකක්. |
+| `id INT AUTO_INCREMENT PRIMARY KEY` | හැම student කෙනෙකුටම unique ID එකක්. |
 | `name VARCHAR(100) NOT NULL` | Student ගේ සම්පූර්ණ නම. හිස්ව තියන්න බෑ. |
-| `email VARCHAR(150) NOT NULL UNIQUE` | Student ගේ email එක. Unique වෙන්න ඕනේ. |
-| `registration_number VARCHAR(50) NOT NULL UNIQUE` | හැම student කෙනෙක්ටම තියෙන විශේෂ code එකක් (උදා: "STU-2026-001"). Unique වෙන්න ඕනේ. |
-| `classroom_id INT NOT NULL` | මේ student ඉන්නේ මොන classroom එකේද කියන එක. |
-| `FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE` | `classrooms` table එකට connect කරනවා. Classroom එකක් delete කරොත්, ඒකේ ඉන්න students ලත් අයින් වෙනවා. |
+| `email VARCHAR(150) NOT NULL UNIQUE` | Student ගේ email එක. අනිවාර්යයෙන්ම unique වෙන්න ඕනේ. |
+| `registration_number VARCHAR(50) NOT NULL UNIQUE` | හැම student කෙනෙකුටම තියෙන විශේෂ code එකක් (උදා: "STU-2026-001"). Unique වෙන්න ඕනේ. |
+| `classroom_id INT NOT NULL` | මේ student අයිති වෙන්නේ කොයි classroom එකටද කියන එක. |
+| `FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE` | `classrooms` table එකට connect කරනවා. Classroom එකක් delete කරොත්, ඒකේ ඉන්න students ලත් delete වෙනවා. |
 
 ---
 
-### Step 4: Create the `attendance` Table
+### Step 4: `attendance` Table එක හැදීම
 
 ```sql
 CREATE TABLE attendance (
@@ -317,29 +317,29 @@ CREATE TABLE attendance (
 );
 ```
 
-**Line-by-line explanation:**
+**Line-by-line විස්තරය:**
 
-| Line | What it does |
+| Line | කරන්නේ මොකක්ද? |
 |------|-------------|
-| `student_id INT NOT NULL` | මේ attendance record එක කාගෙද කියන එක. |
-| `classroom_id INT NOT NULL` | මේ attendance එක mark කරේ මොන classroom එකේද කියන එක. |
+| `student_id INT NOT NULL` | මේ attendance record එක කොයි student ටද අදාළ වෙන්නේ. |
+| `classroom_id INT NOT NULL` | මේ attendance එක ගත්තේ කොයි classroom එකේද කියන එක. |
 | `date DATE NOT NULL` | Attendance ගත්ත දවස (උදා: "2026-04-28"). |
-| `status ENUM('present', 'absent', 'late') NOT NULL` | Attendance status එක. මේ values 3 විතරයි පාවිච්චි කරන්න පුළුවන්. |
-| `marked_by INT NOT NULL` | මේ attendance එක mark කරපු teacher ව පෙන්නනවා. `users.id` එකට point කරනවා. |
+| `status ENUM('present', 'absent', 'late') NOT NULL` | Attendance status එක. මේ values 3 විතරයි දෙන්න පුළුවන්. |
+| `marked_by INT NOT NULL` | මේ attendance එක mark කරපු teacher. `users.id` එකට point කරනවා. |
 | `FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE` | `students` table එකට connect කරනවා. |
 | `FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE` | `classrooms` table එකට connect කරනවා. |
 | `FOREIGN KEY (marked_by) REFERENCES users(id) ON DELETE CASCADE` | `users` table එකට (teacher ට) connect කරනවා. |
-| `UNIQUE KEY unique_attendance (student_id, date)` | ⭐ **ගොඩක් වැදගත්!** මේකෙන් තහවුරු කරනවා එක student කෙනෙක්ට දවසකට තියෙන්න පුළුවන් **එක** attendance record එකක් විතරයි කියලා. ඔයා එකම දවසේ එකම student ට දෙවෙනි record එකක් දාන්න හැදුවොත්, MySQL එකෙන් error එකක් දෙනවා. |
+| `UNIQUE KEY unique_attendance (student_id, date)` | ⭐ **ගොඩක් වැදගත්!** මේකෙන් make sure කරනවා එක student කෙනෙකුට දවසකට තියෙන්න පුළුවන් **එක** attendance record එකක් විතරයි කියලා. ඔයා එකම දවසේ එකම student ට දෙවෙනි record එකක් add කරන්න හැදුවොත්, MySQL එකෙන් error එකක් දෙනවා. |
 
 ---
 
-## 6. 📝 Adding Sample Data
+## 6. 📝 Adding Sample Data (Sample Data එකතු කිරීම)
 
-දැන් අපි queries practice කරන්න පුළුවන් වෙන්න fake data ටිකක් add කරමු. පල්ලෙහා තියෙන හැම block එකක්ම copy කරලා MySQL Workbench එකේ paste කරන්න.
+දැන් අපි queries practice කරන්න ලේසි වෙන්න fake data ටිකක් add කරමු. පල්ලෙහා තියෙන හැම block එකක්ම copy කරලා MySQL Workbench එකේ paste කරලා run කරන්න.
 
-> ⚠️ **Important:** මේවා run කරන්න ඕනේ ඔක්කොම tables හැදුවට **පස්සේ**. Foreign Keys තියෙන නිසා මේවා දාන පිළිවෙල ගොඩක් වැදගත්!
+> ⚠️ **Important:** මේවා run කරන්න ඕනේ tables ඔක්කොම හැදුවට **පස්සේ**. Foreign Keys තියෙන නිසා මේක කරන පිළිවෙළ ගොඩක් වැදගත්!
 
-### Insert Users
+### Users Insert කිරීම
 
 ```sql
 INSERT INTO users (name, email, password, role) VALUES
@@ -348,16 +348,16 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Sanduni Fernando', 'sanduni@school.com', '$2b$10$VxB/Z1jcdUDt2rNG7V6bWenRA0afyXCPPxyMwRJ6RxX7gKWQzkl4e', 'teacher');
 ```
 
-**What's happening (මොකද වෙන්නේ):**
-- අපි users ලා 3 දෙනෙක්ව add කරනවා: admin කෙනෙක් සහ teachers ලා 2 දෙනෙක්.
+**මොකක්ද වෙන්නේ:**
+- අපි users ලා 3ක් add කරනවා: admin කෙනෙක් 1යි, teachers ලා 2යි.
 - `Amara` තමයි admin. `Nimal` සහ `Sanduni` කියන්නේ teachers ලා.
-- අපි `id` එක type කරන්නේ නෑ — MySQL එකෙන් ඉබේම ඒක දෙනවා (1, 2, 3).
+- අපි `id` එක type කරන්නේ නෑ — MySQL එකෙන් ඉබේම (1, 2, 3) දෙනවා.
 
-**🔐 About the passwords:**
+**🔐 Passwords ගැන:**
 
-Passwords ටික පේන්නේ නිකම්ම random අකුරු ගොඩක් වගේ. ඒකට හේතුව තමයි ඒවා **bcrypt** කියන library එක පාවිච්චි කරලා **hash** කරලා තියෙන්නේ. අපි **කවදාවත්** plain text passwords database එකක store කරන්නේ නෑ. ඒක ලොකු security ප්‍රශ්නයක්.
+Passwords දැක්කම නිකන් random අකුරු ගොඩක් වගේ පේන්නේ. ඒකට හේතුව තමයි ඒවා **bcrypt** කියන library එක පාවිච්චි කරලා **hash** කරලා තියෙන්නේ. අපි **කවදාවත්** plain text passwords (සාමාන්‍ය අකුරු) database එකක store කරන්නේ නෑ. ඒක ලොකු security අවදානමක්.
 
-අපේ Node.js backend එකේදි (Day 2), අපි passwords save කරන්න කලින් hash කරන්න `bcrypt` npm package එක පාවිච්චි කරනවා.
+අපේ Node.js backend එකේදී (Day 2), අපි passwords save කරන්න කලින් `bcrypt` npm package එක පාවිච්චි කරලා ඒව hash කරනවා.
 
 Testing වලට පාවිච්චි කරන්න පුළුවන් **plain text passwords** ටික මෙන්න:
 
@@ -367,9 +367,9 @@ Testing වලට පාවිච්චි කරන්න පුළුවන්
 | Nimal (Teacher) | nimal@school.com | `teacher123` |
 | Sanduni (Teacher) | sanduni@school.com | `teacher123` |
 
-> 💡 මේ hashes ජෙනරේට් කරලා තියෙන්නේ bcrypt එකේ **10 salt rounds** පාවිච්චි කරලයි. අපි login system එක හදද්දි, type කරන password එක save කරලා තියෙන hash එකට සමානද කියලා බලන්න `bcrypt.compare()` පාවිච්චි කරනවා.
+> 💡 මේ hashes ජනනය කරලා තියෙන්නේ bcrypt එකේ **10 salt rounds** පාවිච්චි කරලයි. අපි login system එක හදනකොට, `bcrypt.compare()` එකෙන් check කරනවා ඔයා type කරන password එක මේ store කරලා තියෙන hash එකට match වෙනවද කියලා.
 
-### Insert Classrooms
+### Classrooms Insert කිරීම
 
 ```sql
 INSERT INTO classrooms (name, section, teacher_id) VALUES
@@ -377,11 +377,11 @@ INSERT INTO classrooms (name, section, teacher_id) VALUES
 ('Batch 2026 - Mobile Development', 'Evening', 3);
 ```
 
-**What's happening:**
+**මොකක්ද වෙන්නේ:**
 - Classroom 1 එක assign කරලා තියෙන්නේ `teacher_id = 2` (Nimal) ට.
 - Classroom 2 එක assign කරලා තියෙන්නේ `teacher_id = 3` (Sanduni) ට.
 
-### Insert Students
+### Students Insert කිරීම
 
 ```sql
 INSERT INTO students (name, email, registration_number, classroom_id) VALUES
@@ -391,11 +391,11 @@ INSERT INTO students (name, email, registration_number, classroom_id) VALUES
 ('Ishara Madushani', 'ishara@student.com', 'STU-2026-004', 2);
 ```
 
-**What's happening:**
-- Tharindu සහ Nethmi ඉන්නේ Classroom 1 එකේ (Web Development).
-- Kavinda සහ Ishara ඉන්නේ Classroom 2 එකේ (Mobile Development).
+**මොකක්ද වෙන්නේ:**
+- Tharindu සහ Nethmi ඉන්නේ Classroom 1 (Web Development) එකේ.
+- Kavinda සහ Ishara ඉන්නේ Classroom 2 (Mobile Development) එකේ.
 
-### Insert Attendance Records
+### Attendance Records Insert කිරීම
 
 ```sql
 -- Day 1: Monday, April 28
@@ -420,16 +420,16 @@ INSERT INTO attendance (student_id, classroom_id, date, status, marked_by) VALUE
 (4, 2, '2026-04-30', 'present', 3);
 ```
 
-**What's happening:**
-- අපි දවස් 3කට attendance add කරා.
+**මොකක්ද වෙන්නේ:**
+- අපි දවස් 3ක attendance add කරා.
 - `marked_by = 2` කියන්නේ Teacher Nimal තමයි mark කරේ. `marked_by = 3` කියන්නේ Teacher Sanduni තමයි mark කරේ.
-- දවසින් දවසට students ලගේ statuses වෙනස් වෙනවා — සමහරු present, සමහරු late, සමහරු absent.
+- හැම දවසකම students ලට වෙනස් statuses තියෙනවා — සමහරු present, සමහරු late, සමහරු absent.
 
 ---
 
 ## 7. 🔍 Fetching Data (SELECT Queries)
 
-දැන් තමයි හොඳම හරිය! අපි දැන් add කරපු data ටික **read කරමු**. මේකට අපි පාවිච්චි කරන්නේ `SELECT` queries.
+දැන් තමයි නියම වැඩේ! අපි අර add කරපු data **read** කරලා බලමු. මේකට අපි පාවිච්චි කරන්නේ `SELECT` queries.
 
 ---
 
@@ -439,111 +439,111 @@ INSERT INTO attendance (student_id, classroom_id, date, status, marked_by) VALUE
 
 ---
 
-**Query 1: Get all users (ඔක්කොම users ලව ගන්නවා)**
+**Query 1: හැම user කෙනෙක්වම ගන්න**
 
 ```sql
 SELECT * FROM users;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `SELECT *` | **ඔක්කොම columns** තෝරගන්නවා. `*` එකෙන් කියන්නේ "හැමදේම" කියන එක. |
+| `SELECT *` | **ඔක්කොම columns** තෝරන්න. `*` එකෙන් කියන්නේ "ඔක්කොම" කියන එක. |
 | `FROM users` | `users` table එකෙන්. |
 
 ---
 
-**Query 2: Get only teacher names and emails (Teachers ලගේ නම් සහ emails විතරක් ගන්නවා)**
+**Query 2: Teacher ගේ නම් සහ emails විතරක් ගන්න**
 
 ```sql
 SELECT name, email FROM users WHERE role = 'teacher';
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `SELECT name, email` | `name` සහ `email` columns විතරක් ගන්නවා (ඔක්කොම නෙවෙයි). |
-| `WHERE role = 'teacher'` | **Filter:** role එක `'teacher'` වෙන rows විතරක් පෙන්නනවා. |
+| `SELECT name, email` | `name` සහ `email` columns විතරක් ගන්න (ඔක්කොම නෙවෙයි). |
+| `WHERE role = 'teacher'` | **Filter:** Role එක `'teacher'` වෙන rows විතරක් පෙන්නන්න. |
 
 ---
 
-**Query 3: Get all students (ඔක්කොම students ලව ගන්නවා)**
+**Query 3: හැම student කෙනෙක්වම ගන්න**
 
 ```sql
 SELECT * FROM students;
 ```
 
-මේකෙන් හැම student කෙනෙක්ම එයාලගේ ඔක්කොම විස්තර එක්කම අපිට දෙනවා.
+මේකෙන් අපිට හැම student කෙනෙක්ගෙම ඔක්කොම details හම්බවෙනවා.
 
 ---
 
-**Query 4: Find a student by registration number (Registration number එකෙන් student කෙනෙක්ව හොයනවා)**
+**Query 4: Registration number එකෙන් student කෙනෙක්ව හොයන්න**
 
 ```sql
 SELECT * FROM students WHERE registration_number = 'STU-2026-001';
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `WHERE registration_number = 'STU-2026-001'` | Registration number එක හරියටම ගැලපෙන student ව හොයනවා. |
+| `WHERE registration_number = 'STU-2026-001'` | හරියටම මේ registration number එක තියෙන student ව හොයන්න. |
 
 ---
 
-**Query 5: Get all attendance records for a specific date (නිශ්චිත දවසකට අදාල ඔක්කොම attendance records ගන්නවා)**
+**Query 5: දෙන ලද දවසක attendance records ඔක්කොම ගන්න**
 
 ```sql
 SELECT * FROM attendance WHERE date = '2026-04-28';
 ```
 
-මේකෙන් April 28 වෙනිදාට අදාල ඔක්කොම attendance records පෙන්නනවා.
+මේකෙන් පෙන්නන්නේ April 28 වෙනිදා තියෙන ඔක්කොම attendance records.
 
 ---
 
-**Query 6: Count total students (මුළු students ගාණ ගණන් කරනවා)**
+**Query 6: මුළු students ලා ගාණ count කරන්න**
 
 ```sql
 SELECT COUNT(*) AS total_students FROM students;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `COUNT(*)` | Rows ගාණ ගණන් කරනවා. |
-| `AS total_students` | Result column එක `total_students` කියලා rename කරනවා, එතකොට කියවන්න ලේසියි. |
+| `COUNT(*)` | Rows කීයක් තියෙනවද කියලා count කරනවා. |
+| `AS total_students` | Result column එකේ නම `total_students` විදිහට වෙනස් කරනවා, කියවන්න ලේසි වෙන්න. |
 
 ---
 
-**Query 7: Get students ordered by name (A to Z) (නමේ පිළිවෙලට A ඉඳන් Z ට students ලව ගන්නවා)**
+**Query 7: Students ලගේ නම් අනුව පිළිවෙළට (A ඉඳන් Z ට) ගන්න**
 
 ```sql
 SELECT * FROM students ORDER BY name ASC;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `ORDER BY name ASC` | `name` එක අනුව **ආරෝහණ (ascending)** පිළිවෙලට (A → Z) results ටික sort කරනවා. Z → A ඕනේ නම් `DESC` පාවිච්චි කරන්න. |
+| `ORDER BY name ASC` | `name` එක අනුව **ascending** (ආරෝහණ) පිළිවෙළට (A → Z) sort කරන්න. Z → A වලට `DESC` පාවිච්චි කරන්න. |
 
 ---
 
-**Query 8: Count how many times each status appears (හැම status එකක්ම කී පාරක් තියෙනවද කියලා ගණන් කරනවා)**
+**Query 8: හැම status එකක්ම කී පාරක් තියෙනවද කියලා count කරන්න**
 
 ```sql
 SELECT status, COUNT(*) AS count FROM attendance GROUP BY status;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `GROUP BY status` | එකම `status` එක තියෙන ඔක්කොම rows එකට එකතු (group) කරනවා. |
-| `COUNT(*)` | හැම group එකකම rows කීයක් තියෙනවද කියලා ගණන් කරනවා. |
+| `GROUP BY status` | එකම `status` එක තියෙන rows ඔක්කොම එකට group කරනවා. |
+| `COUNT(*)` | හැම group එකකම rows කීයක් තියෙනවද කියලා count කරනවා. |
 
-මේකෙන් `present: 8, absent: 2, late: 2` වගේ ප්‍රතිඵලයක් පෙන්නයි.
+මේකෙන් පෙන්වන්නේ මෙන්න මේ වගේ එකක්: `present: 8, absent: 2, late: 2`.
 
 ---
 
-### 🔵 Part B: JOIN Queries (Combining Tables)
+### 🔵 Part B: JOIN Queries (Tables එකතු කිරීම)
 
-JOINs වලින් අපිට **tables දෙකකින් හෝ ඊට වැඩි ගාණකින් data එකට එකතු කරන්න** පුළුවන්. මේක ගොඩක් ප්‍රබලයි!
+JOINs වලින් අපිට පුළුවන් **tables දෙකකින් හෝ ඊට වැඩි ගාණකින් data එකතු කරන්න**. මේක ගොඩක් ප්‍රයෝජනවත්!
 
-> 🎯 **Analogy:** ඔයා ගාව Excel sheets දෙකක් තියෙනවා කියලා හිතන්න — එකක student names, අනිත් එකේ classroom names. JOIN එකක් කියන්නේ හැම student කෙනෙක් ගාවටම අදාල classroom name එක ගේන්න VLOOKUP පාවිච්චි කරනවා වගේ වැඩක්.
+> 🎯 **Analogy:** ඔයා ගාව Excel sheets දෙකක් තියෙනවා කියලා හිතන්න — එකක student නම්, අනිත් එකේ classroom නම්. JOIN එකක් කියන්නේ හරියට හැම student ගෙම නම ගාවින් VLOOKUP එකක් දාලා classroom එකේ නම ගේනවා වගේ වැඩක්.
 
-ගොඩක්ම පාවිච්චි වෙන ජාතිය තමයි `INNER JOIN`. ඒකෙන් tables දෙකේම **ගැලපෙන data (matching data)** තියෙන rows විතරක් අපිට දෙනවා.
+ගොඩක්ම පාවිච්චි වෙන වර්ගය තමයි `INNER JOIN`. මේකෙන් අපිට tables දෙකේම **match වෙන data** තියෙන rows දෙනවා.
 
 **Basic JOIN syntax:**
 ```sql
@@ -554,7 +554,7 @@ INNER JOIN table_b ON table_a.foreign_key = table_b.primary_key;
 
 ---
 
-**Query 1: Get students with their classroom name (Students ලව එයාලගේ classroom name එකත් එක්ක ගන්නවා)**
+**Query 1: Students ලගේ විස්තරත් එක්ක එයාලගේ classroom එකේ නමත් ගන්න**
 
 ```sql
 SELECT
@@ -565,15 +565,15 @@ FROM students
 INNER JOIN classrooms ON students.classroom_id = classrooms.id;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `students.name AS student_name` | `students` table එකෙන් `name` එක ගන්නවා, ඒකට `student_name` කියලා කියනවා. |
-| `classrooms.name AS classroom_name` | `classrooms` table එකෙන් `name` එක ගන්නවා, ඒකට `classroom_name` කියලා කියනවා. |
-| `INNER JOIN classrooms ON students.classroom_id = classrooms.id` | `classroom_id` එක classroom එකේ `id` එකට සමාන වෙන තැනින් tables දෙක connect කරනවා. |
+| `students.name AS student_name` | `students` table එකෙන් `name` එක අරගෙන ඒකට `student_name` කියලා නම දාන්න. |
+| `classrooms.name AS classroom_name` | `classrooms` table එකෙන් `name` එක අරගෙන ඒකට `classroom_name` කියලා නම දාන්න. |
+| `INNER JOIN classrooms ON students.classroom_id = classrooms.id` | Classroom එකේ `id` එකට `classroom_id` එක match වෙන විදිහට මේ tables දෙක connect කරන්න. |
 
 ---
 
-**Query 2: Get classrooms with their teacher name (Classrooms ටික ඒවායේ teacher ගේ නමත් එක්ක ගන්නවා)**
+**Query 2: Classrooms වල විස්තරත් එක්ක ඒකේ teacher ගේ නමත් ගන්න**
 
 ```sql
 SELECT
@@ -584,11 +584,11 @@ FROM classrooms
 INNER JOIN users ON classrooms.teacher_id = users.id;
 ```
 
-මේකෙන් `classrooms` එකයි `users` එකයි connect කරලා මොන teacher ද මොන පන්තියට උගන්වන්නේ කියලා පෙන්නනවා.
+මේකෙන් `classrooms` සහ `users` connect කරලා, කොයි teacher ද කොයි class එක උගන්වන්නේ කියලා පෙන්නනවා.
 
 ---
 
-**Query 3: Get attendance records with student names (Attendance records ටික student ගේ නමත් එක්ක ගන්නවා)**
+**Query 3: Attendance records එක්ක student ගේ නමත් ගන්න**
 
 ```sql
 SELECT
@@ -600,11 +600,11 @@ INNER JOIN students ON attendance.student_id = students.id
 ORDER BY attendance.date;
 ```
 
-දැන් `student_id = 1` කියලා පේනවා වෙනුවට, අපිට ඇත්ත student ගේ නම පේනවා!
+දැන් අපිට `student_id = 1` කියලා පේනවා වෙනුවට, ඇත්තම student ගේ නම පේනවා!
 
 ---
 
-**Query 4: Get full attendance details (සම්පූර්ණ attendance විස්තර ගන්නවා - student + classroom + teacher)**
+**Query 4: සම්පූර්ණ attendance විස්තර ගන්න (student + classroom + teacher)**
 
 ```sql
 SELECT
@@ -620,16 +620,16 @@ INNER JOIN users ON attendance.marked_by = users.id
 ORDER BY attendance.date, students.name;
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| Multiple `INNER JOIN` | අපි **tables 4ක්** එකට join කරනවා! හැම JOIN එකකින්ම අලුත් විස්තර එකතු වෙනවා. |
-| `ORDER BY attendance.date, students.name` | මුලින්ම date එක අනුව sort කරලා, ඊටපස්සේ student ගේ නම අනුව sort කරනවා. |
+| Multiple `INNER JOIN` | අපි **tables 4ක්** එකට join කරනවා! හැම JOIN එකකින්ම තවත් information එකතු කරනවා. |
+| `ORDER BY attendance.date, students.name` | ඉස්සෙල්ලාම date එක අනුව sort කරලා, ඊටපස්සේ student name එක අනුව sort කරන්න. |
 
-> 💡 අපේ **Node.js backend** එක සම්පූර්ණ attendance reports පෙන්නන්න පාවිච්චි කරන්නේ මේ වගේ query එකක් තමයි.
+> 💡 අපේ **Node.js backend** එකේ සම්පූර්ණ attendance reports පෙන්නන්න අපි පාවිච්චි කරන්නේ මේ වගේ query එකක් තමයි.
 
 ---
 
-**Query 5: Get attendance for a specific student (නිශ්චිත student කෙනෙක්ගේ attendance ගන්නවා)**
+**Query 5: අදාළ student කෙනෙකුගේ attendance ගන්න**
 
 ```sql
 SELECT
@@ -642,11 +642,11 @@ WHERE attendance.student_id = 1
 ORDER BY attendance.date;
 ```
 
-මේකෙන් `id = 1` (Tharindu) කියන student ගේ ඔක්කොම attendance records අපිට දෙනවා.
+මේකෙන් අපිට `id = 1` (Tharindu) කියන student ගේ ඔක්කොම attendance records හම්බවෙනවා.
 
 ---
 
-**Query 6: Count attendance status for each student (හැම student කෙනෙක්ගේම attendance status එක ගණන් කරනවා)**
+**Query 6: හැම student කෙනෙක්ගෙම attendance status count එක ගන්න**
 
 ```sql
 SELECT
@@ -659,11 +659,11 @@ GROUP BY students.name, attendance.status
 ORDER BY students.name;
 ```
 
-මේකෙන් පෙන්නනවා හැම student කෙනෙක්ම කී පාරක් present වුණාද, absent වුණාද, නැත්නම් late වුණාද කියලා. Reports හදද්දි මේක ගොඩක් ප්‍රයෝජනවත්!
+මේකෙන් පෙන්නනවා හැම student කෙනෙක්ම කී පාරක් present, absent, හෝ late වෙලා තියෙනවද කියලා. Reports හදන්න මේක ගොඩක් ප්‍රයෝජනවත්!
 
 ---
 
-**Query 7: Get all students in a specific teacher's classrooms (නිශ්චිත teacher කෙනෙක්ගේ classrooms වල ඉන්න ඔක්කොම students ලව ගන්නවා)**
+**Query 7: අදාළ teacher කෙනෙකුගේ classrooms වල ඉන්න ඔක්කොම students ලව ගන්න**
 
 ```sql
 SELECT
@@ -677,11 +677,11 @@ INNER JOIN users ON classrooms.teacher_id = users.id
 WHERE users.id = 2;
 ```
 
-මේකෙන් Teacher Nimal ගේ (`id = 2`) classrooms වල ඉන්න ඔක්කොම students ලව හොයනවා.
+මේකෙන් හොයාගන්නවා Teacher Nimal ගේ (`id = 2`) classrooms වල ඉන්න ඔක්කොම students ලව.
 
 ---
 
-**Query 8: Get today's absent students with their classroom info (අද absent වුණු students ලව එයාලගේ classroom විස්තරත් එක්ක ගන්නවා)**
+**Query 8: අද absent වෙලා ඉන්න students ලව එයාලගේ classroom info එකත් එක්ක ගන්න**
 
 ```sql
 SELECT
@@ -695,26 +695,26 @@ WHERE attendance.date = '2026-04-30'
   AND attendance.status = 'absent';
 ```
 
-| Part | Meaning |
+| Part | තේරුම |
 |------|---------|
-| `WHERE attendance.date = '2026-04-30'` | අද දවසට අදාලව filter කරනවා. |
-| `AND attendance.status = 'absent'` | `AND` එකෙන් දෙවෙනි condition එකකුත් එකතු කරනවා. මේ දෙකම ඇත්ත (true) වෙන්න ඕනේ. |
+| `WHERE attendance.date = '2026-04-30'` | අද දවසට (today's date) අදාළව filter කරන්න. |
+| `AND attendance.status = 'absent'` | `AND` කියන එකෙන් තව condition එකක් දානවා. මේ දෙකම true වෙන්න ඕනේ. |
 
-> 💡 අපේ backend එකේදි, අපි `'2026-04-30'` වෙනුවට code එක පාවිච්චි කරලා අද ඇත්ත දවස දානවා.
+> 💡 අපේ backend එකේදී, අපි මේ `'2026-04-30'` කියන එක කෝඩ් එකෙන් අද දවසේ ඇත්තම date එකට replace කරනවා.
 
 ---
 
-## 🎉 You Did It!
+## 🎉 You Did It! (ඔයා ඒක කළා!)
 
-ඔයා මේ දේවල් ඉගෙනගත්තා:
+ඔයා දැන් ඉගෙන ගත්තා:
 - ✅ Relational database එකක් කියන්නේ මොකක්ද
 - ✅ ERD diagram එකක් කියවන්නේ කොහොමද
-- ✅ Keys සහ constraints එක්ක tables හදන්නේ කොහොමද
+- ✅ Keys සහ constraints පාවිච්චි කරලා tables හදන්නේ කොහොමද
 - ✅ Data insert කරන්නේ කොහොමද
 - ✅ SELECT පාවිච්චි කරලා data query කරන්නේ කොහොමද
-- ✅ JOIN පාවිච්චි කරලා tables එකට එකතු කරන්නේ කොහොමද
+- ✅ JOIN පාවිච්චි කරලා tables එකතු කරන්නේ කොහොමද
 
-> **Next up (Day 2):** අපි Node.js + Express backend එක හදලා, raw SQL ලියනවා වෙනුවට JavaScript පාවිච්චි කරලා මේ database එකත් එක්ක කතා කරන්න **Prisma ORM** එක පාවිච්චි කරනවා!
+> **Next up (Day 2):** අපි ඊළඟට Node.js + Express backend එකක් හදලා, raw SQL ලියනවා වෙනුවට JavaScript වලින් මේ database එකත් එක්ක කතා කරන්න **Prisma ORM** පාවිච්චි කරනවා!
 
 ---
 

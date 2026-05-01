@@ -57,14 +57,15 @@ flowchart TD
 | 6 | GET | `/api/classrooms` | Logged-in users | Get all classrooms |
 | 7 | GET | `/api/classrooms/:id` | Logged-in users | Get one classroom |
 | 8 | GET | `/api/classrooms/teacher/:teacherId` | Logged-in users | Get teacher's classrooms |
-| 9 | POST | `/api/students` | Admin, Teacher | Add a student |
-| 10 | GET | `/api/students` | Logged-in users | Get all students |
-| 11 | GET | `/api/students/:id` | Logged-in users | Get one student |
-| 12 | GET | `/api/students/classroom/:classroomId` | Logged-in users | Get students in a class |
-| 13 | POST | `/api/attendance` | Admin, Teacher | Mark one student's attendance |
-| 14 | POST | `/api/attendance/bulk` | Admin, Teacher | Mark many students at once |
-| 15 | GET | `/api/attendance/classroom/:id?date=...` | Logged-in users | Get class attendance for a date |
-| 16 | GET | `/api/attendance/student/:id` | Logged-in users | Get student's attendance history |
+| 9 | PUT | `/api/classrooms/:id` | Admin only | Update/Reassign classroom |
+| 10 | POST | `/api/students` | Admin, Teacher | Add a student |
+| 11 | GET | `/api/students` | Logged-in users | Get all students |
+| 12 | GET | `/api/students/:id` | Logged-in users | Get one student |
+| 13 | GET | `/api/students/classroom/:classroomId` | Logged-in users | Get students in a class |
+| 14 | POST | `/api/attendance` | Admin, Teacher | Mark one student's attendance |
+| 15 | POST | `/api/attendance/bulk` | Admin, Teacher | Mark many students at once |
+| 16 | GET | `/api/attendance/classroom/:id?date=...` | Logged-in users | Get class attendance for a date |
+| 17 | GET | `/api/attendance/student/:id` | Logged-in users | Get student's attendance history |
 
 Now let's start building! 🚀
 
@@ -580,6 +581,8 @@ model Attendance {
 | `@@unique([studentId, date])` | A student can only have ONE attendance record per day |
 
 #### Generate the Prisma Client
+
+> ⚠️ **STOP!** Before running this, you MUST have your `.env` file created (from Phase 1) with your actual MySQL password in the `DATABASE_URL`. If Prisma cannot find the `.env` file, it will crash!
 
 ```bash
 npx prisma generate
@@ -1276,6 +1279,9 @@ export default router;
 | `router.get("/me", verifyToken, getMe)` | First run `verifyToken` middleware, THEN run `getMe`. |
 | `export default router` | Shares this router so `server.js` can plug it in. |
 
+> 💡 **Why is `/register` public?**
+> In a real-world app, you might want to restrict who can register new teachers (e.g. only Admins). However, to keep our bootcamp project simple, we leave it public so you can easily use it from the Admin Panel without dealing with complex token forwarding on Day 2!
+
 > ⚠️ **Note:** The `verifyToken` and `authorizeRoles` imports will show errors because we haven't created the middleware file yet. That's OK — we build it in Phase 5! For now, the Register route works without middleware.
 
 ### Wire Up the Register Route in server.js
@@ -1751,7 +1757,22 @@ async function findClassroomsByTeacherId(teacherId) {
   return classrooms;
 }
 
-export { createClassroom, findAllClassrooms, findClassroomById, findClassroomsByTeacherId };
+async function updateClassroom(id, name, section, teacherId) {
+  const classroom = await prisma.classroom.update({
+    where: { id: id },
+    data: {
+      ...(name && { name: name }),
+      ...(section !== undefined && { section: section }),
+      ...(teacherId && { teacherId: teacherId }),
+    },
+    include: {
+      teacher: { select: { id: true, name: true, email: true } },
+    },
+  });
+  return classroom;
+}
+
+export { createClassroom, findAllClassrooms, findClassroomById, findClassroomsByTeacherId, updateClassroom };
 ```
 
 | Line | Why did we write this? |
@@ -1759,6 +1780,7 @@ export { createClassroom, findAllClassrooms, findClassroomById, findClassroomsBy
 | `include: { teacher: { select: { ... } } }` | Like a SQL JOIN — also fetch the teacher's info, but only id, name, email (not password!). |
 | `include: { students: true }` | In `findClassroomById`, also fetch all students in that classroom. |
 | `findClassroomsByTeacherId` | Filter classrooms by a specific teacher. |
+| `...(name && { name: name })` | The JS Spread trick. It only updates `name` if `name` was actually provided. |
 
 > 💡 **`include` = SQL JOIN.** Without it, you get `teacherId: 3` (just a number). With it, you get the full teacher object nested inside.
 
@@ -1797,12 +1819,23 @@ async function getClassroomsByTeacherId(teacherId) {
   return { success: true, message: "Teacher's classrooms retrieved successfully.", data: classrooms };
 }
 
-export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacherId };
+async function updateClassroom(id, name, section, teacherId) {
+  if (!id) return { success: false, message: "Classroom ID is required.", data: null };
+  
+  const existing = await classroomRepository.findClassroomById(id);
+  if (!existing) return { success: false, message: "Classroom not found.", data: null };
+
+  const classroom = await classroomRepository.updateClassroom(id, name, section, teacherId);
+  return { success: true, message: "Classroom updated successfully.", data: classroom };
+}
+
+export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacherId, updateClassroom };
 ```
 
 | Line | Why did we write this? |
 |------|------------------------|
 | `import * as classroomRepository` | Imports ALL exports as one object. Use it like `classroomRepository.createClassroom(...)`. |
+| `if (!existing)` | Checks if the classroom exists BEFORE trying to update it, preventing Prisma errors. |
 | `if (!classroom)` | The "Early Return" pattern — if not found, return error immediately and stop. |
 
 > 💡 **`import * as` vs `import { }`:** `import * as classroomRepository` grabs EVERYTHING and puts it in a box. It makes it obvious where functions come from: `classroomRepository.createClassroom(...)`.
@@ -1832,7 +1865,14 @@ async function createClassroom(req, res) {
 
 async function getAllClassrooms(req, res) {
   try {
-    const result = await classroomService.getAllClassrooms();
+    let result;
+    // Role-based filtering: Admin sees all, Teacher sees only theirs
+    if (req.user.role === "admin") {
+      result = await classroomService.getAllClassrooms();
+    } else {
+      result = await classroomService.getClassroomsByTeacherId(req.user.userId);
+    }
+    
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get classrooms error:", error);
@@ -1863,11 +1903,25 @@ async function getClassroomsByTeacher(req, res) {
   }
 }
 
-export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher };
+async function updateClassroom(req, res) {
+  try {
+    const id = parseInt(req.params.id);
+    const { name, section, teacherId } = req.body;
+    const result = await classroomService.updateClassroom(id, name, section, teacherId);
+    if (!result.success) { return res.status(404).json(result); }
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Update classroom error:", error);
+    return res.status(500).json({ success: false, message: "Something went wrong. Please try again.", data: null });
+  }
+}
+
+export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher, updateClassroom };
 ```
 
 | Line | Why did we write this? |
 |------|------------------------|
+| `if (req.user.role === "admin")` | **Role-Based Filtering!** If a teacher fetches `/api/classrooms`, we ONLY return their specific classrooms. Admin gets everything. |
 | `parseInt(req.params.id)` | URL params are strings. `/5` → `"5"`. `parseInt` converts to number `5` for Prisma. |
 | `res.status(404).json(result)` | 404 = Not Found. The classroom ID doesn't exist. |
 
@@ -1882,13 +1936,14 @@ export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTea
 ```javascript
 import express from "express";
 const router = express.Router();
-import { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher } from "../controllers/classroomController.js";
+import { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher, updateClassroom } from "../controllers/classroomController.js";
 import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 router.post("/", verifyToken, authorizeRoles("admin"), createClassroom);
 router.get("/", verifyToken, getAllClassrooms);
 router.get("/:id", verifyToken, getClassroomById);
 router.get("/teacher/:teacherId", verifyToken, getClassroomsByTeacher);
+router.put("/:id", verifyToken, authorizeRoles("admin"), updateClassroom);
 
 export default router;
 ```
@@ -1897,6 +1952,7 @@ export default router;
 |------|------------------------|
 | `router.post("/", verifyToken, authorizeRoles("admin"), createClassroom)` | Chain: check token → check admin role → create. Teachers can't create classrooms. |
 | `router.get("/", verifyToken, getAllClassrooms)` | Any logged-in user can view classrooms. |
+| `router.put("/:id", ...)` | Updates a classroom (e.g. reassigning a teacher). Only admins can do this! |
 | `router.get("/:id", ...)` | The `:id` is a dynamic URL parameter. |
 
 ---
@@ -1937,8 +1993,20 @@ async function findStudentsByClassroomId(classroomId) {
   return students;
 }
 
-export { createStudent, findAllStudents, findStudentById, findStudentsByClassroomId };
+async function findStudentsByTeacherId(teacherId) {
+  const students = await prisma.student.findMany({
+    where: { classroom: { teacherId: teacherId } },
+    include: { classroom: { select: { id: true, name: true, section: true } } },
+  });
+  return students;
+}
+
+export { createStudent, findAllStudents, findStudentById, findStudentsByClassroomId, findStudentsByTeacherId };
 ```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `where: { classroom: { teacherId: ... } }` | Prisma Relational Filtering! It finds all students whose assigned classroom has this specific teacher ID. |
 
 ---
 
@@ -1973,7 +2041,12 @@ async function getStudentsByClassroomId(classroomId) {
   return { success: true, message: "Students retrieved successfully.", data: students };
 }
 
-export { createStudent, getAllStudents, getStudentById, getStudentsByClassroomId };
+async function getStudentsByTeacherId(teacherId) {
+  const students = await studentRepository.findStudentsByTeacherId(teacherId);
+  return { success: true, message: "Students retrieved successfully.", data: students };
+}
+
+export { createStudent, getAllStudents, getStudentById, getStudentsByClassroomId, getStudentsByTeacherId };
 ```
 
 ---
@@ -1999,7 +2072,14 @@ async function createStudent(req, res) {
 
 async function getAllStudents(req, res) {
   try {
-    const result = await studentService.getAllStudents();
+    let result;
+    // Role-based filtering: Admin sees all, Teacher sees only theirs
+    if (req.user.role === "admin") {
+      result = await studentService.getAllStudents();
+    } else {
+      result = await studentService.getStudentsByTeacherId(req.user.userId);
+    }
+    
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get students error:", error);
@@ -2035,6 +2115,7 @@ export { createStudent, getAllStudents, getStudentById, getStudentsByClassroom }
 
 | Line | Why did we write this? |
 |------|------------------------|
+| `if (req.user.role === "admin")` | **Role-Based Filtering!** If a teacher fetches `/api/students`, we ONLY return their specific students. Admin gets everyone. |
 | `const { name, email, registrationNumber, classroomId } = req.body` | Destructuring — a shortcut to extract multiple fields at once. Same as writing 4 separate `const x = req.body.x` lines. |
 
 ---
@@ -2088,7 +2169,14 @@ Body: { "name": "Batch 2026 - Data Science", "section": "Afternoon", "teacherId"
 ```
 Expected: `201 Created` ✅
 
-**Test 3: Create a Classroom as Teacher**
+**Test 3: Reassign Classroom Teacher (Admin Only)**
+```
+PUT http://localhost:5000/api/classrooms/1  +  Admin token
+Body: { "teacherId": 3 }
+```
+Expected: `200 OK` — Classroom 1 is now assigned to Teacher 3 ✅
+
+**Test 4: Create a Classroom as Teacher**
 ```
 POST http://localhost:5000/api/classrooms  +  Teacher token (Nimal)
 Body: { "name": "Test Class", "section": "Test", "teacherId": 2 }

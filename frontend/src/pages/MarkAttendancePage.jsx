@@ -1,19 +1,29 @@
 import { useState, useEffect } from "react";
 import apiClient from "../api/apiClient";
-import Navbar from "../components/Navbar";
+import Layout from "../components/Layout";
+
+const STATUS_OPTIONS = ["present", "absent", "late"];
+const STATUS_COLORS = {
+  present: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  absent:  "bg-red-100 text-red-700 ring-red-200",
+  late:    "bg-amber-100 text-amber-700 ring-amber-200",
+};
 
 function MarkAttendancePage() {
   const [classrooms, setClassrooms] = useState([]);
   const [selectedClassroomId, setSelectedClassroomId] = useState("");
   const [date, setDate] = useState("");
   const [students, setStudents] = useState([]);
-  
-  // This object will hold { studentId: "present" } or { studentId: "absent" }
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Step 1: Fetch classrooms for the Dropdown when page loads
+  // Default date to today
+  useEffect(function () {
+    const today = new Date().toISOString().split("T")[0];
+    setDate(today);
+  }, []);
+
   useEffect(function () {
     async function loadClassrooms() {
       try {
@@ -26,174 +36,200 @@ function MarkAttendancePage() {
     loadClassrooms();
   }, []);
 
-  // Step 2: Fetch students when they click "Load Students"
   async function handleLoadStudents(event) {
     event.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMessage({ text: "", type: "" });
+    setStudents([]);
 
     try {
-      // Fetch ONLY students for the selected classroom using the correct backend endpoint
       const response = await apiClient.get("/students/classroom/" + selectedClassroomId);
-      const classroomStudents = response.data.data;
-      
-      setStudents(classroomStudents);
+      const list = response.data.data;
+      setStudents(list);
 
-      // Default everyone to 'present' initially
-      const initialData = {};
-      classroomStudents.forEach(function(student) {
-        initialData[student.id] = "present";
-      });
-      setAttendanceData(initialData);
+      const initial = {};
+      list.forEach(function (s) { initial[s.id] = "present"; });
+      setAttendanceData(initial);
 
-      if (classroomStudents.length === 0) {
-        setMessage("No students found in this classroom.");
+      if (list.length === 0) {
+        setMessage({ text: "No students found in this classroom.", type: "info" });
       }
     } catch (err) {
-      setMessage("Failed to load students.");
+      setMessage({ text: "Failed to load students.", type: "error" });
     } finally {
       setLoading(false);
     }
   }
 
-  // Handle radio button changes for a specific student
   function handleStatusChange(studentId, status) {
-    setAttendanceData(function(prevData) {
-      return { ...prevData, [studentId]: status };
-    });
+    setAttendanceData(function (prev) { return { ...prev, [studentId]: status }; });
   }
 
-  // Step 3: Submit the bulk data to the backend
-  async function handleSubmitAttendance() {
+  async function handleSubmit() {
     setLoading(true);
-    setMessage("");
+    setMessage({ text: "", type: "" });
 
-    // Convert our object { 1: "present", 2: "absent" } into an array that the backend expects
-    const records = Object.keys(attendanceData).map(function(studentId) {
+    const records = Object.keys(attendanceData).map(function (id) {
       return {
-        studentId: parseInt(studentId),
+        studentId: parseInt(id),
         classroomId: parseInt(selectedClassroomId),
         date: date,
-        status: attendanceData[studentId]
+        status: attendanceData[id],
       };
     });
 
     try {
-      const response = await apiClient.post("/attendance/bulk", {
-        attendanceList: records
-      });
-      
-      const responseMessage = response.data.message;
+      const response = await apiClient.post("/attendance/bulk", { attendanceList: records });
       const errors = response.data.data ? response.data.data.errors : [];
-      
       if (errors && errors.length > 0) {
-        setMessage("⚠️ " + responseMessage);
+        setMessage({ text: "⚠️ " + response.data.message, type: "warn" });
       } else {
-        setMessage("✅ Attendance marked successfully!");
-        setStudents([]); // Clear the table on full success
+        setMessage({ text: "Attendance submitted successfully!", type: "success" });
+        setStudents([]);
       }
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setMessage("❌ " + err.response.data.message);
-      } else {
-        setMessage("❌ Failed to mark attendance.");
-      }
+      const msg = err.response && err.response.data ? err.response.data.message : "Failed to submit attendance.";
+      setMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
     }
   }
 
+  const msgClasses = {
+    success: "bg-emerald-50 border-emerald-100 text-emerald-700",
+    error: "bg-red-50 border-red-100 text-red-700",
+    warn: "bg-amber-50 border-amber-100 text-amber-700",
+    info: "bg-blue-50 border-blue-100 text-blue-700",
+  };
+
   return (
-    <>
-      <Navbar />
-      <div className="page-container">
-        <h1>Mark Attendance</h1>
+    <Layout>
+      <div className="mb-6">
+        <h1 className="page-header">Mark Attendance</h1>
+        <p className="page-subheader">Select a classroom and date, then set each student's status.</p>
+      </div>
 
-        <form onSubmit={handleLoadStudents} className="search-form">
-          <select 
-            value={selectedClassroomId} 
-            onChange={function(e) { setSelectedClassroomId(e.target.value); }}
-            required
+      {/* Filter form */}
+      <div className="card mb-6">
+        <form onSubmit={handleLoadStudents} className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-48">
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Classroom</label>
+            <select
+              id="classroom-select"
+              value={selectedClassroomId}
+              onChange={function (e) { setSelectedClassroomId(e.target.value); }}
+              required
+              className="input-field"
+            >
+              <option value="">Select classroom...</option>
+              {classrooms.map(function (c) {
+                return <option key={c.id} value={c.id}>{c.name}</option>;
+              })}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
+            <input
+              id="attendance-date"
+              type="date"
+              value={date}
+              onChange={function (e) { setDate(e.target.value); }}
+              required
+              className="input-field"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !selectedClassroomId || !date}
+            className="btn-primary px-6 py-2.5"
           >
-            <option value="">-- Select Classroom --</option>
-            {classrooms.map(function(c) {
-              return <option key={c.id} value={c.id}>{c.name}</option>;
-            })}
-          </select>
-
-          <input
-            type="date"
-            value={date}
-            onChange={function(e) { setDate(e.target.value); }}
-            required
-          />
-          <button type="submit" disabled={loading || !selectedClassroomId || !date}>
-            Load Students
+            {loading && students.length === 0 ? "Loading..." : "Load Students"}
           </button>
         </form>
+      </div>
 
-        {message && <p className={message.includes("✅") ? "success-msg" : "error"}>{message}</p>}
+      {/* Message */}
+      {message.text && (
+        <div className={`border rounded-lg px-4 py-3 mb-5 text-sm font-medium ${msgClasses[message.type]}`}>
+          {message.text}
+        </div>
+      )}
 
-        {students.length > 0 && (
-          <div style={{ marginTop: "20px" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Reg. Number</th>
-                  <th>Attendance Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map(function(student) {
-                  return (
-                    <tr key={student.id}>
-                      <td>{student.name}</td>
-                      <td>{student.registrationNumber}</td>
-                      <td>
-                        <div className="attendance-toggle">
-                          <label>
-                            <input 
-                              type="radio" 
-                              name={"status-" + student.id} 
-                              value="present"
-                              checked={attendanceData[student.id] === "present"}
-                              onChange={function() { handleStatusChange(student.id, "present"); }}
-                            /> Present
-                          </label>
-                          <label>
-                            <input 
-                              type="radio" 
-                              name={"status-" + student.id} 
-                              value="absent"
-                              checked={attendanceData[student.id] === "absent"}
-                              onChange={function() { handleStatusChange(student.id, "absent"); }}
-                            /> Absent
-                          </label>
-                          <label>
-                            <input 
-                              type="radio" 
-                              name={"status-" + student.id} 
-                              value="late"
-                              checked={attendanceData[student.id] === "late"}
-                              onChange={function() { handleStatusChange(student.id, "late"); }}
-                            /> Late
-                          </label>
+      {/* Student attendance table */}
+      {students.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+            <p className="text-sm font-semibold text-gray-900">{students.length} students · {date}</p>
+            <div className="flex gap-2 text-xs text-gray-400">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />Present</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Absent</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />Late</span>
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reg. Number</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {students.map(function (student) {
+                const current = attendanceData[student.id] || "present";
+                return (
+                  <tr key={student.id} className="hover:bg-gray-50 transition-colors duration-100">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">
+                          {student.name.charAt(0)}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            
-            <button className="mark-btn" onClick={handleSubmitAttendance} disabled={loading}>
-              {loading ? "Saving..." : "Submit Attendance"}
+                        <span className="font-medium text-gray-900">{student.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-xs text-gray-400">{student.registrationNumber}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex gap-2">
+                        {STATUS_OPTIONS.map(function (s) {
+                          const active = current === s;
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={function () { handleStatusChange(student.id, s); }}
+                              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ring-1 transition-all duration-100 ${
+                                active
+                                  ? STATUS_COLORS[s] + " ring-current"
+                                  : "bg-gray-50 text-gray-400 ring-gray-200 hover:ring-gray-300"
+                              }`}
+                            >
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+            <button
+              id="submit-attendance-btn"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="btn-primary px-8 py-2.5"
+            >
+              {loading ? "Submitting..." : "Submit Attendance"}
             </button>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </Layout>
   );
 }
 

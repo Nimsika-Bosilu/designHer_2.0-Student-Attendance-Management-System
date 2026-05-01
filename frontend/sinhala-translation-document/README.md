@@ -1,82 +1,82 @@
-# 🎨 Day 3 — Building the React Frontend (All-In-One Master Guide)
+# 🎨 Day 3 — Building the React Frontend (සම්පූර්ණ මාර්ගෝපදේශය)
 
 > **Day 3 of designHer 2.0 Bootcamp**
-> Today we connect our React frontend to the backend API we built on Day 2!
-> We will build this app **piece by piece**, testing each piece before moving on.
+> අද අපි අපේ React frontend එක ඊයේ (Day 2) හදපු backend API එකට සම්බන්ධ කරනවා!
+> අපි මේ app එක හදන්නේ **කොටසින් කොටස**, ඊළඟ කොටසට යන්න කලින් හැම එකක්ම test කරමිනුයි.
 
-> 💡 **How to use this guide:** Every file has a `🚀 FULL CODE (READY TO COPY)` block. Copy it, paste it into the correct file, and save. Then test before moving on. There are ZERO placeholders here.
+> 💡 **මේ guide එක පාවිච්චි කරන්නේ කොහොමද:** හැම file එකකම `🚀 FULL CODE (READY TO COPY)` කියලා block එකක් තියෙනවා. ඒක copy කරලා, හරි file එකට paste කරලා save කරන්න. ඊළඟ එකට යන්න කලින් අනිවාර්යයෙන්ම test කරන්න. මෙතන placeholders (හිස් තැන්) මුකුත් නෑ.
 
 ---
 
 ## 🗺️ Phase 1: Foundation & Setup
 
-### The Full System — How Everything Connects
+### සම්පූර්ණ System එක — ඔක්කොම Connect වෙන්නේ කොහොමද
 
 ```mermaid
 flowchart TD
-    A["🔑 Login Page\n/login"] -->|"Login success → Get JWT token"| B["📊 Dashboard\n/dashboard"]
+    A["🔑 Login Page\n/login"] -->|"Login සාර්ථකයි → JWT token එක ගන්නවා"| B["📊 Dashboard\n/dashboard"]
     B --> C["🏫 Classrooms\n/classrooms"]
     B --> D["👩‍🎓 Students\n/students"]
     B --> E["✅ Mark Attendance\n/mark-attendance"]
     B --> G["📝 View Attendance\n/attendance"]
-    F["🛡️ ProtectedRoute\n(The Bouncer)"] --> B
+    F["🛡️ ProtectedRoute\n(Bouncer)" ] --> B
     F --> C
     F --> D
     F --> E
     F --> G
 ```
 
-### The Folder Structure — The LEGO Box Analogy
+### Folder Structure එක — LEGO Box Analogy එක
 
-Imagine you buy a LEGO set. Inside the box, pieces are sorted into labelled bags. You don't throw 500 pieces into one bag — that would be chaos! Our folders work the same way:
+හිතන්න ඔයා LEGO සෙට් එකක් ගෙනාවා කියලා. පෙට්ටිය ඇතුළේ, කෑලි ටික වෙනම බෑග් වලට දාලා ලේබල් කරලා තියෙන්නේ. ඔයා කෑලි 500ම එකම බෑග් එකකට දාන්නේ නෑනේ — එහෙම කරොත් පිස්සු හැදෙයි! අපේ folders වැඩ කරන්නේත් ඒ විදිහටමයි:
 
 ```
 frontend/
-├── package.json            ← The shopping list of tools we need
+├── package.json            ← අපිට ඕන කරන tools වල shopping list එක
 ├── src/
-│   ├── api/                ← BAG 1: The "Phone" to call the backend
+│   ├── api/                ← BAG 1: Backend එකට කතා කරන "Phone" එක
 │   │   └── apiClient.js
-│   ├── components/         ← BAG 2: Reusable LEGO bricks (used on EVERY page)
+│   ├── components/         ← BAG 2: හැමතැනම පාවිච්චි වෙන LEGO bricks (හැම page එකකම තියෙනවා)
 │   │   ├── ProtectedRoute.jsx
 │   │   └── Navbar.jsx
-│   ├── pages/              ← BAG 3: Each finished "room" of the house
+│   ├── pages/              ← BAG 3: හදලා ඉවර වෙච්ච "කාමර"
 │   │   ├── LoginPage.jsx
 │   │   ├── DashboardPage.jsx
 │   │   ├── ClassroomsPage.jsx
 │   │   ├── StudentsPage.jsx
 │   │   ├── MarkAttendancePage.jsx
 │   │   └── AttendancePage.jsx
-│   ├── App.jsx             ← The "instruction manual" (which room goes where)
-│   ├── App.css             ← The paint and decorations
-│   └── main.jsx            ← The foundation (starts everything)
+│   ├── App.jsx             ← "උපදෙස් මාලාව" (කොයි කාමරේ කොතනටද යන්නේ)
+│   ├── App.css             ← පාට සහ හැඩවැඩ කිරීම්
+│   └── main.jsx            ← අත්තිවාරම (ඔක්කොම පටන් ගන්නේ මෙතනින්)
 ```
 
-> ⚠️ **What could go wrong?**
-> If you put a "Page" file inside the `components` folder, React won't crash, but you will get very confused later. Stick to the LEGO bags!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයා "Page" file එකක් `components` folder එක ඇතුළට දැම්මොත්, React crash වෙන්නේ නෑ, හැබැයි පස්සේ ඔයාටම පැටලෙයි. ඒ නිසා LEGO බෑග් වලට අදාළව දේවල් දාන්න!
 > 
-> If your backend is on a different port than 5000, you will get a CORS error. Open apiClient.js and change the baseURL port.
+> ඔයාගේ backend එක 5000 නෙවෙයි වෙන port එකක නම් තියෙන්නේ, ඔයාට CORS error එකක් එයි. apiClient.js එක open කරලා baseURL port එක වෙනස් කරන්න.
 
-### Step 1: Initialize the Project
+### Step 1: Project එක Initialize කරන්න
 
-Run these exact commands in your terminal to set up the React app using Vite:
+Vite පාවිච්චි කරලා React app එක හදන්න ඔයාගේ terminal එකේ මේ විධානයන් හරියටම run කරන්න:
 
-> 🚨 DO THIS FIRST — before creating any files:
+> 🚨 වෙන කිසිම file එකක් හදන්න කලින් ඉස්සෙල්ලාම මේක කරන්න:
 > npm create vite@latest frontend -- --template react
 > cd frontend
 > npm install axios react-router-dom
 > npm install -D tailwindcss@3 postcss autoprefixer
 > npx tailwindcss init -p
 >
-> If you skip this, NOTHING will work. Every import will fail.
+> ඔයා මේක මඟහැරියොත්, මුකුත්ම වැඩ කරන්නේ නැති වෙයි. හැම import එකක්ම fail වෙයි.
 
 ```bash
-# Create the Vite project
+# Vite project එක හදන්න
 npm create vite@latest frontend -- --template react
 
-# Go into the folder
+# Folder එක ඇතුළට යන්න
 cd frontend
 
-# Install necessary libraries and Tailwind CSS
+# අවශ්‍ය libraries සහ Tailwind CSS install කරන්න
 npm install axios react-router-dom
 npm install -D tailwindcss@3 postcss autoprefixer
 npx tailwindcss init -p
@@ -84,7 +84,7 @@ npx tailwindcss init -p
 
 ### 📁 File: `tailwind.config.js`
 
-This file tells Tailwind where to look for our HTML and React code to generate the CSS.
+මේ file එකෙන් Tailwind එකට කියනවා CSS generate කරන්න අපේ HTML සහ React කෝඩ් එක තියෙන්නේ කොහෙද කියලා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -96,15 +96,14 @@ export default {
 }
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `content` | Tells Tailwind to scan all our `.jsx` files and generate only the CSS we actually use. |
-| `fontFamily` | Sets 'Inter' as the primary font for that modern, sleek look. |
-
+| `content` | Tailwind එකට කියනවා අපේ ඔක්කොම `.jsx` files scan කරලා අපි පාවිච්චි කරන CSS විතරක් generate කරන්න කියලා. |
+| `fontFamily` | 'Inter' කියන font එක primary font එක විදිහට සකස් කරනවා ලස්සන modern පෙනුමක් ගන්න. |
 
 ### 📁 File: `package.json`
 
-This is our "shopping list". It tells Node.js what libraries our project needs.
+මේක තමයි අපේ "shopping list" එක. මේකෙන් Node.js එකට කියනවා අපේ project එකට ඕන libraries මොනවද කියලා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -135,38 +134,38 @@ This is our "shopping list". It tells Node.js what libraries our project needs.
 }
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `"dev": "vite"` | Creates the `npm run dev` command to start our local server. |
-| `"axios"` | The tool we use to make HTTP requests to our backend. |
-| `"react-router-dom"` | The tool that lets us switch between pages (Login, Dashboard, etc.) without reloading the browser. |
+| `"dev": "vite"` | අපේ local server එක පටන් ගන්න `npm run dev` කියන command එක හදනවා. |
+| `"axios"` | අපේ backend එකට HTTP requests යවන්න පාවිච්චි කරන tool එක. |
+| `"react-router-dom"` | Browser එක reload කරන්නේ නැතුව pages අතරේ මාරු වෙන්න (Login, Dashboard, ආදිය) දෙන tool එක. |
 
 ---
 
 ### 📁 File: `src/api/apiClient.js`
 
-#### 🤔 The Axios vs Fetch Debate (Day 2 vs Day 3)
-On Day 2, we mentioned using `fetch()` to avoid installing extra dependencies on the backend. So why are we installing `axios` today?
+#### 🤔 Axios ද Fetch ද? (Day 2 සහ Day 3)
+Day 2 වලදී, backend එකට අමතර දේවල් install කරන එක නවත්වන්න අපි කිව්වා `fetch()` පාවිච්චි කරනවා කියලා. එහෙනම් අද අපි ඇයි `axios` install කරන්නේ?
 
-1. **Industry Standard:** In professional React development, Axios is the industry standard.
-2. **Auto-JSON:** `fetch()` requires you to manually run `response.json()` every time. Axios does this automatically.
-3. **Interceptors:** Axios allows us to build "Interceptors" (like our Central Phone) to easily attach the JWT token to *every single request* automatically. Doing this with `fetch` requires writing a lot of messy wrapper functions.
+1. **Industry Standard (කර්මාන්ත ප්‍රමිතිය):** Professional React development වලදී, Axios තමයි industry standard එක.
+2. **Auto-JSON:** `fetch()` වලදී ඔයාට හැමවෙලේම `response.json()` කියන එක අතින් ලියන්න වෙනවා. Axios ඒක ඉබේම කරනවා.
+3. **Interceptors:** Axios වලින් අපිට "Interceptors" (අපේ Central Phone එක වගේ) හදන්න පුළුවන්. ඒකෙන් *යවන හැම request එකකටම* JWT token එක ලේසියෙන්ම අමුණන්න පුළුවන්. `fetch` වලින් මේක කරන්න ගියොත් පැටලිලි සහගත කෝඩ් ගොඩක් ලියන්න වෙනවා.
 
-#### ✅ The Solution — The "Central Phone"
+#### ✅ The Solution — "Central Phone" එක
 
-Think of `apiClient.js` as a **phone that already has the restaurant's number saved AND automatically says your name (token) every time you call.**
+හිතන්න `apiClient.js` කියන්නේ **කලින්ම restaurant එකේ number එක save කරලා තියෙන වගේම ඔයා කතා කරන හැමවෙලේම ඔයාගේ නම (token එක) ඉබේම කියන ෆෝන් එකක්** කියලා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import axios from "axios";
 
-// Create a reusable Axios instance with our backend's base URL
+// අපේ backend එකේ base URL එකත් එක්ක reusable Axios instance එකක් හදන්න
 const apiClient = axios.create({
   baseURL: "http://localhost:5000/api",
 });
 
-// Automatically attach the JWT token to EVERY request
+// හැම request එකකටම JWT token එක ඉබේම අමුණන්න
 apiClient.interceptors.request.use(function (config) {
   const token = localStorage.getItem("token");
   if (token) {
@@ -178,25 +177,25 @@ apiClient.interceptors.request.use(function (config) {
 export default apiClient;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `import axios from "axios"` | Gets the Axios library. |
-| `axios.create({ baseURL: ... })` | Creates a custom Axios with the backend URL baked in. Now we write `/classrooms` instead of the full URL. |
-| `interceptors.request.use(...)` | Runs a function **before every single request**. Like a helper who stamps every letter before mailing it. |
-| `localStorage.getItem("token")` | Reads the JWT token saved during login. The token proves "I am logged in". |
-| `config.headers.Authorization` | Adds `Bearer eyJ...` to the request header. Our backend's `verifyToken` middleware expects this exact format. |
-| `export default apiClient` | Shares this configured Axios with all other files. |
+| `import axios from "axios"` | Axios library එක ගන්නවා. |
+| `axios.create({ baseURL: ... })` | Backend URL එක කලින්ම දාලා custom Axios එකක් හදනවා. දැන් අපි සම්පූර්ණ URL එක ලියන්නේ නැතුව `/classrooms` කියලා ලියනවා. |
+| `interceptors.request.use(...)` | **හැම request එකකටම කලින්** function එකක් run කරනවා. හරියට ලියුම් යවන්න කලින් හැම ලියුමකටම මුද්දර ගහනවා වගේ වැඩක්. |
+| `localStorage.getItem("token")` | Login වෙනකොට save කරපු JWT token එක කියවනවා. Token එකෙන් "මම login වෙලා ඉන්නේ" කියලා ඔප්පු කරනවා. |
+| `config.headers.Authorization` | Request header එකට `Bearer eyJ...` කියන එක එකතු කරනවා. අපේ backend එකේ `verifyToken` middleware එක බලාපොරොත්තු වෙන්නේ හරියටම මේ විදිහටයි. |
+| `export default apiClient` | මේ හදාගත්ත Axios එක අනිත් ඔක්කොම files එක්ක share කරනවා. |
 
-> ⚠️ **What could go wrong?**
-> If you spell `Authorization` wrong (like `Auth` or `authorisation`), the backend will reject every request with a `401 Unauthorized` error because it can't find the token!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයා `Authorization` කියන එකේ අකුරක් හරි වැරදියට ලිව්වොත් (උදා: `Auth` හෝ `authorisation`), backend එක token එක හොයාගන්න බැරුව හැම request එකක්ම `401 Unauthorized` error එකක් දීලා ප්‍රතික්ෂේප කරනවා!
 > 
-> If you see 'Cannot find module axios', you forgot to run npm install axios. Stop the server, run it, then restart.
+> ඔයාට 'Cannot find module axios' කියලා ආවොත්, ඒ කියන්නේ ඔයා npm install axios run කරලා නෑ. Server එක නවත්වලා, ඒක run කරලා, ආපහු restart කරන්න.
 
 ---
 
 ### 📁 File: `src/main.jsx`
 
-This is the **foundation**. It mounts our entire React app into the HTML page.
+මේක තමයි **අත්තිවාරම**. මේකෙන් අපේ සම්පූර්ණ React app එක HTML page එක ඇතුළට දානවා (mount කරනවා).
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -213,19 +212,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `import App from "./App"` | Gets our main App component (the brain). |
-| `import "./App.css"` | Loads our global styling. |
-| `document.getElementById("root")` | Finds the `<div id="root">` in `index.html`. |
-| `<React.StrictMode>` | Helps catch bugs during development (extra warnings). |
-| `<App />` | Renders our entire application inside that div. |
+| `import App from "./App"` | අපේ main App component එක (මොළය) ගන්නවා. |
+| `import "./App.css"` | අපේ global styling ටික ලෝඩ් කරනවා. |
+| `document.getElementById("root")` | `index.html` එකේ තියෙන `<div id="root">` එක හොයාගන්නවා. |
+| `<React.StrictMode>` | Development කාලේදී bugs අල්ලගන්න උදව් වෙනවා (අමතර warnings දෙනවා). |
+| `<App />` | ඒ div එක ඇතුළේ අපේ සම්පූර්ණ application එක render කරනවා. |
 
 ---
 
 ### 📁 File: `src/App.css`
 
-All styling for the entire app. We keep it minimal — today's focus is API integration, not CSS.
+සම්පූර්ණ app එකටම අදාළ styling. අපි මේක සරලව තියාගන්නවා — අද අපේ අරමුණ API එක connect කරන එක මිසක්, CSS නෙවෙයි.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -292,7 +291,7 @@ All styling for the entire app. We keep it minimal — today's focus is API inte
 
 ### 📁 File: `src/App.jsx`
 
-This is the **brain** of the app. It answers the question: "When the user goes to a URL, which React component should I show?"
+මේක තමයි app එකේ **මොළය**. මේකෙන් තමයි මේ ප්‍රශ්නෙට උත්තර දෙන්නේ: "User කෙනෙක් URL එකකට ගියාම, මම පෙන්නන්න ඕනේ කොයි React component එකද?"
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -311,10 +310,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* Public (ඕනෑම කෙනෙකුට) */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected */}
+        {/* Protected (ලොගින් වෙච්ච අයට විතරයි) */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/classrooms" element={<ProtectedRoute><ClassroomsPage /></ProtectedRoute>} />
         <Route path="/students" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
@@ -322,7 +321,7 @@ function App() {
         <Route path="/attendance" element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
 
-        {/* Catch-all */}
+        {/* Catch-all (වැරදි URL එකකට ගියොත්) */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
@@ -332,21 +331,21 @@ function App() {
 export default App;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `<BrowserRouter>` | Enables URL-based page navigation in React. |
-| `<Route path="/login" element={<LoginPage />} />` | When URL is `/login`, show the LoginPage component. |
-| `<ProtectedRoute><DashboardPage /></ProtectedRoute>` | Wrap Dashboard in the Bouncer — checks for token first. |
-| `<Route path="*">` | Catches any unknown URL (like `/banana`) and redirects to login. |
+| `<BrowserRouter>` | React වල URL-based page navigation එකට ඉඩ දෙනවා. |
+| `<Route path="/login" element={<LoginPage />} />` | URL එක `/login` වුණාම, LoginPage component එක පෙන්නනවා. |
+| `<ProtectedRoute><DashboardPage /></ProtectedRoute>` | Dashboard එක Bouncer කෙනෙක්ගෙන් වට කරනවා — මුලින්ම token එක තියෙනවද බලනවා. |
+| `<Route path="*">` | දන්නේ නැති ඕනෑම URL එකක් (`/banana` වගේ) ආවොත් අල්ලගෙන login එකට හරවලා යවනවා. |
 
-> ⚠️ **What could go wrong?**
-> If you forget the `<BrowserRouter>`, React will crash with a terrifying red screen saying "useRoutes() may be used only in the context of a <Router> component."
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයාට `<BrowserRouter>` එක අමතක වුණොත්, React එක බය හිතෙන රතු පාට screen එකකින් "useRoutes() may be used only in the context of a <Router> component." කියලා error එකක් දීලා crash වෙයි.
 
 ---
 
 ### 📁 File: `src/components/Layout.jsx`
 
-This wrapper component ensures the sidebar and content area are consistently positioned across all pages.
+මේ wrapper component එකෙන් sidebar එකයි content area එකයි හැම page එකකම එකම විදිහට තියෙනවා කියලා තහවුරු කරනවා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -367,16 +366,16 @@ function Layout({ children }) {
 export default Layout;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `{ children }` | A special React prop that represents whatever is put inside the `<Layout> ... </Layout>` tags. |
-| `ml-56` | Tailwind for `margin-left: 14rem`. This pushes the main content to the right so it doesn't overlap the fixed sidebar. |
+| `{ children }` | `<Layout> ... </Layout>` tags ඇතුළට දාන ඕනෑම දෙයක් නියෝජනය කරන special React prop එකක්. |
+| `ml-56` | `margin-left: 14rem` කියන එකට Tailwind පාවිච්චි කරන නම. මේකෙන් main content එක දකුණට තල්ලු කරනවා එතකොට ඒක fixed වෙලා තියෙන sidebar එක උඩට එන්නේ නෑ. |
 
 ---
 
 ### 📁 File: `src/components/Navbar.jsx`
 
-The Navbar appears on every page (except Login).
+Navbar එක හැම page එකකම (Login එකේ ඇරෙන්න) පෙන්නනවා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -469,27 +468,27 @@ function Navbar() {
 export default Navbar;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `JSON.parse(...)` | Read the saved user object. If nothing is saved, use `null`. |
-| `localStorage.removeItem("token")` | Logout = throw away the wristband (JWT). |
-| `navigate("/login")` | After logout, send user back to login page. |
-| `<Link to="/dashboard">` | React Router's version of `<a href>`. It navigates instantly without fully reloading the browser. |
+| `JSON.parse(...)` | Save කරපු user object එක කියවනවා. මුකුත් save වෙලා නැත්නම්, `null` පාවිච්චි කරනවා. |
+| `localStorage.removeItem("token")` | Logout වෙනවා = wristband එක (JWT) විසි කරලා දානවා. |
+| `navigate("/login")` | Logout වුණාට පස්සේ, user ව login page එකට යවනවා. |
+| `<Link to="/dashboard">` | සාමාන්‍ය `<a href>` එක වෙනුවට React Router එක පාවිච්චි කරන විදිහ. මේකෙන් browser එක සම්පූර්ණයෙන්ම reload කරන්නේ නැතුව ක්ෂණිකව page එක මාරු කරනවා. |
 
-> ⚠️ **What could go wrong?**
-> Using a standard `<a href="/dashboard">` instead of `<Link>` causes the browser to do a full refresh, which ruins the fast "Single Page App" experience React provides.
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> `<Link>` වෙනුවට සාමාන්‍ය `<a href="/dashboard">` පාවිච්චි කරොත් browser එක සම්පූර්ණයෙන්ම refresh වෙනවා, ඒකෙන් React වලින් දෙන වේගවත් "Single Page App" අත්දැකීම නැති වෙලා යනවා.
 
 ---
 
-### 📁 File: `src/components/ProtectedRoute.jsx` — The Bouncer
+### 📁 File: `src/components/ProtectedRoute.jsx` — Bouncer
 
-#### ❌ The Problem — Users Can Cheat!
+#### ❌ The Problem — Users ලට හොර කරන්න පුළුවන්!
 
-Someone types `http://localhost:5173/dashboard` directly in the URL bar without logging in. They have no token, but React tries to show the Dashboard anyway. API calls fail, the screen breaks.
+කවුරුහරි ලොගින් වෙන්නේ නැතුව කෙලින්ම URL bar එකේ `http://localhost:5173/dashboard` කියලා type කරනවා. එයාලට token එකක් නෑ, හැබැයි React ඒත් Dashboard එක පෙන්නන්න හදනවා. API calls fail වෙනවා, screen එක කැඩෙනවා.
 
 #### ✅ The Solution — The Bouncer
 
-A **bouncer at a club** checks: "Do you have a wristband (token)?" No? Back to the entrance!
+**Club එකක ඉන්න bouncer කෙනෙක්** අහනවා: "ඔයාට wristband (token) එකක් තියෙනවද?" නැද්ද? ආපහු දොරටුව ගාවට යන්න!
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -507,20 +506,20 @@ function ProtectedRoute({ children }) {
 export default ProtectedRoute;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `{ children }` | Represents whatever page is wrapped inside (e.g., `<DashboardPage />`). |
-| `localStorage.getItem("token")` | Check: does the user have a wristband? |
-| `<Navigate to="/login" />` | No wristband → bounce them to login. |
-| `return children` | Has wristband → let them in, show the page. |
+| `{ children }` | මේක ඇතුළේ දාලා තියෙන ඕනෑම page එකක් නියෝජනය කරනවා (උදා: `<DashboardPage />`). |
+| `localStorage.getItem("token")` | Check කරනවා: user ගාව wristband එකක් තියෙනවද? |
+| `<Navigate to="/login" />` | Wristband එකක් නෑ → එයාලව login එකට හරවලා යවනවා (bounce කරනවා). |
+| `return children` | Wristband එකක් තියෙනවා → ඇතුළට යන්න දෙනවා, page එක පෙන්නනවා. |
 
-#### 🧪 TEST: Try the Bouncer!
-1. Clear localStorage: DevTools (F12) → **Application** → **Local Storage** → Clear All.
-2. Type `http://localhost:5173/dashboard` in the address bar.
-3. **Expected:** Immediately redirected to `/login`. ✅
+#### 🧪 TEST: Bouncer ව Try කරලා බලන්න!
+1. localStorage එක Clear කරන්න: DevTools (F12) → **Application** → **Local Storage** → Clear All.
+2. Address bar එකේ `http://localhost:5173/dashboard` කියලා type කරන්න.
+3. **බලාපොරොත්තු වෙන දේ:** ක්ෂණිකවම `/login` එකට හරවලා යවන්න ඕනේ. ✅
 
-> ⚠️ **What could go wrong?**
-> If you clear localStorage while you are already on the Dashboard, the screen won't change until you click a link or refresh. The Bouncer only checks at the door!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයා දැනටමත් Dashboard එකේ ඉන්න ගමන් localStorage එක clear කරොත්, ඔයා link එකක් click කරනකන් හරි refresh කරනකන් හරි screen එක වෙනස් වෙන්නේ නෑ. Bouncer check කරන්නේ දොරටුව ගාවදී විතරයි!
 
 ---
 
@@ -530,20 +529,24 @@ export default ProtectedRoute;
 
 ### 📁 File: `src/pages/LoginPage.jsx`
 
-#### ❌ The Problem — Normal Variables Are Silent!
+#### ❌ The Problem — සාමාන්‍ය Variables සද්ද නෑ!
 
-If you track typing with `let email = ""`, React ignores it. React is a painter. The painter repaints ONLY when you SHOUT. A `let` variable changes silently.
+ඔයා `let email = ""` කියලා type කරන එක track කරන්න හැදුවොත්, React ඒක ගණන් ගන්නේ නෑ. React කියන්නේ චිත්‍ර ශිල්පියෙක් වගේ. මේ චිත්‍ර ශිල්පියා ආපහු චිත්‍රය අඳින්නේ ඔයා කෑගැහුවොත් (SHOUT) විතරයි. `let` variable එකක් වෙනස් වෙන්නේ සද්ද නැතුවයි.
 
-#### ✅ The Solution — `useState` (The Megaphone)
+#### ✅ The Solution — `useState` (Megaphone එක)
 
-`useState` is a **megaphone**. `setEmail("new value")` SHOUTS: "Hey React! Repaint NOW!"
+`useState` කියන්නේ **megaphone** එකක් වගේ. `setEmail("new value")` කියන එක කෑගහලා කියනවා: "ඒයි React! දැන්ම ආපහු අඳින්න!"
 
 ```mermaid
 flowchart TD
-    A["You call setEmail('amara@school.com')"] --> B["📢 Megaphone shouts to React"]
-    B --> C["React sees the state changed"]
-    C --> D["🎨 React repaints the screen"]
-    D --> E["User sees the new text! ✅"]
+    A["ඔයා setEmail('amara@school.com') call කරනවා"] --> B["📢 Megaphone එකෙන් React ට කෑගහලා කියනවා"]
+    B --> C["React දකිනවා state එක වෙනස් වෙලා කියලා"]
+    C --> D["🎨 React ආපහු screen එක අඳිනවා"]
+    D --> E["User ට අලුත් text එක පේනවා! ✅"]
+```
+
+#### 🚀 FULL CODE (READY TO COPY)
+
 ```jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -570,7 +573,7 @@ function LoginPage() {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
-        setError("Something went wrong. Is the backend running?");
+        setError("මොකක්දෝ වැරදීමක් වුණා. Backend එක run වෙනවද?");
       }
     } finally {
       setLoading(false);
@@ -591,7 +594,7 @@ function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h2 className="text-base font-semibold text-gray-900 mb-5">Sign in to your account</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-5">ඔයාගේ ගිණුමට ඇතුළු වෙන්න</h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -648,73 +651,74 @@ function LoginPage() {
 export default LoginPage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `useState("")` | Track inputs. Start empty. Megaphone! |
-| `event.preventDefault()` | Stop the browser from refreshing on form submit. |
-| `setLoading(true)` | Megaphone: show "Logging in..." on the button. |
-| `await apiClient.post(...)` | Call backend. WAIT for response. |
-| `localStorage.setItem("token", ...)` | Save the JWT wristband. |
-| `navigate("/dashboard")` | Jump to Dashboard! |
+| `useState("")` | Inputs track කරනවා. හිස්ව පටන් ගන්නවා. Megaphone! |
+| `event.preventDefault()` | Form එක submit කරද්දී browser එක refresh වෙන එක නවත්වනවා. |
+| `setLoading(true)` | Megaphone: button එකේ "Logging in..." කියලා පෙන්නනවා. |
+| `await apiClient.post(...)` | Backend එකට call කරනවා. Response එක එනකන් WAIT කරනවා. |
+| `localStorage.setItem("token", ...)` | JWT wristband එක save කරනවා. |
+| `navigate("/dashboard")` | Dashboard එකට පනිනවා! |
 
 #### 🧪 TEST: Login Flow
-1. Open `http://localhost:5173`.
-2. Press **F12** → **Network** tab.
-3. Type `amara@school.com` / `admin123` → Click Login.
-4. **Network tab:** See `login` request with status **200**. ✅
+1. `http://localhost:5173` අරින්න.
+2. **F12** ඔබලා → **Network** tab එකට යන්න.
+3. `amara@school.com` / `admin123` type කරලා → Login click කරන්න.
+4. **Network tab එකේ:** **200** status එකත් එක්ක `login` request එක පේන්න ඕනේ. ✅
 
-> ⚠️ **What could go wrong?**
-> If you get `ERR_CONNECTION_REFUSED`, your backend (Port 5000) is not running!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයාට `ERR_CONNECTION_REFUSED` ආවොත්, ඔයාගේ backend එක (Port 5000) run වෙන්නේ නෑ!
 > 
-> If the login form submits but nothing happens, open F12 Network tab. If you see ERR_CONNECTION_REFUSED, your backend is not running.
+> Login form එක submit වුණාට මුකුත් වෙන්නේ නැත්නම්, F12 ඔබලා Network tab එක බලන්න. ඔයාට ERR_CONNECTION_REFUSED පේනවා නම්, ඔයාගේ backend එක run වෙන්නේ නෑ.
 
 ---
 
-## 📊 Phase 4: Data Display (Effects & Loops)
+## 📊 Phase 4: Data Display (Effects සහ Loops)
 
 ---
 
 ### 📁 File: `src/pages/DashboardPage.jsx`
 
-#### ❌ The DISASTER — The Infinite Loop (The Mirror Effect)
+#### ❌ The DISASTER — Infinite Loop එක (කණ්ණාඩි දෙකේ කතාව)
 
-We want to load stats when the page opens. Imagine you write this without `useEffect`:
+අපිට ඕනේ page එක open වෙනකොටම stats ටික load කරන්න. හිතන්න ඔයා `useEffect` පාවිච්චි කරන්නේ නැතුව මේක ලියනවා කියලා:
 
 ```javascript
 function DashboardPage() {
   const [stats, setStats] = useState({ classrooms: 0 });
   
-  // ❌ DISASTER: Calling an API directly inside the component
+  // ❌ DISASTER: Component එක ඇතුළෙම කෙලින්ම API එකක් call කිරීම
   apiClient.get("/classrooms").then(function(res) {
-    setStats({ classrooms: res.data.data.length }); // This triggers a re-render!
+    setStats({ classrooms: res.data.data.length }); // මේකෙන් ආපහු re-render වෙනවා!
   });
 
   return <div>{stats.classrooms}</div>;
 }
 ```
 
-Imagine putting **two mirrors facing each other**.
-`Component renders` → `API responds` → `setStats() shouts` → `Component re-renders` → `API responds again`... FOREVER.
-**Result:** Thousands of API requests per second. Browser freezes. Backend crashes. 💀
+හිතන්න **මුහුණට මුහුණ බලන් ඉන්න කණ්ණාඩි දෙකක්** තියනවා කියලා.
+`Component එක render වෙනවා` → `API එක response එක දෙනවා` → `setStats() එකෙන් කෑගහනවා` → `Component එක ආපහු re-render වෙනවා` → `API එක ආපහු response දෙනවා`... මේක දිගටම වෙනවා.
+**ප්‍රතිඵලය:** තත්පරේකට API requests දහස් ගාණක් යයි. Browser එක හිරවෙයි. Backend එක crash වෙයි. 💀
 
-#### ✅ The Solution — `useEffect` (The Once-a-Day Alarm)
+#### ✅ The Solution — `useEffect` (දවසකට සැරයක් වදින Alarm එක)
 
-`useEffect` is an **alarm clock**. You set it to ring ONCE in the morning.
+`useEffect` කියන්නේ **alarm clock** එකක් වගේ. ඔයා ඒක සෙට් කරන්නේ උදේට එක පාරක් (ONCE) විතරක් වදින්නයි.
 
 ```mermaid
 flowchart TD
-    A["1. Component renders for the first time"] --> B["⏰ Alarm (useEffect) rings!"]
-    B --> C["2. fetchStats() calls API"]
-    C --> D["3. setStats() updates state"]
-    D --> E["4. Component re-renders with data"]
-    E --> F["🚫 Alarm does NOT ring again"]
+    A["1. Component එක පළවෙනි පාරට render වෙනවා"] --> B["⏰ Alarm (useEffect) එක වදිනවා!"]
+    B --> C["2. fetchStats() එකෙන් API එක call කරනවා"]
+    C --> D["3. setStats() එකෙන් state එක update කරනවා"]
+    D --> E["4. Component එක data එක්ක ආපහු re-render වෙනවා"]
+    E --> F["🚫 Alarm එක ආපහු වදින්නේ නෑ"]
 ```
 
 ```javascript
 useEffect(function () {
-  fetchData(); // Runs ONCE on page load
-}, []); // ← THIS EMPTY ARRAY = "ring only once"
+  fetchData(); // Page load වෙද්දී ONE පාරක් විතරක් run වෙනවා
+}, []); // ← මේ හිස් ARRAY එකෙන් කියන්නේ "එක පාරක් විතරක් වදින්න" කියලයි
 ```
+
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -758,10 +762,10 @@ function DashboardPage() {
   ];
 
   const quickLinks = [
-    { label: "Mark Today's Attendance", to: "/mark-attendance", desc: "Record attendance for a classroom", icon: "✅" },
-    { label: "View Attendance Report", to: "/attendance", desc: "Check attendance by date & class", icon: "📋" },
-    { label: "Manage Classrooms", to: "/classrooms", desc: "See all classrooms", icon: "🏫" },
-    ...(isAdmin ? [{ label: "Admin Panel", to: "/admin", desc: "Add teachers & classrooms", icon: "⚙️" }] : []),
+    { label: "Mark Today's Attendance", to: "/mark-attendance", desc: "Classroom එකකට අදාළව attendance දාන්න", icon: "✅" },
+    { label: "View Attendance Report", to: "/attendance", desc: "දවස සහ පන්තිය අනුව attendance බලන්න", icon: "📋" },
+    { label: "Manage Classrooms", to: "/classrooms", desc: "ඔක්කොම classrooms ටික බලන්න", icon: "🏫" },
+    ...(isAdmin ? [{ label: "Admin Panel", to: "/admin", desc: "Teachers ලව සහ classrooms එකතු කරන්න", icon: "⚙️" }] : []),
   ];
 
   if (loading) {
@@ -778,9 +782,9 @@ function DashboardPage() {
     <Layout>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="page-header">Welcome back, {user ? user.name.split(" ")[0] : "User"} 👋</h1>
+        <h1 className="page-header">ආයුබෝවන්, {user ? user.name.split(" ")[0] : "User"} 👋</h1>
         <p className="page-subheader">
-          Here's what's happening with your attendance system today.
+          අද ඔයාගේ attendance system එකේ තත්ත්වය මෙහෙමයි.
         </p>
       </div>
 
@@ -791,7 +795,7 @@ function DashboardPage() {
             <Link key={s.label} to={s.to} className="card hover:shadow-md transition-shadow duration-200 group">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-2xl">{s.icon}</span>
-                <span className="text-xs font-medium text-gray-400 group-hover:text-indigo-500 transition-colors">View →</span>
+                <span className="text-xs font-medium text-gray-400 group-hover:text-indigo-500 transition-colors">බලන්න →</span>
               </div>
               <p className="text-3xl font-bold text-gray-900 mb-1">{s.value ?? "—"}</p>
               <p className="text-sm text-gray-500">{s.label}</p>
@@ -802,7 +806,7 @@ function DashboardPage() {
 
       {/* Quick links */}
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick actions</h2>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">ඉක්මන් සබැඳි</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {quickLinks.map(function (q) {
             return (
@@ -830,16 +834,16 @@ function DashboardPage() {
 export default DashboardPage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `useEffect(..., [])` | The Alarm — run ONCE on page load. No infinite loops! |
-| `Promise.all([...])` | Fetch classrooms AND students **at the same time**. Faster! |
-| `{stats.classrooms}` | Display the actual number fetched from the database. |
+| `useEffect(..., [])` | Alarm එක — page එක load වෙනකොට ONE පාරක් විතරක් run වෙනවා. Infinite loops නෑ! |
+| `Promise.all([...])` | Classrooms සහ students ලව **එකම වෙලාවේ** fetch කරනවා. මේකෙන් වේගය වැඩි වෙනවා! |
+| `{stats.classrooms}` | Database එකෙන් ගත්ත ඇත්ත ගාණ පෙන්නනවා. |
 
-> ⚠️ **What could go wrong?**
-> Forgetting the `[]` array at the end of `useEffect` is the #1 mistake beginners make. Your computer fans will spin up as your app sends 10,000 requests to the backend!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> `useEffect` එක අන්තිමට තියෙන `[]` array එක අමතක කරන එක තමයි beginners ලා කරන ප්‍රධානම වැරැද්ද. ඔයාගේ app එකෙන් backend එකට requests 10,000 ක් යවද්දී ඔයාගේ computer එකේ ෆෑන් එකත් වේගයෙන් කැරෙකෙන්න ගනීවි!
 > 
-> If you see 'Cannot read properties of undefined (reading length)', the API returned something unexpected. Check F12 Network tab — look at the actual response JSON.
+> ඔයාට 'Cannot read properties of undefined (reading length)' කියලා error එකක් ආවොත්, API එකෙන් බලාපොරොත්තු නොවුණු දෙයක් ඇවිත් තියෙනවා. F12 Network tab එක බලන්න — ඇත්තටම ආපු response JSON එක මොකක්ද කියලා බලන්න.
 
 ---
 
@@ -884,13 +888,13 @@ function ClassroomsPage() {
     <Layout>
       <div className="mb-6">
         <h1 className="page-header">Classrooms</h1>
-        <p className="page-subheader">{classrooms.length} classroom{classrooms.length !== 1 ? "s" : ""} registered</p>
+        <p className="page-subheader">Classroom{classrooms.length !== 1 ? "s" : ""} {classrooms.length} ක් ලියාපදිංචි කර ඇත</p>
       </div>
 
       {classrooms.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-4xl mb-3">🏫</p>
-          <p className="text-gray-500 text-sm">No classrooms found. Ask the admin to create one.</p>
+          <p className="text-gray-500 text-sm">කිසිදු classroom එකක් හමුවුණේ නෑ. Admin ට කියලා අලුත් එකක් හදාගන්න.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -934,14 +938,14 @@ function ClassroomsPage() {
 export default ClassroomsPage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `.map(function(classroom))` | Loop through the array. Create a `<tr>` for each. |
-| `key={classroom.id}` | React requires a unique ID for every item in a list. |
-| `{classroom.teacher ? ...}` | If teacher exists, show name. Else, show "—". |
+| `.map(function(classroom))` | Array එක හරහා loop වෙනවා. එක් එක් කෙනාට `<tr>` එකක් හදනවා. |
+| `key={classroom.id}` | ලිස්ට් එකක තියෙන හැම අයිතමයකටම අනන්‍ය (unique) ID එකක් තියෙන්න ඕනේ කියලා React බලාපොරොත්තු වෙනවා. |
+| `{classroom.teacher ? ...}` | Teacher කෙනෙක් ඉන්නවා නම්, නම පෙන්නන්න. නැත්නම්, "—" පෙන්නන්න. |
 
-> ⚠️ **What could go wrong?**
-> If you forget `key={classroom.id}`, React will yell at you in the console, and updating the table later might cause weird visual bugs.
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයාට `key={classroom.id}` කියන එක අමතක වුණොත්, console එකේ React ඔයාට බනින්න පටන් ගනීවි, ඒ වගේම පස්සේ table එක update කරද්දී නොහිතපු visual bugs එන්න පුළුවන්.
 
 ---
 
@@ -997,11 +1001,11 @@ function StudentsPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="page-header">Students</h1>
-          <p className="page-subheader">{students.length} student{students.length !== 1 ? "s" : ""} enrolled</p>
+          <p className="page-subheader">Student{students.length !== 1 ? "s" : ""} {students.length} ක් ඇතුළත් කර ඇත</p>
         </div>
         <input
           type="text"
-          placeholder="Search students..."
+          placeholder="Students ලව search කරන්න..."
           value={search}
           onChange={function (e) { setSearch(e.target.value); }}
           className="input-field max-w-xs"
@@ -1011,7 +1015,7 @@ function StudentsPage() {
       {filtered.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-4xl mb-3">👩‍🎓</p>
-          <p className="text-gray-500 text-sm">{search ? "No students match your search." : "No students found."}</p>
+          <p className="text-gray-500 text-sm">{search ? "ඔයාගේ search එකට ගැලපෙන students ලා නෑ." : "කිසිදු student කෙනෙක් හමුවුණේ නෑ."}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -1053,34 +1057,34 @@ function StudentsPage() {
 export default StudentsPage;
 ```
 
-## 📝 Phase 5: The Main Feature - Marking Attendance (Bulk POST)
+## 📝 Phase 5: ප්‍රධානම පහසුකම - Attendance මාර්ක් කිරීම (Bulk POST)
 
-This is the big one! Instead of marking students one by one, we fetch a whole classroom, toggle Present/Absent for everyone, and send ONE massive list to the backend.
+මේක තමයි ලොකුම එක! Students ලව එක්කෙනා බැගින් mark කරනවා වෙනුවට, අපි සම්පූර්ණ classroom එකම අරගෙන, හැමෝගෙම Present/Absent ටොගල් කරලා, එකපාරින්ම ලොකු ලිස්ට් එකක් backend එකට යවනවා.
 
 ### 📁 File: `src/pages/MarkAttendancePage.jsx`
 
 #### UX Upgrade (Dropdowns)
-We don't want teachers typing a random Classroom ID (like `12`). They won't remember it! Instead, we fetch all classrooms on page load and put them in a `<select>` dropdown.
+අපිට ඕනේ නෑ teachers ලා Classroom ID එක (උදාහරණයක් විදිහට `12` වගේ) අතින් type කරනවාට. එයාලට ඒවා මතක හිටින්නේ නෑ! ඒ වෙනුවට, අපි page එක load වෙද්දී ඔක්කොම classrooms ටික fetch කරලා `<select>` dropdown එකකට දානවා.
 
-#### How attendanceData Works — Dynamic Keys Explained
+#### attendanceData වැඩ කරන විදිහ — Dynamic Keys පැහැදිලි කිරීම
 
-Normal objects have fixed keys:
-  `const obj = { name: "Nimal" }`  // "name" is hardcoded
+සාමාන්‍ය objects වල keys ස්ථිරයි (fixed):
+  `const obj = { name: "Nimal" }`  // "name" කියන එක hardcode කරලා තියෙන්නේ
 
-Dynamic keys let us use a VARIABLE as the key:
+Dynamic keys වලින් අපිට VARIABLE එකක් key එක විදිහට පාවිච්චි කරන්න පුළුවන්:
   `const studentId = 1`
   `const obj = { [studentId]: "present" }`
-  // Result: `{ 1: "present" }`
+  // ප්‍රතිඵලය: `{ 1: "present" }`
 
-So when a teacher clicks "Present" for student 3:
+ඒ නිසා teacher "Present" කියලා 3 වෙනි student ට click කරාම:
   `handleStatusChange(3, "present")`
-  // attendanceData becomes: `{ 1: "present", 2: "present", 3: "present" }`
+  // attendanceData මේ වගේ වෙනවා: `{ 1: "present", 2: "present", 3: "present" }`
 
-When they click "Absent" for student 2:
+අපි හිතමු 2 වෙනි student ට "Absent" click කරා කියලා:
   `handleStatusChange(2, "absent")`
-  // attendanceData becomes: `{ 1: "present", 2: "absent", 3: "present" }`
+  // attendanceData දැන් මෙහෙමයි: `{ 1: "present", 2: "absent", 3: "present" }`
 
-Each student gets their OWN slot in the object, identified by their ID.
+එක් එක් student ට මේ object එක ඇතුළේ එයාලටම වෙන් වෙච්ච වෙනම ඉඩක් තියෙනවා, ඒක එයාලගේ ID එකෙන් තමයි අඳුරගන්නේ.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -1105,7 +1109,7 @@ function MarkAttendancePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Default date to today
+  // Default දවස විදිහට අද දවස දාන්න
   useEffect(function () {
     const today = new Date().toISOString().split("T")[0];
     setDate(today);
@@ -1139,10 +1143,10 @@ function MarkAttendancePage() {
       setAttendanceData(initial);
 
       if (list.length === 0) {
-        setMessage({ text: "No students found in this classroom.", type: "info" });
+        setMessage({ text: "මේ classroom එකේ students ලා නෑ.", type: "info" });
       }
     } catch (err) {
-      setMessage({ text: "Failed to load students.", type: "error" });
+      setMessage({ text: "Students ලව ගන්න එක fail වුණා.", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -1171,11 +1175,11 @@ function MarkAttendancePage() {
       if (errors && errors.length > 0) {
         setMessage({ text: "⚠️ " + response.data.message, type: "warn" });
       } else {
-        setMessage({ text: "Attendance submitted successfully!", type: "success" });
+        setMessage({ text: "Attendance සාර්ථකව submit කරා!", type: "success" });
         setStudents([]);
       }
     } catch (err) {
-      const msg = err.response && err.response.data ? err.response.data.message : "Failed to submit attendance.";
+      const msg = err.response && err.response.data ? err.response.data.message : "Attendance submit කරන එක fail වුණා.";
       setMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
@@ -1193,7 +1197,7 @@ function MarkAttendancePage() {
     <Layout>
       <div className="mb-6">
         <h1 className="page-header">Mark Attendance</h1>
-        <p className="page-subheader">Select a classroom and date, then set each student's status.</p>
+        <p className="page-subheader">Classroom එක සහ date එක තෝරලා, ඊටපස්සේ හැම student කෙනෙක්ගෙම status එක සකස් කරන්න.</p>
       </div>
 
       {/* Filter form */}
@@ -1208,7 +1212,7 @@ function MarkAttendancePage() {
               required
               className="input-field"
             >
-              <option value="">Select classroom...</option>
+              <option value="">Classroom එක තෝරන්න...</option>
               {classrooms.map(function (c) {
                 return <option key={c.id} value={c.id}>{c.name}</option>;
               })}
@@ -1232,7 +1236,7 @@ function MarkAttendancePage() {
             disabled={loading || !selectedClassroomId || !date}
             className="btn-primary px-6 py-2.5"
           >
-            {loading && students.length === 0 ? "Loading..." : "Load Students"}
+            {loading && students.length === 0 ? "Loading..." : "Students ලව ගන්න"}
           </button>
         </form>
       </div>
@@ -1248,7 +1252,7 @@ function MarkAttendancePage() {
       {students.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-900">{students.length} students · {date}</p>
+            <p className="text-sm font-semibold text-gray-900">Student{students.length !== 1 ? "s" : ""} {students.length} යි · {date}</p>
             <div className="flex gap-2 text-xs text-gray-400">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />Present</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Absent</span>
@@ -1323,26 +1327,25 @@ function MarkAttendancePage() {
 export default MarkAttendancePage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `<select>` dropdown | Better UX! We fetch classrooms with `useEffect` and list them as `<option>`s. |
-| `attendanceData` object | Stores { studentId: "status" }. Example: `{ 1: "present", 2: "absent" }` |
-| `initialData[student.id] = "present"` | We default everyone to 'present' to save the teacher time. |
-| `{ ...prevData, [studentId]: status }` | Safely updates the state object with the new radio button choice. |
-| `apiClient.post("/attendance/bulk", ...)` | Sends the massive list to our Day 2 Bulk endpoint! |
+| `<select>` dropdown | පාවිච්චි කරන අයට ලේසියි (UX)! අපි `useEffect` එකෙන් classrooms අරගෙන ඒවා `<option>` විදිහට පෙන්නනවා. |
+| `attendanceData` object | මේකේ ගබඩා කරගන්නේ { studentId: "status" } කියන එකයි. උදාහරණයක්: `{ 1: "present", 2: "absent" }` |
+| `initialData[student.id] = "present"` | Teacher ගේ වෙලාව ඉතුරු කරන්න අපි හැමෝම 'present' කියලා default විදිහට දානවා. |
+| `{ ...prevData, [studentId]: status }` | Radio button එකෙන් තෝරන අලුත් අගය ආරක්ෂිතව state object එකට update කරනවා. |
+| `apiClient.post("/attendance/bulk", ...)` | අර ලොකු ලිස්ට් එක අපි Day 2 වලදී හදපු Bulk endpoint එකට යවනවා! |
 
-> ⚠️ **What could go wrong?**
-> If you don't use `parseInt()` when sending `classroomId` and `studentId` to the backend, Prisma will throw an error because it expects numbers, but HTML inputs always return strings!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයා backend එකට `classroomId` සහ `studentId` යවනකොට `parseInt()` පාවිච්චි කරේ නැත්නම්, HTML inputs හැමවෙලේම දෙන්නේ strings නිසා Prisma ඒක බලාපොරොත්තු වෙන ඉලක්කම් (numbers) නැතුව error එකක් දෙනවා!
 > 
-> If attendance submits but the backend returns an error, check that every record in attendanceList has studentId, classroomId, date, and status. One missing field breaks the whole submission.
+> Attendance submit වෙලත් backend එකෙන් error එකක් ආවොත්, attendanceList එකේ තියෙන හැම record එකකම studentId, classroomId, date, සහ status කියන ඒවා හරියට තියෙනවද බලන්න. එකක් හරි අඩු වුණොත් මුළු submission එකම වැඩ කරන්නේ නෑ.
 
----
 
-## 🔍 Phase 6: Viewing Attendance
+## 🔍 Phase 6: Attendance බැලීම
 
 ### 📁 File: `src/pages/AttendancePage.jsx`
 
-This page is similar to marking, but we use a Dropdown and Date to view existing records.
+මේ page එක attendance mark කරන එකට සමානයි, හැබැයි අපි මෙතනදී Dropdown එකකුයි Date එකකුයි පාවිච්චි කරලා කලින් දාපු records බලනවා.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -1369,7 +1372,7 @@ function AttendancePage() {
     }
     loadClassrooms();
 
-    // Default date to today
+    // Default දවස විදිහට අද දවස දාන්න
     const today = new Date().toISOString().split("T")[0];
     setDate(today);
   }, []);
@@ -1385,10 +1388,10 @@ function AttendancePage() {
       const response = await apiClient.get("/attendance/classroom/" + classroomId + "?date=" + date);
       setRecords(response.data.data);
       if (response.data.data.length === 0) {
-        setMessage("No attendance records found for this date.");
+        setMessage("මේ දවසට අදාළ කිසිදු attendance record එකක් හමුවුණේ නෑ.");
       }
     } catch (err) {
-      const msg = err.response && err.response.data ? err.response.data.message : "Failed to fetch attendance records.";
+      const msg = err.response && err.response.data ? err.response.data.message : "Attendance records ගන්න එක fail වුණා.";
       setMessage(msg);
     } finally {
       setLoading(false);
@@ -1407,7 +1410,7 @@ function AttendancePage() {
     <Layout>
       <div className="mb-6">
         <h1 className="page-header">View Attendance</h1>
-        <p className="page-subheader">Search attendance records by classroom and date.</p>
+        <p className="page-subheader">Classroom එක සහ date එක අනුව attendance records හොයන්න.</p>
       </div>
 
       {/* Filter */}
@@ -1422,7 +1425,7 @@ function AttendancePage() {
               required
               className="input-field"
             >
-              <option value="">Select classroom...</option>
+              <option value="">Classroom එක තෝරන්න...</option>
               {classrooms.map(function (c) {
                 return <option key={c.id} value={c.id}>{c.name}</option>;
               })}
@@ -1513,78 +1516,78 @@ function AttendancePage() {
 export default AttendancePage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `apiClient.get("/attendance/classroom/" + classroomId + "?date=" + date)` | Injects user's inputs into the URL (e.g. `/attendance/classroom/1?date=2026-04-28`) |
-| `className={"status-badge status-" + record.status}` | Dynamically sets CSS class. If status is "present", class is "status-present" (green badge) |
+| `apiClient.get("/attendance/classroom/" + classroomId + "?date=" + date)` | User දෙන අගයන් URL එකට ඇතුළු කරනවා (උදාහරණයක් විදිහට `/attendance/classroom/1?date=2026-04-28`) |
+| `className={"status-badge status-" + record.status}` | CSS class එක dynamically සකස් කරනවා. Status එක "present" නම්, class එක "status-present" වෙනවා (කොළ පාට badge එක) |
 
-> ⚠️ **What could go wrong?**
-> If you test this and no records appear, make sure you actually submitted the attendance on the **Mark Attendance** page first!
+> ⚠️ **මොනවද වැරදෙන්න පුළුවන්?**
+> ඔයා මේක test කරද්දී කිසිම record එකක් ආවේ නැත්නම්, ඔයා ඇත්තටම ඉස්සෙල්ලා **Mark Attendance** page එකෙන් attendance එක submit කරලද කියලා බලන්න!
 
 ---
 
-## 🤔 "Wait! Why Didn't We Use Axios in the Backend (Day 2)?"
+## 🤔 "පොඩ්ඩක් ඉන්න! ඇයි අපි Backend එකේ (Day 2) Axios පාවිච්චි කරේ නැත්තේ?"
 
-> 📞 **The Phone Call Analogy:**
+> 📞 **Phone Call උදාහරණය:**
 >
-> - **Express** is someone who **sits by the phone and WAITS for calls**. It is a **receiver** (server). It doesn't call anyone — it just answers.
-> - **Axios** is someone who **picks up the phone and MAKES calls**. It is a **requester** (client). It dials a number and talks.
+> - **Express** කියන්නේ **ෆෝන් එක ගාව වාඩි වෙලා calls එනකන් බලාගෙන ඉන්න කෙනා**. එයා **ලබන්නෙක් (receiver)** (server එක). එයා වෙන කාටවත් කෝල් ගන්නේ නෑ — එයා කරන්නේ කෝල්ස් ආවාම උත්තර දෙන එක විතරයි.
+> - **Axios** කියන්නේ **ෆෝන් එක අරගෙන කෝල්ස් ගන්න කෙනා**. එයා **ඉල්ලන්නෙක් (requester)** (client එක). එයා නම්බර් එකක් ගහලා කතා කරනවා.
 >
-> Our React frontend needs to CALL the backend → uses **Axios** (the caller).
-> Our Express backend just WAITS for calls → uses **Express** (the receiver).
+> අපේ React frontend එකට backend එකට CALL කරන්න ඕනේ → ඒකට **Axios** (කෝල් ගන්න කෙනා) පාවිච්චි කරනවා.
+> අපේ Express backend එක කරන්නේ කෝල්ස් එනකන් බලාගෙන ඉන්න එක → ඒකට **Express** (ලබන්නා) පාවිච්චි කරනවා.
 
 ```mermaid
 flowchart LR
-    A["📱 React + AXIOS\n(Makes the phone call)"] -->|"HTTP Request"| B["📞 Express\n(Answers the phone)"]
+    A["📱 React + AXIOS\n(Phone කෝල් එක ගන්නවා)"] -->|"HTTP Request"| B["📞 Express\n(Phone එකට උත්තර දෙනවා)"]
     B -->|"Prisma"| C["🗄️ MySQL Database"]
 ```
 
-| Tool | Role | Used Where | Why |
+| Tool එක | කාර්යය | පාවිච්චි වෙන්නේ කොහෙද | ඇයි ඒ |
 |------|------|-----------|-----|
-| **Express** | Receiver — waits for requests | Backend (Day 2) | The backend IS the server |
-| **Axios** | Requester — makes requests | Frontend (Day 3) | The frontend CALLS the server |
-| **Prisma** | Database talker | Backend (Day 2) | Talks to MySQL |
+| **Express** | Receiver — requests එනකන් බලන් ඉන්නවා | Backend (Day 2) | Backend එක තමයි server එක වෙන්නේ |
+| **Axios** | Requester — requests යවනවා | Frontend (Day 3) | Frontend එකෙන් server එකට CALL කරනවා |
+| **Prisma** | Database එකත් එක්ක කතා කරනවා | Backend (Day 2) | MySQL එක්ක කතා කරන්න |
 
-A backend would use Axios ONLY if calling **another external API** (Twilio for SMS, Stripe for payments). Ours only talks to its own database via Prisma.
+Backend එකක් Axios පාවිච්චි කරන්නේ **වෙනත් බාහිර API එකකට** කතා කරන්න ඕනේ වුණොත් විතරයි (උදාහරණයක් විදිහට SMS යවන්න Twilio එකට, සල්ලි ගෙවන්න Stripe එකට වගේ). අපේ එක කතා කරන්නේ ඒකෙම database එකට විතරයි Prisma හරහා.
 
 ---
 
-## 🎉 Congratulations! You Built a Full-Stack App!
+## 🎉 සුබ පැතුම්! ඔයා Full-Stack App එකක් හැදුවා!
 
-Over 3 days, you built:
+දවස් 3ක් ඇතුළත, ඔයා හැදුවේ මේවා:
 
-| Day | What You Built | Key Skills |
+| දවස | ඔයා හැදුව දේ | ප්‍රධාන හැකියාවන් (Key Skills) |
 |-----|---------------|-----------|
 | **Day 1** | MySQL Database | Tables, Keys, Relationships, SQL Queries |
 | **Day 2** | Express Backend API | REST, JWT, Middleware, Prisma, Layered Architecture |
 | **Day 3** | React Frontend | Components, State, Effects, API Calls, Bulk Processing |
 
-> **You are now a full-stack developer.** 🚀
+> **දැන් ඔයා full-stack developer කෙනෙක්.** 🚀
 
 ---
 
-## 🏃‍♂️ How to Run the App Locally
+## 🏃‍♂️ App එක ඔයාගේ මැෂින් එකේ Run කරන්නේ කොහොමද
 
-To test the complete attendance system on your machine, you must run both the backend and frontend at the same time.
+සම්පූර්ණ attendance system එකම ඔයාගේ මැෂින් එකේ test කරන්න නම්, ඔයා backend එකයි frontend එකයි දෙකම එකම වෙලාවේ run කරන්න ඕනේ.
 
-### 1. Start the Backend (Terminal 1)
-Open a new terminal window:
+### 1. Backend එක Start කරන්න (Terminal 1)
+අලුත් terminal window එකක් open කරන්න:
 ```bash
 cd backend
 npm run dev
 ```
-Wait until you see: `🚀 Server is running on port 5000`
+`🚀 Server is running on port 5000` කියලා පෙන්නනකන් ඉන්න.
 
-### 2. Start the Frontend (Terminal 2)
-Open a **second** terminal window:
+### 2. Frontend එක Start කරන්න (Terminal 2)
+**දෙවෙනි** terminal window එකක් open කරන්න:
 ```bash
 cd frontend
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
+ඔයාගේ browser එකේ `http://localhost:5173` අරින්න.
 
-### 🧪 Test Credentials (from our Day 1 Database Seed)
-Use these exact credentials to log in:
+### 🧪 Test Credentials (අපේ Day 1 Database Seed එකෙන්)
+ලොගින් වෙන්න හරියටම මේ තොරතුරු පාවිච්චි කරන්න:
 
 | Email              | Password    | Role    |
 |--------------------|-------------|---------|
@@ -1592,28 +1595,27 @@ Use these exact credentials to log in:
 | nimal@school.com   | teacher123  | Teacher |
 | sanduni@school.com | teacher123  | Teacher |
 
-### ❌ Common Errors
+### ❌ ගොඩක් අයට එන Errors
 
-| Error | What happened? | How to fix |
+| Error එක | මොකක්ද වුණේ? | හදාගන්නේ කොහොමද |
 |-------|---------------|------------|
-| `Network Error` or `ERR_CONNECTION_REFUSED` | Your backend isn't running | Start Terminal 1 (`cd backend && npm run dev`) |
-| `401 Unauthorized` | Your token expired or you didn't send one | Log out and log back in |
-| Blank White Screen | You have a syntax error in your React code | Press F12 -> Console to see exactly which line is broken |
-| `Cannot destructure property 'children' of 'undefined'` | You forgot a curly brace in a component prop | Check `function ProtectedRoute({ children })` |
+| `Network Error` හෝ `ERR_CONNECTION_REFUSED` | ඔයාගේ backend එක run වෙන්නේ නෑ | Terminal 1 එකේ backend එක start කරන්න (`cd backend && npm run dev`) |
+| `401 Unauthorized` | ඔයාගේ token එක කල් ඉකුත් වෙලා (expired) නැත්නම් ඔයා token එකක් යවලා නෑ | ලොග් අවුට් වෙලා ආපහු ලොගින් වෙන්න |
+| Blank White Screen (සුදු පාට හිස් තිරයක්) | ඔයාගේ React කෝඩ් එකේ syntax error එකක් තියෙනවා | F12 ඔබලා Console එක බලන්න හරියටම වැරදිලා තියෙන්නේ මොන පේළියේද කියලා |
+| `Cannot destructure property 'children' of 'undefined'` | ඔයාට component prop එකක සඟල වරහනක් (curly brace) අමතක වෙලා | `function ProtectedRoute({ children })` කියලා තියෙනවද බලන්න |
 
 ---
 
-> Made with ❤️ for **designHer 2.0 Bootcamp 2026**
-
+> ❤️ ආදරෙන් හැදුවේ **designHer 2.0 Bootcamp 2026** වෙනුවෙන්
 
 ---
 
-### 📁 File: `src/pages/AdminPage.jsx` — The Admin Panel
+### 📁 File: `src/pages/AdminPage.jsx` — Admin Panel එක
 
-The Admin Panel has **three sections**:
-1. Add Teacher — create teacher login
-2. Add Classroom — link classroom to teacher via dropdown
-3. Change Classroom Teacher — reassign teacher to existing classroom
+Admin Panel එකේ **කොටස් තුනක්** තියෙනවා:
+1. Add Teacher — අලුත් teacher කෙනෙකුට login එකක් හදනවා
+2. Add Classroom — අලුත් classroom එකක් හදලා dropdown එකෙන් teacher කෙනෙක්ව සම්බන්ධ කරනවා
+3. Change Classroom Teacher — දැනට තියෙන classroom එකකට අලුත් teacher කෙනෙක්ව මාරු කරනවා
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -1659,7 +1661,7 @@ function AdminPage() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  // Redirect non-admins immediately
+  // Admin ලා නෙවෙයි නම් එයාලව ආපහු හරවලා යවනවා
   useEffect(function () {
     if (!user || user.role !== "admin") navigate("/dashboard");
   }, []);
@@ -1698,11 +1700,11 @@ function AdminPage() {
     setTeacherMsg({ text: "", type: "" });
     try {
       await apiClient.post("/auth/register", { ...teacherForm, role: "teacher" });
-      setTeacherMsg({ text: "Teacher account created successfully!", type: "success" });
+      setTeacherMsg({ text: "Teacher ගේ ගිණුම සාර්ථකව හැදුවා!", type: "success" });
       setTeacherForm({ name: "", email: "", password: "" });
       refreshData();
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to create teacher.";
+      const msg = err.response?.data?.message || "Teacher ව හදන එක fail වුණා.";
       setTeacherMsg({ text: msg, type: "error" });
     } finally {
       setTeacherLoading(false);
@@ -1724,11 +1726,11 @@ function AdminPage() {
         section: classroomForm.section,
         teacherId: parseInt(classroomForm.teacherId),
       });
-      setClassroomMsg({ text: "Classroom created and linked to teacher!", type: "success" });
+      setClassroomMsg({ text: "Classroom එක හදලා teacher ට සම්බන්ධ කරා!", type: "success" });
       setClassroomForm({ name: "", section: "", teacherId: "" });
       refreshData();
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to create classroom.";
+      const msg = err.response?.data?.message || "Classroom එක හදන එක fail වුණා.";
       setClassroomMsg({ text: msg, type: "error" });
     } finally {
       setClassroomLoading(false);
@@ -1740,7 +1742,7 @@ function AdminPage() {
   const [reassignLoading, setReassignLoading] = useState(false);
   const [reassignMsg, setReassignMsg] = useState({ text: "", type: "" });
 
-  // Derive what the current teacher is for the selected classroom
+  // තෝරපු classroom එකට දැනට ඉන්න teacher කවුද කියලා හොයාගන්නවා
   const selectedClassroom = classrooms.find(function (c) {
     return String(c.id) === String(reassignForm.classroomId);
   });
@@ -1754,11 +1756,11 @@ function AdminPage() {
       await apiClient.put("/classrooms/" + reassignForm.classroomId, {
         teacherId: parseInt(reassignForm.newTeacherId),
       });
-      setReassignMsg({ text: "Teacher reassigned successfully!", type: "success" });
+      setReassignMsg({ text: "Teacher ව සාර්ථකව මාරු කරා!", type: "success" });
       setReassignForm({ classroomId: "", newTeacherId: "" });
       refreshData();
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to reassign teacher.";
+      const msg = err.response?.data?.message || "Teacher ව මාරු කරන එක fail වුණා.";
       setReassignMsg({ text: msg, type: "error" });
     } finally {
       setReassignLoading(false);
@@ -1775,18 +1777,18 @@ function AdminPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="page-header">Admin Panel</h1>
-        <p className="page-subheader">Manage teachers, classrooms, and assignments.</p>
+        <p className="page-subheader">Teachers ලව, classrooms, සහ assignments පාලනය කරන්න.</p>
       </div>
 
       {/* ── Row 1: Add Teacher + Add Classroom ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
         {/* Add Teacher */}
-        <SectionCard icon="👤" title="Add Teacher Account" subtitle="Creates a login for a new teacher">
+        <SectionCard icon="👤" title="Add Teacher Account" subtitle="අලුත් teacher කෙනෙකුට login එකක් හදන්න">
           <form id="add-teacher-form" onSubmit={handleAddTeacher} className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-              <input id="teacher-name" type="text" placeholder="e.g. Kasun Perera"
+              <label className="block text-xs font-medium text-gray-600 mb-1">Full Name (සම්පූර්ණ නම)</label>
+              <input id="teacher-name" type="text" placeholder="උදා: Kasun Perera"
                 value={teacherForm.name} onChange={function (e) { upd(setTeacherForm, "name", e.target.value); }}
                 required className="input-field" />
             </div>
@@ -1798,7 +1800,7 @@ function AdminPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Password</label>
-              <input id="teacher-password" type="password" placeholder="Minimum 6 characters"
+              <input id="teacher-password" type="password" placeholder="අවම වශයෙන් අකුරු 6ක්"
                 value={teacherForm.password} onChange={function (e) { upd(setTeacherForm, "password", e.target.value); }}
                 required minLength={6} className="input-field" />
             </div>
@@ -1810,33 +1812,33 @@ function AdminPage() {
         </SectionCard>
 
         {/* Add Classroom */}
-        <SectionCard icon="🏫" title="Add Classroom" subtitle="Creates a classroom and links it to a teacher">
+        <SectionCard icon="🏫" title="Add Classroom" subtitle="Classroom එකක් හදලා ඒක teacher කෙනෙකුට සම්බන්ධ කරන්න">
           <form id="add-classroom-form" onSubmit={handleAddClassroom} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Classroom Name</label>
-              <input id="classroom-name" type="text" placeholder="e.g. Batch 2026 - Web Dev"
+              <input id="classroom-name" type="text" placeholder="උදා: Batch 2026 - Web Dev"
                 value={classroomForm.name} onChange={function (e) { upd(setClassroomForm, "name", e.target.value); }}
                 required className="input-field" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Section <span className="text-gray-400">(optional)</span>
+                Section <span className="text-gray-400">(අත්‍යවශ්‍ය නෑ)</span>
               </label>
-              <input id="classroom-section" type="text" placeholder="e.g. Morning / Evening"
+              <input id="classroom-section" type="text" placeholder="උදා: Morning / Evening"
                 value={classroomForm.section} onChange={function (e) { upd(setClassroomForm, "section", e.target.value); }}
                 className="input-field" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Assign Teacher</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Assign Teacher (Teacher ව පවරන්න)</label>
               {teachers.length === 0 ? (
                 <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5 text-xs text-amber-700">
-                  No teachers yet — add one first using the form on the left.
+                  තාම teachers ලා නෑ — වම් පැත්තේ තියෙන form එකෙන් ඉස්සෙල්ලා කෙනෙක්ව එකතු කරන්න.
                 </div>
               ) : (
                 <select id="classroom-teacher" value={classroomForm.teacherId}
                   onChange={function (e) { upd(setClassroomForm, "teacherId", e.target.value); }}
                   required className="input-field">
-                  <option value="">Select teacher...</option>
+                  <option value="">Teacher ව තෝරන්න...</option>
                   {teachers.map(function (t) {
                     return <option key={t.id} value={t.id}>{t.name} — {t.email}</option>;
                   })}
@@ -1854,19 +1856,19 @@ function AdminPage() {
 
       {/* ── Row 2: Reassign Teacher ── */}
       <div className="mb-6">
-        <SectionCard icon="🔄" title="Change Classroom Teacher" subtitle="Reassign a classroom to a different teacher">
+        <SectionCard icon="🔄" title="Change Classroom Teacher" subtitle="Classroom එකක් වෙන teacher කෙනෙකුට මාරු කරන්න">
           <form id="reassign-form" onSubmit={handleReassign} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Step 1: pick classroom */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold mr-1">1</span>
-                  Select Classroom
+                  Classroom එක තෝරන්න
                 </label>
                 <select id="reassign-classroom" value={reassignForm.classroomId}
                   onChange={function (e) { upd(setReassignForm, "classroomId", e.target.value); upd(setReassignForm, "newTeacherId", ""); }}
                   required className="input-field">
-                  <option value="">Select classroom...</option>
+                  <option value="">Classroom එක තෝරන්න...</option>
                   {classrooms.map(function (c) {
                     return (
                       <option key={c.id} value={c.id}>
@@ -1879,13 +1881,13 @@ function AdminPage() {
                 {/* Show current teacher */}
                 {selectedClassroom && (
                   <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
-                    <span className="text-xs text-gray-500">Current teacher:</span>
+                    <span className="text-xs text-gray-500">දැනට ඉන්න teacher:</span>
                     <div className="flex items-center gap-1.5">
                       <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center text-xs font-bold text-violet-700">
                         {selectedClassroom.teacher ? selectedClassroom.teacher.name.charAt(0) : "?"}
                       </div>
                       <span className="text-xs font-medium text-gray-700">
-                        {selectedClassroom.teacher ? selectedClassroom.teacher.name : "Unassigned"}
+                        {selectedClassroom.teacher ? selectedClassroom.teacher.name : "පවරලා නෑ (Unassigned)"}
                       </span>
                     </div>
                   </div>
@@ -1896,18 +1898,18 @@ function AdminPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold mr-1">2</span>
-                  Select New Teacher
+                  අලුත් Teacher ව තෝරන්න
                 </label>
                 <select id="reassign-teacher" value={reassignForm.newTeacherId}
                   onChange={function (e) { upd(setReassignForm, "newTeacherId", e.target.value); }}
                   required disabled={!reassignForm.classroomId}
                   className="input-field disabled:opacity-50">
-                  <option value="">Select teacher...</option>
+                  <option value="">Teacher ව තෝරන්න...</option>
                   {teachers.map(function (t) {
                     const isCurrent = selectedClassroom && selectedClassroom.teacher && selectedClassroom.teacher.id === t.id;
                     return (
                       <option key={t.id} value={t.id} disabled={isCurrent}>
-                        {t.name}{isCurrent ? " (current)" : ""}
+                        {t.name}{isCurrent ? " (දැනට ඉන්න)" : ""}
                       </option>
                     );
                   })}
@@ -1925,11 +1927,11 @@ function AdminPage() {
               </button>
               {reassignForm.classroomId && reassignForm.newTeacherId && (
                 <p className="text-xs text-gray-400">
-                  Assigning <strong className="text-gray-600">
+                  <strong className="text-gray-600">
                     {teachers.find(function (t) { return String(t.id) === String(reassignForm.newTeacherId); })?.name}
-                  </strong> to <strong className="text-gray-600">
+                  </strong> ව <strong className="text-gray-600">
                     {selectedClassroom?.name}
-                  </strong>
+                  </strong> ට පවරමින් පවතී
                 </p>
               )}
             </div>
@@ -1946,7 +1948,7 @@ function AdminPage() {
             </h3>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {teachers.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-gray-400 text-center">No teachers yet.</p>
+                <p className="px-5 py-8 text-sm text-gray-400 text-center">තාම teachers ලා නෑ.</p>
               ) : (
                 <ul className="divide-y divide-gray-50">
                   {teachers.map(function (t) {
@@ -1963,7 +1965,7 @@ function AdminPage() {
                           <p className="text-xs text-gray-400 truncate">{t.email}</p>
                         </div>
                         <span className="text-xs text-gray-400 flex-shrink-0">
-                          {assigned.length} class{assigned.length !== 1 ? "es" : ""}
+                          Class{assigned.length !== 1 ? "es" : "room"} {assigned.length} ක්
                         </span>
                       </li>
                     );
@@ -1979,7 +1981,7 @@ function AdminPage() {
             </h3>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {classrooms.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-gray-400 text-center">No classrooms yet.</p>
+                <p className="px-5 py-8 text-sm text-gray-400 text-center">තාම classrooms නෑ.</p>
               ) : (
                 <ul className="divide-y divide-gray-50">
                   {classrooms.map(function (c) {
@@ -1990,7 +1992,7 @@ function AdminPage() {
                           <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
                           <p className="text-xs text-gray-400 truncate">
                             {c.section ? c.section + " · " : ""}
-                            {c.teacher ? c.teacher.name : "No teacher assigned"}
+                            {c.teacher ? c.teacher.name : "Teacher කෙනෙක් පවරලා නෑ"}
                           </p>
                         </div>
                       </li>
@@ -2009,11 +2011,10 @@ function AdminPage() {
 export default AdminPage;
 ```
 
-| Line | Why did we write this? |
+| Line | ඇයි අපි මේක ලිව්වේ? |
 |------|------------------------|
-| `if (!user || user.role !== "admin") navigate("/dashboard")` | Security! If a teacher tries to access `/admin` via URL, kick them back to the dashboard immediately. |
-| `Promise.all([...])` | Fetches users and classrooms AT THE SAME TIME (parallel) to make the page load faster. |
-| `filter(function (u) { return u.role === "teacher"; })` | The API returns ALL users. We only want to show teachers in our dropdowns. |
-| `disabled={isCurrent}` | In the Reassign dropdown, we disable the option if they are ALREADY the teacher of that class. |
-| `refreshData()` | After adding a teacher or class, we fetch the fresh list from the database so the UI updates instantly! |
-
+| `if (!user || user.role !== "admin") navigate("/dashboard")` | ආරක්ෂාව! Teacher කෙනෙක් URL එකෙන් `/admin` වලට යන්න හැදුවොත්, එයාව වහාම dashboard එකට හරවලා යවනවා. |
+| `Promise.all([...])` | Page එක ඉක්මනට load වෙන්න users ලවයි classrooms දෙකම **එකම වෙලාවේ** (සමාන්තරව) fetch කරනවා. |
+| `filter(function (u) { return u.role === "teacher"; })` | API එකෙන් ඔක්කොම users ලව එවනවා. අපිට ඕනේ අපේ dropdowns වල teachers ලව විතරක් පෙන්නන්නයි. |
+| `disabled={isCurrent}` | Reassign dropdown එකේදී, එයාලා දැනටමත් ඒ class එකේ teacher නම් අපි ඒ option එක disable කරනවා. |
+| `refreshData()` | Teacher කෙනෙක් හෝ class එකක් එකතු කරාට පස්සේ, අපි database එකෙන් අලුත්ම ලිස්ට් එක fetch කරනවා, එතකොට UI එක ක්ෂණිකවම update වෙනවා! |

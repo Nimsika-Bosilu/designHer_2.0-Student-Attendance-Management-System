@@ -43,7 +43,14 @@ async function createStudent(req, res) {
 // -----------------------------------------------
 async function getAllStudents(req, res) {
   try {
-    const result = await studentService.getAllStudents();
+    let result;
+    // Role-based filtering: Admin sees all, Teacher sees only theirs
+    if (req.user.role === "admin") {
+      result = await studentService.getAllStudents();
+    } else {
+      result = await studentService.getStudentsByTeacherId(req.user.userId);
+    }
+    
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get students error:", error);

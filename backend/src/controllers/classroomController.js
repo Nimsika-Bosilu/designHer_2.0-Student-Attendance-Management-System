@@ -37,7 +37,14 @@ async function createClassroom(req, res) {
 // -----------------------------------------------
 async function getAllClassrooms(req, res) {
   try {
-    const result = await classroomService.getAllClassrooms();
+    let result;
+    // Role-based filtering: Admin sees all, Teacher sees only theirs
+    if (req.user.role === "admin") {
+      result = await classroomService.getAllClassrooms();
+    } else {
+      result = await classroomService.getClassroomsByTeacherId(req.user.userId);
+    }
+    
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get classrooms error:", error);
@@ -95,9 +102,36 @@ async function getClassroomsByTeacher(req, res) {
   }
 }
 
+// -----------------------------------------------
+// PUT /api/classrooms/:id
+// Update classroom (reassign teacher, rename, etc.)
+// -----------------------------------------------
+async function updateClassroom(req, res) {
+  try {
+    const id = parseInt(req.params.id);
+    const { name, section, teacherId } = req.body;
+
+    const result = await classroomService.updateClassroom(id, name, section, teacherId);
+
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Update classroom error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again.",
+      data: null,
+    });
+  }
+}
+
 export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,
   getClassroomsByTeacher,
+  updateClassroom,
 };

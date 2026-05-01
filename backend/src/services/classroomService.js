@@ -76,9 +76,32 @@ async function getClassroomsByTeacherId(teacherId) {
   };
 }
 
+// -----------------------------------------------
+// Update a classroom's details / reassign teacher
+// -----------------------------------------------
+async function updateClassroom(id, name, section, teacherId) {
+  if (!id) {
+    return { success: false, message: "Classroom ID is required.", data: null };
+  }
+
+  // Make sure the classroom exists first
+  const existing = await classroomRepository.findClassroomById(id);
+  if (!existing) {
+    return { success: false, message: "Classroom not found.", data: null };
+  }
+
+  const classroom = await classroomRepository.updateClassroom(id, name, section, teacherId);
+  return {
+    success: true,
+    message: "Classroom updated successfully.",
+    data: classroom,
+  };
+}
+
 export {
   createClassroom,
   getAllClassrooms,
   getClassroomById,
   getClassroomsByTeacherId,
+  updateClassroom,
 };

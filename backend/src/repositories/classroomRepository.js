@@ -76,9 +76,30 @@ async function findClassroomsByTeacherId(teacherId) {
   return classrooms;
 }
 
+// -----------------------------------------------
+// Update a classroom (e.g. reassign teacher)
+// -----------------------------------------------
+async function updateClassroom(id, name, section, teacherId) {
+  const classroom = await prisma.classroom.update({
+    where: { id: id },
+    data: {
+      ...(name && { name: name }),
+      ...(section !== undefined && { section: section }),
+      ...(teacherId && { teacherId: teacherId }),
+    },
+    include: {
+      teacher: {
+        select: { id: true, name: true, email: true },
+      },
+    },
+  });
+  return classroom;
+}
+
 export {
   createClassroom,
   findAllClassrooms,
   findClassroomById,
   findClassroomsByTeacherId,
+  updateClassroom,
 };

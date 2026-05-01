@@ -81,9 +81,23 @@ async function getStudentsByClassroomId(classroomId) {
   };
 }
 
+// -----------------------------------------------
+// Get students for a specific teacher
+// -----------------------------------------------
+async function getStudentsByTeacherId(teacherId) {
+  const students = await studentRepository.findStudentsByTeacherId(teacherId);
+
+  return {
+    success: true,
+    message: "Students retrieved successfully.",
+    data: students,
+  };
+}
+
 export {
   createStudent,
   getAllStudents,
   getStudentById,
   getStudentsByClassroomId,
+  getStudentsByTeacherId,
 };
