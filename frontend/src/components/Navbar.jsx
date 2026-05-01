@@ -17,7 +17,8 @@ function Navbar() {
         <Link to="/dashboard">Dashboard</Link>
         <Link to="/classrooms">Classrooms</Link>
         <Link to="/students">Students</Link>
-        <Link to="/attendance">Attendance</Link>
+        <Link to="/mark-attendance">Mark Attendance</Link>
+        <Link to="/attendance">View Attendance</Link>
       </div>
       <div className="navbar-user">
         <span>{user ? user.name : "User"} ({user ? user.role : ""})</span>

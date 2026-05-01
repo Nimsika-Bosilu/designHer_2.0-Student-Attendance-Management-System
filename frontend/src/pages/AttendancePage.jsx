@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import apiClient from "../api/apiClient";
 import Navbar from "../components/Navbar";
 
 function AttendancePage() {
+  const [classrooms, setClassrooms] = useState([]);
   const [classroomId, setClassroomId] = useState("");
   const [date, setDate] = useState("");
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Load classrooms for the dropdown
+  useEffect(function () {
+    async function loadClassrooms() {
+      try {
+        const response = await apiClient.get("/classrooms");
+        setClassrooms(response.data.data);
+      } catch (err) {}
+    }
+    loadClassrooms();
+  }, []);
+
   async function handleSearch(event) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    setRecords([]);
 
     try {
       const response = await apiClient.get(
@@ -39,20 +52,24 @@ function AttendancePage() {
     <>
       <Navbar />
       <div className="page-container">
-        <h1>Attendance</h1>
+        <h1>View Attendance</h1>
 
         <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="number"
-            placeholder="Classroom ID"
-            value={classroomId}
-            onChange={function (e) { setClassroomId(e.target.value); }}
+          <select 
+            value={classroomId} 
+            onChange={function(e) { setClassroomId(e.target.value); }}
             required
-          />
+          >
+            <option value="">-- Select Classroom --</option>
+            {classrooms.map(function(c) {
+              return <option key={c.id} value={c.id}>{c.name}</option>;
+            })}
+          </select>
+
           <input
             type="date"
             value={date}
-            onChange={function (e) { setDate(e.target.value); }}
+            onChange={function(e) { setDate(e.target.value); }}
             required
           />
           <button type="submit" disabled={loading}>

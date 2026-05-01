@@ -4,11 +4,11 @@
 > Today we connect our React frontend to the backend API we built on Day 2!
 > We will build this app **piece by piece**, testing each piece before moving on.
 
-> 💡 **How to use this guide:** Every file has a `🚀 FULL CODE (READY TO COPY)` block. Copy it, paste it into the correct file, and save. Then test before moving on.
+> 💡 **How to use this guide:** Every file has a `🚀 FULL CODE (READY TO COPY)` block. Copy it, paste it into the correct file, and save. Then test before moving on. There are ZERO placeholders here.
 
 ---
 
-## 🗺️ Phase 1: The App Architecture & Setup
+## 🗺️ Phase 1: Foundation & Setup
 
 ### The Full System — How Everything Connects
 
@@ -17,114 +17,108 @@ flowchart TD
     A["🔑 Login Page\n/login"] -->|"Login success → Get JWT token"| B["📊 Dashboard\n/dashboard"]
     B --> C["🏫 Classrooms\n/classrooms"]
     B --> D["👩‍🎓 Students\n/students"]
-    B --> E["📝 Attendance\n/attendance"]
+    B --> E["✅ Mark Attendance\n/mark-attendance"]
+    B --> G["📝 View Attendance\n/attendance"]
     F["🛡️ ProtectedRoute\n(The Bouncer)"] --> B
     F --> C
     F --> D
     F --> E
+    F --> G
 ```
-
-### How React Talks to Our Day 2 Backend
-
-```mermaid
-flowchart LR
-    A["🖥️ React Frontend\n(localhost:5173)"] -->|"HTTP Requests via Axios"| B["⚙️ Express Backend\n(localhost:5000)"]
-    B -->|"Prisma ORM"| C["🐬 MySQL Database"]
-```
-
-### Page-to-Endpoint Map
-
-| Page File | What It Shows | HTTP Method | Backend Endpoint (Day 2) | Auth? |
-|-----------|--------------|-------------|-------------------------|-------|
-| `LoginPage.jsx` | Login form | POST | `/api/auth/login` | ❌ No |
-| `DashboardPage.jsx` | Overview stats | GET | `/api/classrooms` + `/api/students` | ✅ Yes |
-| `ClassroomsPage.jsx` | Classroom table | GET | `/api/classrooms` | ✅ Yes |
-| `StudentsPage.jsx` | Student table | GET | `/api/students` | ✅ Yes |
-| `AttendancePage.jsx` | Attendance search | GET | `/api/attendance/classroom/:id?date=...` | ✅ Yes |
 
 ### The Folder Structure — The LEGO Box Analogy
 
 Imagine you buy a LEGO set. Inside the box, pieces are sorted into labelled bags. You don't throw 500 pieces into one bag — that would be chaos! Our folders work the same way:
 
 ```
-frontend/src/
-├── api/                    ← BAG 1: The "Phone" to call the backend
-│   └── apiClient.js
-├── components/             ← BAG 2: Reusable LEGO bricks (used on EVERY page)
-│   ├── ProtectedRoute.jsx
-│   └── Navbar.jsx
-├── pages/                  ← BAG 3: Each finished "room" of the house
-│   ├── LoginPage.jsx
-│   ├── DashboardPage.jsx
-│   ├── ClassroomsPage.jsx
-│   ├── StudentsPage.jsx
-│   └── AttendancePage.jsx
-├── App.jsx                 ← The "instruction manual" (which room goes where)
-├── App.css                 ← The paint and decorations
-└── main.jsx                ← The foundation (starts everything)
+frontend/
+├── package.json            ← The shopping list of tools we need
+├── src/
+│   ├── api/                ← BAG 1: The "Phone" to call the backend
+│   │   └── apiClient.js
+│   ├── components/         ← BAG 2: Reusable LEGO bricks (used on EVERY page)
+│   │   ├── ProtectedRoute.jsx
+│   │   └── Navbar.jsx
+│   ├── pages/              ← BAG 3: Each finished "room" of the house
+│   │   ├── LoginPage.jsx
+│   │   ├── DashboardPage.jsx
+│   │   ├── ClassroomsPage.jsx
+│   │   ├── StudentsPage.jsx
+│   │   ├── MarkAttendancePage.jsx
+│   │   └── AttendancePage.jsx
+│   ├── App.jsx             ← The "instruction manual" (which room goes where)
+│   ├── App.css             ← The paint and decorations
+│   └── main.jsx            ← The foundation (starts everything)
 ```
 
-| Folder | Purpose | LEGO Analogy |
-|--------|---------|-------------|
-| `api/` | Axios config (base URL + auto token) | The **phone** you use to call the backend |
-| `components/` | Pieces used on MULTIPLE pages | **Standard bricks** — same shape, used everywhere |
-| `pages/` | One file = one screen the user sees | Each **room** in the house |
+> ⚠️ **What could go wrong?**
+> If you put a "Page" file inside the `components` folder, React won't crash, but you will get very confused later. Stick to the LEGO bags!
 
-### Install & Start
+### Step 1: Initialize the Project
+
+Run these exact commands in your terminal to set up the React app using Vite:
 
 ```bash
+# Create the Vite project
+npm create vite@latest frontend -- --template react
+
+# Go into the folder
 cd frontend
-npm install
-npm run dev
+
+# Install necessary libraries
+npm install axios react-router-dom
 ```
 
-> ⚠️ **IMPORTANT:** You need TWO terminals running:
-> - Terminal 1: `cd backend && npm run dev` (Port 5000)
-> - Terminal 2: `cd frontend && npm run dev` (Port 5173)
+### 📁 File: `package.json`
 
----
+This is our "shopping list". It tells Node.js what libraries our project needs.
 
-## 🔌 Phase 2: The Infrastructure (The Hidden Helpers)
+#### 🚀 FULL CODE (READY TO COPY)
 
-These files work "behind the scenes." The user never sees them, but they make everything work.
+```json
+{
+  "name": "designher-attendance-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.5"
+  }
+}
+```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `"dev": "vite"` | Creates the `npm run dev` command to start our local server. |
+| `"axios"` | The tool we use to make HTTP requests to our backend. |
+| `"react-router-dom"` | The tool that lets us switch between pages (Login, Dashboard, etc.) without reloading the browser. |
 
 ---
 
 ### 📁 File: `src/api/apiClient.js`
 
-#### ❌ The Problem — Writing the Full URL Every Single Time
+#### 🤔 The Axios vs Fetch Debate (Day 2 vs Day 3)
+On Day 2, we mentioned using `fetch()` to avoid installing extra dependencies on the backend. So why are we installing `axios` today?
 
-Without a centralized client, every page repeats ugly boilerplate:
-
-```javascript
-// ❌ In ClassroomsPage — UGLY AND REPETITIVE
-const token = localStorage.getItem("token");
-const response = await axios.get("http://localhost:5000/api/classrooms", {
-  headers: { Authorization: "Bearer " + token },
-});
-
-// ❌ In StudentsPage — SAME code AGAIN!
-const token = localStorage.getItem("token");
-const response = await axios.get("http://localhost:5000/api/students", {
-  headers: { Authorization: "Bearer " + token },
-});
-```
-
-If the backend URL changes, you must update ALL 5 files. If you forget the token on ONE page, it breaks.
+1. **Industry Standard:** In professional React development, Axios is the industry standard.
+2. **Auto-JSON:** `fetch()` requires you to manually run `response.json()` every time. Axios does this automatically.
+3. **Interceptors:** Axios allows us to build "Interceptors" (like our Central Phone) to easily attach the JWT token to *every single request* automatically. Doing this with `fetch` requires writing a lot of messy wrapper functions.
 
 #### ✅ The Solution — The "Central Phone"
 
 Think of `apiClient.js` as a **phone that already has the restaurant's number saved AND automatically says your name (token) every time you call.**
-
-```mermaid
-flowchart TD
-    A["LoginPage"] -->|"import apiClient"| X["📞 apiClient.js\n(Central Phone)\nBase URL + Auto Token"]
-    B["DashboardPage"] -->|"import apiClient"| X
-    C["ClassroomsPage"] -->|"import apiClient"| X
-    D["StudentsPage"] -->|"import apiClient"| X
-    E["AttendancePage"] -->|"import apiClient"| X
-    X -->|"Every request auto-gets\nBearer token"| F["Express Backend"]
-```
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -148,16 +142,17 @@ apiClient.interceptors.request.use(function (config) {
 export default apiClient;
 ```
 
-#### Line-by-Line "Why?" Table
+| Line | Why did we write this? |
+|------|------------------------|
+| `import axios from "axios"` | Gets the Axios library. |
+| `axios.create({ baseURL: ... })` | Creates a custom Axios with the backend URL baked in. Now we write `/classrooms` instead of the full URL. |
+| `interceptors.request.use(...)` | Runs a function **before every single request**. Like a helper who stamps every letter before mailing it. |
+| `localStorage.getItem("token")` | Reads the JWT token saved during login. The token proves "I am logged in". |
+| `config.headers.Authorization` | Adds `Bearer eyJ...` to the request header. Our backend's `verifyToken` middleware expects this exact format. |
+| `export default apiClient` | Shares this configured Axios with all other files. |
 
-| Line | What It Does | Why We Need It |
-|------|-------------|---------------|
-| `import axios from "axios"` | Gets the Axios library | Axios is our HTTP calling tool (cleaner than `fetch`) |
-| `axios.create({ baseURL: ... })` | Creates a custom Axios with the URL baked in | Write `/classrooms` instead of the full URL every time |
-| `interceptors.request.use(...)` | Runs a function **before every request** | Like a helper who stamps every letter before mailing |
-| `localStorage.getItem("token")` | Reads the JWT token saved during login | The token proves "I am logged in" |
-| `config.headers.Authorization` | Adds `Bearer eyJ...` to the request header | Our backend's `verifyToken` middleware expects this format |
-| `export default apiClient` | Shares this with all other files | **Locked Room:** opens the window so pages can grab it |
+> ⚠️ **What could go wrong?**
+> If you spell `Authorization` wrong (like `Auth` or `authorisation`), the backend will reject every request with a `401 Unauthorized` error because it can't find the token!
 
 ---
 
@@ -171,6 +166,7 @@ This is the **foundation**. It mounts our entire React app into the HTML page.
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import "./App.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -179,12 +175,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 ```
 
-| Line | Why? |
-|------|------|
-| `import App from "./App"` | Gets our main App component (the brain) |
-| `document.getElementById("root")` | Finds the `<div id="root">` in `index.html` |
-| `<React.StrictMode>` | Helps catch bugs during development (extra warnings) |
-| `<App />` | Renders our entire application inside that div |
+| Line | Why did we write this? |
+|------|------------------------|
+| `import App from "./App"` | Gets our main App component (the brain). |
+| `import "./App.css"` | Loads our global styling. |
+| `document.getElementById("root")` | Finds the `<div id="root">` in `index.html`. |
+| `<React.StrictMode>` | Helps catch bugs during development (extra warnings). |
+| `<App />` | Renders our entire application inside that div. |
 
 ---
 
@@ -195,261 +192,60 @@ All styling for the entire app. We keep it minimal — today's focus is API inte
 #### 🚀 FULL CODE (READY TO COPY)
 
 ```css
-/* === Reset === */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #333; }
 
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f5f5f5;
-  color: #333;
-}
+.login-container { max-width: 400px; margin: 100px auto; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); text-align: center; }
+.login-container h1 { color: #6c3fc5; margin-bottom: 4px; }
+.login-container h2 { color: #999; font-weight: normal; font-size: 1rem; margin-bottom: 30px; }
+.login-container form { display: flex; flex-direction: column; gap: 12px; }
+.login-container input, .search-form input, .search-form select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+.login-container button, .search-form button, .mark-btn { padding: 12px; background: #6c3fc5; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.login-container button:hover, .search-form button:hover, .mark-btn:hover { background: #5a32a8; }
+.login-container button:disabled, .search-form button:disabled, .mark-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.error { color: #e74c3c; font-size: 0.9rem; }
+.success-msg { color: #2ecc71; font-size: 0.9rem; margin-top: 10px; font-weight: bold; text-align: center; }
 
-/* === Login Page === */
-.login-container {
-  max-width: 400px;
-  margin: 100px auto;
-  padding: 40px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
+.navbar { display: flex; align-items: center; justify-content: space-between; background: #6c3fc5; color: white; padding: 12px 24px; }
+.navbar-brand { font-weight: bold; font-size: 1.2rem; }
+.navbar-links { display: flex; gap: 20px; }
+.navbar-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.95rem; }
+.navbar-links a:hover { color: white; }
+.navbar-user { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+.navbar-user button { padding: 6px 14px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; }
 
-.login-container h1 {
-  margin-bottom: 4px;
-  color: #6c3fc5;
-}
+.page-container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
+.page-container h1 { margin-bottom: 20px; color: #6c3fc5; }
 
-.login-container h2 {
-  margin-bottom: 30px;
-  color: #999;
-  font-weight: normal;
-  font-size: 1rem;
-}
+.stats-grid { display: flex; gap: 20px; margin-top: 20px; }
+.stat-card { flex: 1; background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,0.08); }
+.stat-card h2 { font-size: 2.5rem; color: #6c3fc5; margin-bottom: 5px; }
+.stat-card p { color: #888; }
 
-.login-container form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,0.08); margin-top: 20px; }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+th { background: #6c3fc5; color: white; font-weight: 600; }
+tr:hover { background: #f9f5ff; }
 
-.login-container input {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-}
+.search-form { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+.status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; text-transform: capitalize; }
+.status-present { background: #d4edda; color: #155724; }
+.status-absent { background: #f8d7da; color: #721c24; }
+.status-late { background: #fff3cd; color: #856404; }
 
-.login-container input:focus {
-  outline: none;
-  border-color: #6c3fc5;
-}
-
-.login-container button {
-  padding: 12px;
-  background: #6c3fc5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 5px;
-}
-
-.login-container button:hover {
-  background: #5a32a8;
-}
-
-.login-container button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #e74c3c;
-  font-size: 0.9rem;
-}
-
-/* === Navbar === */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #6c3fc5;
-  color: white;
-  padding: 12px 24px;
-}
-
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.navbar-links {
-  display: flex;
-  gap: 20px;
-}
-
-.navbar-links a {
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  font-size: 0.95rem;
-}
-
-.navbar-links a:hover {
-  color: white;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-}
-
-.navbar-user button {
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.navbar-user button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* === Page Container === */
-.page-container {
-  max-width: 950px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
-
-.page-container h1 {
-  margin-bottom: 20px;
-  color: #6c3fc5;
-}
-
-/* === Stats Grid (Dashboard) === */
-.stats-grid {
-  display: flex;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.stat-card {
-  flex: 1;
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
-}
-
-.stat-card h2 {
-  font-size: 2.5rem;
-  color: #6c3fc5;
-  margin-bottom: 5px;
-}
-
-.stat-card p {
-  color: #888;
-}
-
-/* === Tables === */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
-}
-
-th, td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-th {
-  background: #6c3fc5;
-  color: white;
-  font-weight: 600;
-}
-
-tr:hover {
-  background: #f9f5ff;
-}
-
-/* === Search Form (Attendance) === */
-.search-form {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.search-form input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-.search-form button {
-  padding: 10px 20px;
-  background: #6c3fc5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.search-form button:disabled {
-  opacity: 0.6;
-}
-
-/* === Status Badges === */
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-present {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-absent {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.status-late {
-  background: #fff3cd;
-  color: #856404;
-}
+/* Toggle switches for marking attendance */
+.attendance-toggle { display: flex; gap: 10px; }
+.attendance-toggle label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.mark-btn { width: 100%; margin-top: 20px; }
 ```
 
----
-
-## 🛡️ Phase 3: The Security & Routing (The Brain)
+## 🛡️ Phase 2: The Brain & Security
 
 ---
 
 ### 📁 File: `src/App.jsx`
 
-This is the **brain** of the app. It answers the question: "When the user goes to `/login`, which component should I show?"
+This is the **brain** of the app. It answers the question: "When the user goes to a URL, which React component should I show?"
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -459,32 +255,25 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ClassroomsPage from "./pages/ClassroomsPage";
 import StudentsPage from "./pages/StudentsPage";
+import MarkAttendancePage from "./pages/MarkAttendancePage";
 import AttendancePage from "./pages/AttendancePage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public route — anyone can access */}
+        {/* Public route */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected routes — must be logged in */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute><DashboardPage /></ProtectedRoute>
-        } />
-        <Route path="/classrooms" element={
-          <ProtectedRoute><ClassroomsPage /></ProtectedRoute>
-        } />
-        <Route path="/students" element={
-          <ProtectedRoute><StudentsPage /></ProtectedRoute>
-        } />
-        <Route path="/attendance" element={
-          <ProtectedRoute><AttendancePage /></ProtectedRoute>
-        } />
+        {/* Protected routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/classrooms" element={<ProtectedRoute><ClassroomsPage /></ProtectedRoute>} />
+        <Route path="/students" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
+        <Route path="/mark-attendance" element={<ProtectedRoute><MarkAttendancePage /></ProtectedRoute>} />
+        <Route path="/attendance" element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
 
-        {/* Catch-all — redirect unknown URLs to login */}
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
@@ -494,21 +283,21 @@ function App() {
 export default App;
 ```
 
-#### Line-by-Line "Why?" Table
+| Line | Why did we write this? |
+|------|------------------------|
+| `<BrowserRouter>` | Enables URL-based page navigation in React. |
+| `<Route path="/login" element={<LoginPage />} />` | When URL is `/login`, show the LoginPage component. |
+| `<ProtectedRoute><DashboardPage /></ProtectedRoute>` | Wrap Dashboard in the Bouncer — checks for token first. |
+| `<Route path="*">` | Catches any unknown URL (like `/banana`) and redirects to login. |
 
-| Line | Why? |
-|------|------|
-| `<BrowserRouter>` | Enables URL-based page navigation in React |
-| `<Route path="/login" element={<LoginPage />} />` | When URL is `/login`, show the LoginPage component |
-| `<ProtectedRoute><DashboardPage /></ProtectedRoute>` | Wrap Dashboard in the Bouncer — checks for token first |
-| `<Route path="*">` | Catches any unknown URL (like `/banana`) and redirects to login |
-| `export default App` | **Locked Room:** hands the App component to `main.jsx` |
+> ⚠️ **What could go wrong?**
+> If you forget the `<BrowserRouter>`, React will crash with a terrifying red screen saying "useRoutes() may be used only in the context of a <Router> component."
 
 ---
 
 ### 📁 File: `src/components/Navbar.jsx`
 
-The Navbar appears on every page (except Login). It has navigation links and a Logout button.
+The Navbar appears on every page (except Login).
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -532,7 +321,8 @@ function Navbar() {
         <Link to="/dashboard">Dashboard</Link>
         <Link to="/classrooms">Classrooms</Link>
         <Link to="/students">Students</Link>
-        <Link to="/attendance">Attendance</Link>
+        <Link to="/mark-attendance">Mark Attendance</Link>
+        <Link to="/attendance">View Attendance</Link>
       </div>
       <div className="navbar-user">
         <span>{user ? user.name : "User"} ({user ? user.role : ""})</span>
@@ -545,12 +335,15 @@ function Navbar() {
 export default Navbar;
 ```
 
-| Line | Why? |
-|------|------|
-| `JSON.parse(localStorage.getItem("user") \|\| "null")` | Read the saved user object. If nothing saved, use `null`. |
-| `localStorage.removeItem("token")` | Logout = throw away the wristband (JWT) |
-| `navigate("/login")` | After logout, send user back to login page |
-| `<Link to="/dashboard">` | React Router's version of `<a href>` — navigates without full page reload |
+| Line | Why did we write this? |
+|------|------------------------|
+| `JSON.parse(...)` | Read the saved user object. If nothing is saved, use `null`. |
+| `localStorage.removeItem("token")` | Logout = throw away the wristband (JWT). |
+| `navigate("/login")` | After logout, send user back to login page. |
+| `<Link to="/dashboard">` | React Router's version of `<a href>`. It navigates instantly without fully reloading the browser. |
+
+> ⚠️ **What could go wrong?**
+> Using a standard `<a href="/dashboard">` instead of `<Link>` causes the browser to do a full refresh, which ruins the fast "Single Page App" experience React provides.
 
 ---
 
@@ -558,18 +351,11 @@ export default Navbar;
 
 #### ❌ The Problem — Users Can Cheat!
 
-Someone types `http://localhost:5173/dashboard` directly in the URL bar without logging in. They have no token, but React tries to show the Dashboard anyway.
+Someone types `http://localhost:5173/dashboard` directly in the URL bar without logging in. They have no token, but React tries to show the Dashboard anyway. API calls fail, the screen breaks.
 
 #### ✅ The Solution — The Bouncer
 
 A **bouncer at a club** checks: "Do you have a wristband (token)?" No? Back to the entrance!
-
-```mermaid
-flowchart TD
-    A["User tries to visit /dashboard"] --> B{"🛡️ The Bouncer:\nToken in localStorage?"}
-    B -->|"Yes ✅"| C["Welcome! Show DashboardPage"]
-    B -->|"No ❌"| D["Kicked out → /login"]
-```
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -591,92 +377,40 @@ function ProtectedRoute({ children }) {
 export default ProtectedRoute;
 ```
 
-| Line | Why? |
-|------|------|
-| `{ children }` | Whatever page is wrapped inside (e.g., `<DashboardPage />`) |
+| Line | Why did we write this? |
+|------|------------------------|
+| `{ children }` | Represents whatever page is wrapped inside (e.g., `<DashboardPage />`). |
 | `localStorage.getItem("token")` | Check: does the user have a wristband? |
-| `<Navigate to="/login" />` | No wristband → bounce them to login |
-| `return children` | Has wristband → let them in, show the page |
+| `<Navigate to="/login" />` | No wristband → bounce them to login. |
+| `return children` | Has wristband → let them in, show the page. |
 
 #### 🧪 TEST: Try the Bouncer!
-
 1. Clear localStorage: DevTools (F12) → **Application** → **Local Storage** → Clear All.
 2. Type `http://localhost:5173/dashboard` in the address bar.
 3. **Expected:** Immediately redirected to `/login`. ✅
 
+> ⚠️ **What could go wrong?**
+> If you clear localStorage while you are already on the Dashboard, the screen won't change until you click a link or refresh. The Bouncer only checks at the door!
+
 ---
 
-## 🔑 Phase 4: The Login Experience (State & Tokens)
+## 🔑 Phase 3: The Login Experience
 
 ---
 
 ### 📁 File: `src/pages/LoginPage.jsx`
 
-This is the first page users see. They type email and password, click Login, and if the backend says "OK", we save the JWT token and jump to the Dashboard.
-
 #### ❌ The Problem — Normal Variables Are Silent!
 
-```javascript
-// ❌ THIS DOES NOT WORK
-function LoginPage() {
-  let email = "";
-  function handleChange(event) {
-    email = event.target.value;
-    console.log(email); // prints correctly...
-  }
-  return (
-    <div>
-      <input onChange={handleChange} />
-      <p>You typed: {email}</p>  {/* NEVER updates on screen! */}
-    </div>
-  );
-}
-```
-
-```mermaid
-flowchart TD
-    A["User types in the input"] --> B["let email changes silently"]
-    B --> C["React has NO IDEA the variable changed"]
-    C --> D["Screen stays blank forever ❌"]
-```
-
-**Why?** React is a painter. The painter repaints ONLY when you SHOUT. A `let` variable changes silently — the painter never hears it.
+If you track typing with `let email = ""`, React ignores it. React is a painter. The painter repaints ONLY when you SHOUT. A `let` variable changes silently.
 
 #### ✅ The Solution — `useState` (The Megaphone)
 
 `useState` is a **megaphone**. `setEmail("new value")` SHOUTS: "Hey React! Repaint NOW!"
 
-```javascript
-const [email, setEmail] = useState("");
-//     ↑ value  ↑ megaphone     ↑ starting value
-```
+#### The API Call — `async/await` (The Impatient Friend)
 
-| ❌ Silent (React ignores) | ✅ Megaphone (React repaints!) |
-|---|---|
-| `email = "new value"` | `setEmail("new value")` |
-
-#### The API Call — `async/await` (The Waiting Rule)
-
-JavaScript is an **impatient friend**. You ask it to order food (API call), but it doesn't wait — it immediately asks "What's for dessert?" before the food arrives.
-
-```javascript
-// ❌ WITHOUT await — impatient friend
-function handleLogin() {
-  const response = axios.post("/auth/login", { email, password });
-  console.log(response); // undefined! Food hasn't arrived!
-}
-
-// ✅ WITH await — grab their arm: "SIT. WAIT."
-async function handleLogin() {
-  const response = await axios.post("/auth/login", { email, password });
-  console.log(response.data); // ✅ { success: true, token: "..." }
-}
-```
-
-| Keyword | Analogy |
-|---------|---------|
-| `async` | "This function might need to wait" |
-| `await` | Grab the friend's arm: "SIT. WAIT for the food." |
+JavaScript is an **impatient friend**. You ask it to call the API, but it doesn't wait — it moves on immediately. `await` grabs their arm: "SIT. WAIT for the backend."
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -698,19 +432,13 @@ function LoginPage() {
     setError("");
 
     try {
-      const response = await apiClient.post("/auth/login", {
-        email: email,
-        password: password,
-      });
+      const response = await apiClient.post("/auth/login", { email, password });
 
-      // Save the token and user info in localStorage
       localStorage.setItem("token", response.data.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.data.user));
 
-      // Redirect to the dashboard
       navigate("/dashboard");
     } catch (err) {
-      // Show the error message from the backend, or a generic one
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
@@ -728,22 +456,14 @@ function LoginPage() {
 
       <form onSubmit={handleLogin}>
         <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={function (e) { setEmail(e.target.value); }}
-          required
+          type="email" placeholder="Email" value={email}
+          onChange={function (e) { setEmail(e.target.value); }} required
         />
         <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={function (e) { setPassword(e.target.value); }}
-          required
+          type="password" placeholder="Password" value={password}
+          onChange={function (e) { setPassword(e.target.value); }} required
         />
-
         {error && <p className="error">{error}</p>}
-
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
@@ -755,40 +475,27 @@ function LoginPage() {
 export default LoginPage;
 ```
 
-#### Line-by-Line "Why?" Table
-
-| Line | Why? |
-|------|------|
-| `useState("")` for email, password | Track what the user types. Start empty. Megaphone! |
-| `useState("")` for error | If login fails, show the error on screen. |
-| `useState(false)` for loading | While request is flying, disable the button. |
-| `useNavigate()` | Returns a function to jump pages: `navigate("/dashboard")`. |
-| `event.preventDefault()` | Stop the browser from refreshing the page on form submit. |
+| Line | Why did we write this? |
+|------|------------------------|
+| `useState("")` | Track inputs. Start empty. Megaphone! |
+| `event.preventDefault()` | Stop the browser from refreshing on form submit. |
 | `setLoading(true)` | Megaphone: show "Logging in..." on the button. |
-| `await apiClient.post(...)` | Call backend. WAIT for response. (The Waiting Rule) |
-| `localStorage.setItem("token", ...)` | Save the JWT wristband for future API calls. |
-| `JSON.stringify(...)` | localStorage only stores strings. Convert user object to string. |
-| `navigate("/dashboard")` | Login success → jump to Dashboard! |
-| `catch (err)` | Wrong password? Backend error? Show the error message. |
-| `finally { setLoading(false) }` | Re-enable the button whether login worked or failed. |
-| `value={email}` | The input always displays the current state value. |
-| `onChange={function (e) { setEmail(e.target.value); }}` | Every keystroke → megaphone shouts → screen updates. |
-| `{error && <p>...</p>}` | Only show error paragraph IF an error exists. |
-| `disabled={loading}` | Prevent double-clicking while request is in progress. |
-| `{loading ? "Logging in..." : "Login"}` | Different button text based on loading state. |
+| `await apiClient.post(...)` | Call backend. WAIT for response. |
+| `localStorage.setItem("token", ...)` | Save the JWT wristband. |
+| `navigate("/dashboard")` | Jump to Dashboard! |
 
 #### 🧪 TEST: Login Flow
-
 1. Open `http://localhost:5173`.
 2. Press **F12** → **Network** tab.
 3. Type `amara@school.com` / `admin123` → Click Login.
-4. **Network tab:** See `login` request with status **200**.
-5. Click the request → **Response** → See `{ "success": true, "data": { "token": "eyJ..." } }`.
-6. You should be redirected to `/dashboard`. ✅
+4. **Network tab:** See `login` request with status **200**. ✅
+
+> ⚠️ **What could go wrong?**
+> If you get `ERR_CONNECTION_REFUSED`, your backend (Port 5000) is not running!
 
 ---
 
-## 📊 Phase 5: The Data Experience (Effects & Loops)
+## 📊 Phase 4: Data Display (Effects & Loops)
 
 ---
 
@@ -796,54 +503,32 @@ export default LoginPage;
 
 #### ❌ The DISASTER — The Infinite Loop (The Mirror Effect)
 
-We want to load stats when the Dashboard opens. So we call the API inside the component:
+We want to load stats when the page opens. So we call the API:
 
 ```javascript
-// ❌ INFINITE LOOP — YOUR BROWSER WILL CRASH!
 function DashboardPage() {
-  const [stats, setStats] = useState({ classrooms: 0, students: 0 });
-
+  const [stats, setStats] = useState({ classrooms: 0 });
   async function loadData() {
     const res = await apiClient.get("/classrooms");
-    setStats({ classrooms: res.data.data.length, students: 0 });
+    setStats({ classrooms: res.data.data.length });
   }
   loadData(); // Runs directly in the component body!
-
-  return <p>{stats.classrooms} classrooms</p>;
 }
 ```
 
-Imagine putting **two mirrors facing each other**. The reflection bounces forever.
-
-```mermaid
-flowchart TD
-    A["1. Component renders"] --> B["2. loadData() runs"]
-    B --> C["3. API responds with data"]
-    C --> D["4. setStats() called\n(Megaphone shouts!)"]
-    D --> E["5. React repaints screen\n= Component re-renders"]
-    E --> A
-    style A fill:#e74c3c,color:white
-    style E fill:#e74c3c,color:white
-```
-
+Imagine putting **two mirrors facing each other**.
+`Component renders` → `loadData() runs` → `API responds` → `setStats() shouts` → `Component re-renders` → `loadData() runs again`... FOREVER.
 **Result:** Thousands of API requests per second. Browser freezes. Backend crashes. 💀
 
 #### ✅ The Solution — `useEffect` (The Once-a-Day Alarm)
 
-`useEffect` is an **alarm clock**. You set it to ring ONCE in the morning. It does NOT ring every second.
+`useEffect` is an **alarm clock**. You set it to ring ONCE in the morning.
 
 ```javascript
 useEffect(function () {
-  // This code runs ONCE when the page first appears
-  fetchData();
+  fetchData(); // Runs ONCE on page load
 }, []); // ← THIS EMPTY ARRAY = "ring only once"
 ```
-
-| Code | When It Runs | Alarm Analogy |
-|------|-------------|--------------|
-| `useEffect(fn, [])` | **Once** — on page load | Alarm rings once in the morning |
-| `useEffect(fn, [id])` | When `id` changes | Alarm rings when a specific event happens |
-| `useEffect(fn)` | **Every render** — BUG! | Alarm rings every second — disaster! |
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -914,28 +599,18 @@ function DashboardPage() {
 export default DashboardPage;
 ```
 
-#### Line-by-Line "Why?" Table
-
-| Line | Why? |
-|------|------|
+| Line | Why did we write this? |
+|------|------------------------|
 | `useEffect(..., [])` | The Alarm — run ONCE on page load. No infinite loops! |
-| `Promise.all([...])` | Fetch classrooms AND students **at the same time**. Much faster than one by one! |
-| `setStats(...)` | Megaphone: update the numbers on screen |
-| `setLoading(false)` | Data arrived — stop showing "Loading..." |
-| `if (loading) return ...` | Show a simple loading message until the data is ready |
-| `{stats.classrooms}` | Display the actual number fetched from the database |
+| `Promise.all([...])` | Fetch classrooms AND students **at the same time**. Faster! |
+| `{stats.classrooms}` | Display the actual number fetched from the database. |
 
-#### 🧪 TEST: Test the Dashboard!
-
-1. Login. You should see real numbers (e.g., **2 Classrooms**, **4 Students**).
-2. Open DevTools (F12) → **Network**.
-3. You should see GET requests to `/classrooms` and `/students` with status **200**. ✅
+> ⚠️ **What could go wrong?**
+> Forgetting the `[]` array at the end of `useEffect` is the #1 mistake beginners make. Your computer fans will spin up as your app sends 10,000 requests to the backend!
 
 ---
 
 ### 📁 File: `src/pages/ClassroomsPage.jsx`
-
-This page follows the exact same pattern: `useState` + `useEffect` + `apiClient`. Then we use `.map()` to draw a table.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -959,18 +634,10 @@ function ClassroomsPage() {
         setLoading(false);
       }
     }
-
     fetchClassrooms();
   }, []);
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <p style={{ textAlign: "center", marginTop: "50px" }}>Loading classrooms...</p>
-      </>
-    );
-  }
+  if (loading) return <><Navbar /><p>Loading classrooms...</p></>;
 
   return (
     <>
@@ -1012,22 +679,18 @@ function ClassroomsPage() {
 export default ClassroomsPage;
 ```
 
-#### Line-by-Line "Why?" Table
+| Line | Why did we write this? |
+|------|------------------------|
+| `.map(function(classroom))` | Loop through the array. Create a `<tr>` for each. |
+| `key={classroom.id}` | React requires a unique ID for every item in a list. |
+| `{classroom.teacher ? ...}` | If teacher exists, show name. Else, show "—". |
 
-| Line | Why? |
-|------|------|
-| `useState([])` | Start with an empty array of classrooms |
-| `setClassrooms(response.data.data)` | Store the array of classrooms received from backend |
-| `{classrooms.length === 0 ? ... : ...}` | If no classrooms exist, show a message. Otherwise, show the table. |
-| `.map(function(classroom))` | Loop through the array. For every classroom, create a `<tr>` (table row) |
-| `key={classroom.id}` | React requires a unique ID for every item in a list for performance |
-| `{classroom.teacher ? ... : ...}` | If the classroom has a teacher, show their name. If not, show "—" |
+> ⚠️ **What could go wrong?**
+> If you forget `key={classroom.id}`, React will yell at you in the console, and updating the table later might cause weird visual bugs.
 
 ---
 
 ### 📁 File: `src/pages/StudentsPage.jsx`
-
-Identical to ClassroomsPage, but fetches `/students`.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
@@ -1051,18 +714,10 @@ function StudentsPage() {
         setLoading(false);
       }
     }
-
     fetchStudents();
   }, []);
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <p style={{ textAlign: "center", marginTop: "50px" }}>Loading students...</p>
-      </>
-    );
-  }
+  if (loading) return <><Navbar /><p>Loading students...</p></>;
 
   return (
     <>
@@ -1106,30 +761,267 @@ function StudentsPage() {
 export default StudentsPage;
 ```
 
----
+## 📝 Phase 5: The Main Feature - Marking Attendance (Bulk POST)
 
-### 📁 File: `src/pages/AttendancePage.jsx`
+This is the big one! Instead of marking students one by one, we fetch a whole classroom, toggle Present/Absent for everyone, and send ONE massive list to the backend.
 
-This page is different. It does NOT load data automatically on page load. It waits for the user to enter a Classroom ID and a Date, then fetches data on submit. Therefore, **no `useEffect` is needed for the API call!**
+### 📁 File: `src/pages/MarkAttendancePage.jsx`
+
+#### UX Upgrade (Dropdowns)
+We don't want teachers typing a random Classroom ID (like `12`). They won't remember it! Instead, we fetch all classrooms on page load and put them in a `<select>` dropdown.
 
 #### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../api/apiClient";
+import Navbar from "../components/Navbar";
+
+function MarkAttendancePage() {
+  const [classrooms, setClassrooms] = useState([]);
+  const [selectedClassroomId, setSelectedClassroomId] = useState("");
+  const [date, setDate] = useState("");
+  const [students, setStudents] = useState([]);
+  
+  // This object will hold { studentId: "present" } or { studentId: "absent" }
+  const [attendanceData, setAttendanceData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Step 1: Fetch classrooms for the Dropdown when page loads
+  useEffect(function () {
+    async function loadClassrooms() {
+      try {
+        const response = await apiClient.get("/classrooms");
+        setClassrooms(response.data.data);
+      } catch (err) {
+        console.error("Failed to load classrooms", err);
+      }
+    }
+    loadClassrooms();
+  }, []);
+
+  // Step 2: Fetch students when they click "Load Students"
+  async function handleLoadStudents(event) {
+    event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      // Find students that belong to the selected classroom
+      const response = await apiClient.get("/students");
+      const allStudents = response.data.data;
+      
+      const filteredStudents = allStudents.filter(function(student) {
+        return student.classroomId === parseInt(selectedClassroomId);
+      });
+
+      setStudents(filteredStudents);
+
+      // Default everyone to 'present' initially
+      const initialData = {};
+      filteredStudents.forEach(function(student) {
+        initialData[student.id] = "present";
+      });
+      setAttendanceData(initialData);
+
+      if (filteredStudents.length === 0) {
+        setMessage("No students found in this classroom.");
+      }
+    } catch (err) {
+      setMessage("Failed to load students.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Handle radio button changes for a specific student
+  function handleStatusChange(studentId, status) {
+    setAttendanceData(function(prevData) {
+      return { ...prevData, [studentId]: status };
+    });
+  }
+
+  // Step 3: Submit the bulk data to the backend
+  async function handleSubmitAttendance() {
+    setLoading(true);
+    setMessage("");
+
+    // Convert our object { 1: "present", 2: "absent" } into an array
+    const records = Object.keys(attendanceData).map(function(studentId) {
+      return {
+        studentId: parseInt(studentId),
+        status: attendanceData[studentId]
+      };
+    });
+
+    try {
+      await apiClient.post("/attendance/bulk", {
+        classroomId: parseInt(selectedClassroomId),
+        date: date,
+        records: records
+      });
+      
+      setMessage("✅ Attendance marked successfully!");
+      setStudents([]); // Clear the table on success
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setMessage("❌ " + err.response.data.message);
+      } else {
+        setMessage("❌ Failed to mark attendance.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="page-container">
+        <h1>Mark Attendance</h1>
+
+        <form onSubmit={handleLoadStudents} className="search-form">
+          <select 
+            value={selectedClassroomId} 
+            onChange={function(e) { setSelectedClassroomId(e.target.value); }}
+            required
+          >
+            <option value="">-- Select Classroom --</option>
+            {classrooms.map(function(c) {
+              return <option key={c.id} value={c.id}>{c.name}</option>;
+            })}
+          </select>
+
+          <input
+            type="date"
+            value={date}
+            onChange={function(e) { setDate(e.target.value); }}
+            required
+          />
+          <button type="submit" disabled={loading || !selectedClassroomId || !date}>
+            Load Students
+          </button>
+        </form>
+
+        {message && <p className={message.includes("✅") ? "success-msg" : "error"}>{message}</p>}
+
+        {students.length > 0 && (
+          <div style={{ marginTop: "20px" }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Reg. Number</th>
+                  <th>Attendance Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map(function(student) {
+                  return (
+                    <tr key={student.id}>
+                      <td>{student.name}</td>
+                      <td>{student.registrationNumber}</td>
+                      <td>
+                        <div className="attendance-toggle">
+                          <label>
+                            <input 
+                              type="radio" 
+                              name={"status-" + student.id} 
+                              value="present"
+                              checked={attendanceData[student.id] === "present"}
+                              onChange={function() { handleStatusChange(student.id, "present"); }}
+                            /> Present
+                          </label>
+                          <label>
+                            <input 
+                              type="radio" 
+                              name={"status-" + student.id} 
+                              value="absent"
+                              checked={attendanceData[student.id] === "absent"}
+                              onChange={function() { handleStatusChange(student.id, "absent"); }}
+                            /> Absent
+                          </label>
+                          <label>
+                            <input 
+                              type="radio" 
+                              name={"status-" + student.id} 
+                              value="late"
+                              checked={attendanceData[student.id] === "late"}
+                              onChange={function() { handleStatusChange(student.id, "late"); }}
+                            /> Late
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            
+            <button className="mark-btn" onClick={handleSubmitAttendance} disabled={loading}>
+              {loading ? "Saving..." : "Submit Attendance"}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+export default MarkAttendancePage;
+```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `<select>` dropdown | Better UX! We fetch classrooms with `useEffect` and list them as `<option>`s. |
+| `attendanceData` object | Stores { studentId: "status" }. Example: `{ 1: "present", 2: "absent" }` |
+| `initialData[student.id] = "present"` | We default everyone to 'present' to save the teacher time. |
+| `{ ...prevData, [studentId]: status }` | Safely updates the state object with the new radio button choice. |
+| `apiClient.post("/attendance/bulk", ...)` | Sends the massive list to our Day 2 Bulk endpoint! |
+
+> ⚠️ **What could go wrong?**
+> If you don't use `parseInt()` when sending `classroomId` and `studentId` to the backend, Prisma will throw an error because it expects numbers, but HTML inputs always return strings!
+
+---
+
+## 🔍 Phase 6: Viewing Attendance
+
+### 📁 File: `src/pages/AttendancePage.jsx`
+
+This page is similar to marking, but we use a Dropdown and Date to view existing records.
+
+#### 🚀 FULL CODE (READY TO COPY)
+
+```javascript
+import { useState, useEffect } from "react";
 import apiClient from "../api/apiClient";
 import Navbar from "../components/Navbar";
 
 function AttendancePage() {
+  const [classrooms, setClassrooms] = useState([]);
   const [classroomId, setClassroomId] = useState("");
   const [date, setDate] = useState("");
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Load classrooms for the dropdown
+  useEffect(function () {
+    async function loadClassrooms() {
+      try {
+        const response = await apiClient.get("/classrooms");
+        setClassrooms(response.data.data);
+      } catch (err) {}
+    }
+    loadClassrooms();
+  }, []);
+
   async function handleSearch(event) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+    setRecords([]);
 
     try {
       const response = await apiClient.get(
@@ -1156,20 +1048,24 @@ function AttendancePage() {
     <>
       <Navbar />
       <div className="page-container">
-        <h1>Attendance</h1>
+        <h1>View Attendance</h1>
 
         <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="number"
-            placeholder="Classroom ID"
-            value={classroomId}
-            onChange={function (e) { setClassroomId(e.target.value); }}
+          <select 
+            value={classroomId} 
+            onChange={function(e) { setClassroomId(e.target.value); }}
             required
-          />
+          >
+            <option value="">-- Select Classroom --</option>
+            {classrooms.map(function(c) {
+              return <option key={c.id} value={c.id}>{c.name}</option>;
+            })}
+          </select>
+
           <input
             type="date"
             value={date}
-            onChange={function (e) { setDate(e.target.value); }}
+            onChange={function(e) { setDate(e.target.value); }}
             required
           />
           <button type="submit" disabled={loading}>
@@ -1213,14 +1109,13 @@ function AttendancePage() {
 export default AttendancePage;
 ```
 
-#### Line-by-Line "Why?" Table
-
-| Line | Why? |
-|------|------|
-| `useState("")` for classroomId, date | Track the user's search inputs |
-| `apiClient.get("/attendance/classroom/" + classroomId + "?date=" + date)` | Inject the user's inputs into the URL (e.g. `/attendance/classroom/1?date=2026-04-28`) |
-| `{records.length > 0 && <table>...}` | Only draw the table IF we actually found records |
+| Line | Why did we write this? |
+|------|------------------------|
+| `apiClient.get("/attendance/classroom/" + classroomId + "?date=" + date)` | Injects user's inputs into the URL (e.g. `/attendance/classroom/1?date=2026-04-28`) |
 | `className={"status-badge status-" + record.status}` | Dynamically sets CSS class. If status is "present", class is "status-present" (green badge) |
+
+> ⚠️ **What could go wrong?**
+> If you test this and no records appear, make sure you actually submitted the attendance on the **Mark Attendance** page first!
 
 ---
 
@@ -1258,7 +1153,7 @@ Over 3 days, you built:
 |-----|---------------|-----------|
 | **Day 1** | MySQL Database | Tables, Keys, Relationships, SQL Queries |
 | **Day 2** | Express Backend API | REST, JWT, Middleware, Prisma, Layered Architecture |
-| **Day 3** | React Frontend | Components, State, Effects, API Calls, Auth Flow |
+| **Day 3** | React Frontend | Components, State, Effects, API Calls, Bulk Processing |
 
 > **You are now a full-stack developer.** 🚀
 
