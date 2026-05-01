@@ -1,4 +1,4 @@
-﻿# 🎨 Day 3 — Building the React Frontend (All-In-One Master Guide)
+# 🎨 Day 3 — Building the React Frontend (All-In-One Master Guide)
 
 > **Day 3 of designHer 2.0 Bootcamp**
 > Today we connect our React frontend to the backend API we built on Day 2!
@@ -408,6 +408,14 @@ If you track typing with `let email = ""`, React ignores it. React is a painter.
 
 `useState` is a **megaphone**. `setEmail("new value")` SHOUTS: "Hey React! Repaint NOW!"
 
+```mermaid
+flowchart TD
+    A["You call setEmail('amara@school.com')"] --> B["📢 Megaphone shouts to React"]
+    B --> C["React sees the state changed"]
+    C --> D["🎨 React repaints the screen"]
+    D --> E["User sees the new text! ✅"]
+```
+
 #### The API Call — `async/await` (The Impatient Friend)
 
 JavaScript is an **impatient friend**. You ask it to call the API, but it doesn't wait — it moves on immediately. `await` grabs their arm: "SIT. WAIT for the backend."
@@ -523,6 +531,15 @@ Imagine putting **two mirrors facing each other**.
 #### ✅ The Solution — `useEffect` (The Once-a-Day Alarm)
 
 `useEffect` is an **alarm clock**. You set it to ring ONCE in the morning.
+
+```mermaid
+flowchart TD
+    A["1. Component renders for the first time"] --> B["⏰ Alarm (useEffect) rings!"]
+    B --> C["2. fetchStats() calls API"]
+    C --> D["3. setStats() updates state"]
+    D --> E["4. Component re-renders with data"]
+    E --> F["🚫 Alarm does NOT ring again"]
+```
 
 ```javascript
 useEffect(function () {
@@ -808,24 +825,20 @@ function MarkAttendancePage() {
     setMessage("");
 
     try {
-      // Find students that belong to the selected classroom
-      const response = await apiClient.get("/students");
-      const allStudents = response.data.data;
+      // Fetch ONLY students for the selected classroom using the correct backend endpoint
+      const response = await apiClient.get("/students/classroom/" + selectedClassroomId);
+      const classroomStudents = response.data.data;
       
-      const filteredStudents = allStudents.filter(function(student) {
-        return student.classroomId === parseInt(selectedClassroomId);
-      });
-
-      setStudents(filteredStudents);
+      setStudents(classroomStudents);
 
       // Default everyone to 'present' initially
       const initialData = {};
-      filteredStudents.forEach(function(student) {
+      classroomStudents.forEach(function(student) {
         initialData[student.id] = "present";
       });
       setAttendanceData(initialData);
 
-      if (filteredStudents.length === 0) {
+      if (classroomStudents.length === 0) {
         setMessage("No students found in this classroom.");
       }
     } catch (err) {
@@ -847,19 +860,19 @@ function MarkAttendancePage() {
     setLoading(true);
     setMessage("");
 
-    // Convert our object { 1: "present", 2: "absent" } into an array
+    // Convert our object { 1: "present", 2: "absent" } into an array that the backend expects
     const records = Object.keys(attendanceData).map(function(studentId) {
       return {
         studentId: parseInt(studentId),
+        classroomId: parseInt(selectedClassroomId),
+        date: date,
         status: attendanceData[studentId]
       };
     });
 
     try {
       await apiClient.post("/attendance/bulk", {
-        classroomId: parseInt(selectedClassroomId),
-        date: date,
-        records: records
+        attendanceList: records
       });
       
       setMessage("✅ Attendance marked successfully!");
@@ -1156,6 +1169,42 @@ Over 3 days, you built:
 | **Day 3** | React Frontend | Components, State, Effects, API Calls, Bulk Processing |
 
 > **You are now a full-stack developer.** 🚀
+
+---
+
+## 🏃‍♂️ How to Run the App Locally
+
+To test the complete attendance system on your machine, you must run both the backend and frontend at the same time.
+
+### 1. Start the Backend (Terminal 1)
+Open a new terminal window:
+```bash
+cd backend
+npm run dev
+```
+Wait until you see: `🚀 Server is running on port 5000`
+
+### 2. Start the Frontend (Terminal 2)
+Open a **second** terminal window:
+```bash
+cd frontend
+npm run dev
+```
+Open `http://localhost:5173` in your browser.
+
+### 🧪 Test Credentials (from our Day 1 Database Seed)
+Use these exact credentials to log in:
+- **Email:** `amara@school.com` (Teacher)
+- **Password:** `admin123`
+
+### ❌ Common Errors
+
+| Error | What happened? | How to fix |
+|-------|---------------|------------|
+| `Network Error` or `ERR_CONNECTION_REFUSED` | Your backend isn't running | Start Terminal 1 (`cd backend && npm run dev`) |
+| `401 Unauthorized` | Your token expired or you didn't send one | Log out and log back in |
+| Blank White Screen | You have a syntax error in your React code | Press F12 -> Console to see exactly which line is broken |
+| `Cannot destructure property 'children' of 'undefined'` | You forgot a curly brace in a component prop | Check `function ProtectedRoute({ children })` |
 
 ---
 

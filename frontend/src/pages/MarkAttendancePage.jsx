@@ -33,24 +33,20 @@ function MarkAttendancePage() {
     setMessage("");
 
     try {
-      // Find students that belong to the selected classroom
-      const response = await apiClient.get("/students");
-      const allStudents = response.data.data;
+      // Fetch ONLY students for the selected classroom using the correct backend endpoint
+      const response = await apiClient.get("/students/classroom/" + selectedClassroomId);
+      const classroomStudents = response.data.data;
       
-      const filteredStudents = allStudents.filter(function(student) {
-        return student.classroomId === parseInt(selectedClassroomId);
-      });
-
-      setStudents(filteredStudents);
+      setStudents(classroomStudents);
 
       // Default everyone to 'present' initially
       const initialData = {};
-      filteredStudents.forEach(function(student) {
+      classroomStudents.forEach(function(student) {
         initialData[student.id] = "present";
       });
       setAttendanceData(initialData);
 
-      if (filteredStudents.length === 0) {
+      if (classroomStudents.length === 0) {
         setMessage("No students found in this classroom.");
       }
     } catch (err) {
@@ -72,19 +68,19 @@ function MarkAttendancePage() {
     setLoading(true);
     setMessage("");
 
-    // Convert our object { 1: "present", 2: "absent" } into an array
+    // Convert our object { 1: "present", 2: "absent" } into an array that the backend expects
     const records = Object.keys(attendanceData).map(function(studentId) {
       return {
         studentId: parseInt(studentId),
+        classroomId: parseInt(selectedClassroomId),
+        date: date,
         status: attendanceData[studentId]
       };
     });
 
     try {
       await apiClient.post("/attendance/bulk", {
-        classroomId: parseInt(selectedClassroomId),
-        date: date,
-        records: records
+        attendanceList: records
       });
       
       setMessage("✅ Attendance marked successfully!");
