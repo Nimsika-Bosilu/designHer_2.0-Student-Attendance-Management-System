@@ -1242,7 +1242,7 @@ Use these exact credentials to log in:
 |--------------------|-------------|---------|
 | amara@school.com   | admin123    | Admin   |
 | nimal@school.com   | teacher123  | Teacher |
-| priya@school.com   | teacher456  | Teacher |
+| sanduni@school.com | teacher123  | Teacher |
 
 ### ❌ Common Errors
 

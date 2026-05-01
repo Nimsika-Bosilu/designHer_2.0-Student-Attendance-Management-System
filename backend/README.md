@@ -1,36 +1,17 @@
-# 🚀 Student Attendance Management System — Backend API Guide
+# 🚀 Day 2 — Building the Backend REST API (Build-Test-Repeat Master Guide)
 
 > **Day 2 of designHer 2.0 Bootcamp**
 > Today we build the backend REST API using Node.js, Express, and Prisma!
+> We will build this app **phase by phase**, testing each phase before moving on.
+
+> 💡 **How to use this guide:** Every file has a `🚀 FULL CODE (READY TO COPY)` block. Copy it, paste it into the correct file, and save. Then **test** before moving to the next phase. There are ZERO placeholders here.
 
 ---
 
-## 📖 Table of Contents
-
-1. [What We Are Building Today](#1--what-we-are-building-today)
-2. [Step 1 — Project Setup](#2--step-1--project-setup)
-3. [Step 2 — The Secrets Disaster & Environment Variables](#3--step-2--the-secrets-disaster--environment-variables)
-4. [Step 3 — Connecting to the Database with Prisma](#4--step-3--connecting-to-the-database-with-prisma)
-5. [Step 4 — Auth Repository & Async/Await](#5--step-4--auth-repository--asyncawait)
-6. [Step 5 — Auth Service: Passwords & JWT](#6--step-5--auth-service-passwords--jwt)
-7. [Step 6 — Auth Controller: HTTP & Error Handling](#7--step-6--auth-controller-http--error-handling)
-8. [Step 7 — Auth Middleware: Protecting Routes](#8--step-7--auth-middleware-protecting-routes)
-9. [Step 8 — Auth Routes & REST API Design](#9--step-8--auth-routes--rest-api-design)
-10. [Step 9 — Building the Classroom System](#10--step-9--building-the-classroom-system)
-11. [Step 10 — Building the Student System](#11--step-10--building-the-student-system)
-12. [Step 11 — Building the Attendance System](#12--step-11--building-the-attendance-system)
-13. [Step 12 — The Main Server File & CORS](#13--step-12--the-main-server-file--cors)
-14. [Step 13 — Running the Server](#14--step-13--running-the-server)
-15. [Step 14 — Testing with Postman](#15--step-14--testing-with-postman)
-
----
-
-## 1. 🎯 What We Are Building Today
+## 🗺️ The Big Picture — Where Are We?
 
 Yesterday (Day 1), we built the **database** — the storage box for our data.
-
 Today (Day 2), we build the **backend API** — the brain that reads, writes, and protects our data.
-
 Tomorrow (Day 3), we build the **frontend** — the face that users see.
 
 ```mermaid
@@ -39,7 +20,7 @@ flowchart LR
     B -->|"Prisma Queries"| C["🗄️ MySQL Database\n(Day 1)"]
 ```
 
-### The Architecture — Layered Design
+### The Architecture — The Restaurant Analogy
 
 Our backend is organized into **layers**. Each layer has ONE job. Think of it like a restaurant:
 
@@ -89,16 +70,24 @@ Now let's start building! 🚀
 
 ---
 
-## 2. 🛠️ Step 1 — Project Setup
+## 🏗️ Phase 1: Foundation (Setup & Server)
 
-### Create the project folder
+> **Goal:** Get a running Express server that responds "API is running!" when you visit it.
+
+```mermaid
+flowchart LR
+    A["👩‍💻 You\n(Browser)"] -->|"GET http://localhost:5000/"| B["⚙️ Express Server"]
+    B -->|"200 OK\n'API is running!'"| A
+```
+
+### Step 1: Create the Project
 
 ```bash
 mkdir backend
 cd backend
 ```
 
-### Initialize the project
+### Step 2: Initialize the Project
 
 ```bash
 npm init -y
@@ -106,7 +95,7 @@ npm init -y
 
 This creates a `package.json` file — the ID card of our project.
 
-### Install the packages we need
+### Step 3: Install the Packages We Need
 
 ```bash
 npm install express cors dotenv bcrypt jsonwebtoken @prisma/client
@@ -126,7 +115,13 @@ npm install --save-dev prisma nodemon
 | `prisma` | Tool to set up database models |
 | `nodemon` | Restarts the server automatically when you save a file |
 
-### Update package.json
+| Line | Why did we write this? |
+|------|------------------------|
+| `npm init -y` | Creates `package.json`. The `-y` flag says "yes to all default questions." |
+| `npm install express cors ...` | Downloads these packages into `node_modules/` and adds them to `package.json`. |
+| `npm install --save-dev prisma nodemon` | `--save-dev` means "I only need these during development, not in production." |
+
+### Step 4: Update package.json
 
 Open `package.json` and add `"type": "module"` and update the scripts:
 
@@ -139,11 +134,13 @@ Open `package.json` and add `"type": "module"` and update the scripts:
   }
 ```
 
-- `"type": "module"` — Lets us use modern `import`/`export` syntax instead of the older `require()`.
-- `npm run dev` — Runs the server with auto-restart (for development)
-- `npm start` — Runs the server normally (for production)
+| Line | Why did we write this? |
+|------|------------------------|
+| `"type": "module"` | Lets us use modern `import`/`export` syntax instead of the older `require()`. |
+| `"dev": "nodemon src/server.js"` | `npm run dev` runs the server with auto-restart (for development). |
+| `"start": "node src/server.js"` | `npm start` runs the server normally (for production). |
 
-### Create the folder structure
+### Step 5: Create the Folder Structure
 
 ```bash
 mkdir src
@@ -191,9 +188,137 @@ backend/
 └── package.json
 ```
 
+### Step 6: Write the Minimal Server
+
+> 💡 We write a **minimal** server.js first — just enough to test that Express works. We will expand it later after building all the route files.
+
+#### ❌ The Problem — Browser Blocks Your Frontend!
+
+You build your React app on `http://localhost:5173`. Your API runs on `http://localhost:5000`. You try to call the API from React. But the browser **blocks** the request!
+
+```mermaid
+flowchart LR
+    A["React App\nlocalhost:5173"] -->|"Request"| B["Browser\n(Security Check)"]
+    B -->|"❌ BLOCKED!\nDifferent port = different origin"| C["Express API\nlocalhost:5000"]
+```
+
+**Why?** Browsers have a security rule called **CORS** (Cross-Origin Resource Sharing): a website can only talk to the SAME server it came from. Different port = different origin = blocked.
+
+#### ✅ The Solution — cors() middleware
+
+The `cors` package tells the browser: "It is OK, allow requests from other origins."
+
+```mermaid
+flowchart LR
+    A["React App\nlocalhost:5173"] -->|"Request"| B["Browser\n(Security Check)"]
+    B -->|"✅ ALLOWED!\ncors() says it's OK"| C["Express API\nlocalhost:5000"]
+```
+
+#### 📁 File: `src/server.js` (Minimal Version)
+
+#### 🚀 FULL CODE (READY TO COPY)
+
+```javascript
+// Step 1: Load environment variables (MUST be first!)
+import "dotenv/config";
+
+// Step 2: Import packages
+import express from "express";
+import cors from "cors";
+
+// Step 3: Create the Express app
+const app = express();
+
+// Step 4: Add middleware
+app.use(cors());          // Allow React frontend to connect
+app.use(express.json());  // Parse JSON request bodies
+
+// Step 5: Test route
+app.get("/", function (req, res) {
+  res.json({
+    success: true,
+    message: "designHer 2.0 Attendance API is running!",
+    data: null,
+  });
+});
+
+// Step 6: Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, function () {
+  console.log("");
+  console.log("==============================================");
+  console.log("  designHer 2.0 Attendance API");
+  console.log("  Server is running on http://localhost:" + PORT);
+  console.log("==============================================");
+  console.log("");
+});
+```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `import "dotenv/config"` | Loads `.env` file into `process.env`. MUST be first! |
+| `import express from "express"` | Gets the Express framework. |
+| `const app = express()` | Creates a new Express application. |
+| `app.use(cors())` | Allows cross-origin requests (fixes CORS errors from React). |
+| `app.use(express.json())` | Makes Express understand JSON bodies (`req.body`). Without this, `req.body` is always `undefined`! |
+| `app.get("/", ...)` | When someone visits `http://localhost:5000/`, send back a JSON message. |
+| `app.listen(PORT, ...)` | Starts the server on port 5000 and prints a message to the console. |
+
+**Deep dive — The magical `app.use()`:**
+
+In Express, `app.use()` is how you add things to the global middleware pipeline. Every single request that hits your server goes through this pipeline from top to bottom.
+
+**`app.use(cors())`** — Think of CORS like a bouncer at a club who hates people from other neighborhoods. If the React frontend (living at `localhost:5173`) tries to talk to the Express backend (`localhost:5000`), the browser blocks it because they are from different "neighborhoods" (ports). `cors()` tells the browser: "It is fine, let everyone in."
+
+**`app.use(express.json())`** — By default, Express is dumb. If a frontend sends `{ "name": "Nimal" }` in a POST request, Express just sees a confusing stream of raw text bytes. `express.json()` intercepts the request, reads the raw text, converts it into a neat JavaScript object, and attaches it to `req.body`. Without this line, `req.body` will always be `undefined`, and your app will break!
+
+> ⚠️ **What could go wrong?**
+> If you forget `app.use(express.json())`, every `req.body` will be `undefined`. Your register and login will silently fail because `req.body.email` returns `undefined`.
+
+### 🧪 Phase 1 Test: Is the Server Alive?
+
+```bash
+npm run dev
+```
+
+You should see:
+```
+==============================================
+  designHer 2.0 Attendance API
+  Server is running on http://localhost:5000
+==============================================
+```
+
+**Test in Postman:**
+```
+Method: GET
+URL:    http://localhost:5000/
+```
+
+**What to look for:**
+```json
+{ "success": true, "message": "designHer 2.0 Attendance API is running!", "data": null }
+```
+
+✅ If you see this, Phase 1 is complete! Your server is alive.
+
+| Common Error | Cause | Fix |
+|-------------|-------|-----|
+| `Cannot find module 'express'` | Packages not installed | Run `npm install` |
+| `Port 5000 is already in use` | Another server is running | Change PORT in `.env` to 5001, or close the other server |
+
 ---
 
-## 3. 💥 Step 2 — The Secrets Disaster & Environment Variables
+## 🔐 Phase 2: Database & Security (The Fridge & The Safe)
+
+> **Goal:** Connect to our Day 1 MySQL database using Prisma and learn how to keep secrets safe.
+
+```mermaid
+flowchart TD
+    A["Phase 2 Goal"] --> B["1. Keep secrets safe\n(.env file)"]
+    A --> C["2. Connect to MySQL\n(Prisma ORM)"]
+    A --> D["3. Share code between files\n(import/export)"]
+```
 
 ### ❌ The Problem — Hardcoded Secrets
 
@@ -219,6 +344,10 @@ flowchart TD
 
 > ⚠️ **This happens every single day.** Real companies have lost millions of dollars because developers accidentally pushed passwords to GitHub. GitHub has bots that scan for exposed passwords within seconds of a push.
 
+#### 🎬 Scenario: Amara's Mistake
+
+Amara (our admin) is excited after Day 1. She hardcodes her MySQL password `MySecretPassword123` into `server.js` and pushes it to GitHub. Within 30 seconds, a bot finds the password. Next morning, her entire `attendance_system_db` database is gone. All student records — deleted. She has to rebuild everything from scratch. This is preventable.
+
 ### ✅ The Solution — Environment Variables (.env)
 
 Instead of writing passwords in the code, we put them in a **secret file** called `.env` that NEVER gets pushed to GitHub.
@@ -229,9 +358,11 @@ flowchart LR
     C[".env.example\n(TEMPLATE — pushed to GitHub)"] -->|"Shows the format"| D["Other developers\nknow what to fill in"]
 ```
 
-### Create the `.env` file
+#### 📁 File: `.env`
 
 Create a file called `.env` in the `backend/` folder:
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```env
 # Database Connection
@@ -246,9 +377,17 @@ PORT=5000
 
 > ⚠️ Replace `YOUR_MYSQL_PASSWORD` with your actual MySQL password.
 
-### Create the `.env.example` file
+| Line | Why did we write this? |
+|------|------------------------|
+| `DATABASE_URL` | The full connection string for Prisma to reach our MySQL database. |
+| `JWT_SECRET` | A secret key used to sign JWT tokens. Anyone who knows this can create fake tokens! |
+| `PORT` | Which port our server listens on. |
+
+#### 📁 File: `.env.example`
 
 This file is a **template** that you push to GitHub. It shows other developers what variables they need, but without the real values:
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```env
 # Database Connection
@@ -261,16 +400,18 @@ JWT_SECRET="your-secret-key-here"
 PORT=5000
 ```
 
-### Create the `.gitignore` file
+#### 📁 File: `.gitignore`
 
 This tells Git to NEVER push certain files:
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```
 node_modules/
 .env
 ```
 
-### How to use environment variables in code
+#### How to Use Environment Variables in Code
 
 ```javascript
 // ✅ SAFE! The real password is in .env, not in the code
@@ -290,9 +431,9 @@ flowchart LR
 
 ---
 
-## 4. 🗄️ Step 3 — Connecting to the Database with Prisma
+### Connecting to the Database with Prisma
 
-### ❌ The Problem — Writing Raw SQL is Painful
+#### ❌ The Problem — Writing Raw SQL is Painful
 
 On Day 1, you wrote SQL queries like this:
 
@@ -319,7 +460,7 @@ const result = await connection.query(
 3. Vulnerable to SQL injection attacks
 4. No error checking until you run it
 
-### ✅ The Solution — Prisma ORM
+#### ✅ The Solution — Prisma ORM
 
 **Prisma** is an ORM (Object-Relational Mapper). It lets you talk to the database using JavaScript instead of SQL.
 
@@ -342,7 +483,7 @@ flowchart LR
     B -->|"SELECT * FROM users"| C["MySQL Database"]
 ```
 
-### Set up Prisma
+#### Set Up Prisma
 
 ```bash
 npx prisma init
@@ -350,9 +491,9 @@ npx prisma init
 
 This creates a `prisma/` folder with a `schema.prisma` file.
 
-### Create the Prisma schema
+#### 📁 File: `prisma/schema.prisma`
 
-Open `prisma/schema.prisma` and replace with:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```prisma
 generator client {
@@ -428,8 +569,6 @@ model Attendance {
 }
 ```
 
-**What does each part mean?**
-
 | Prisma Code | What It Does |
 |-------------|-------------|
 | `@id` | This field is the primary key |
@@ -440,7 +579,7 @@ model Attendance {
 | `@relation` | Defines a relationship between tables (like FOREIGN KEY) |
 | `@@unique([studentId, date])` | A student can only have ONE attendance record per day |
 
-### Generate the Prisma Client
+#### Generate the Prisma Client
 
 ```bash
 npx prisma generate
@@ -448,48 +587,17 @@ npx prisma generate
 
 This creates the Prisma client code that we can use in our JavaScript files.
 
-### Create the database connection file
+---
 
-Create `src/config/db.js`:
+### The "Locked Room" — How Import/Export Works
 
-```javascript
-// Import PrismaClient from the Prisma package
-import { PrismaClient } from "@prisma/client";
-
-// Create a new Prisma client instance
-const prisma = new PrismaClient();
-
-// Export it so other files can use it
-export default prisma;
-```
-
-> 💡 **`export default`** — This is how we share code between files in modern JavaScript (ESM). We create the Prisma client ONCE here, and `import` it in every file that needs to talk to the database.
-
-**Let's break down every line:**
-
-| Line | What It Does | Why We Need It |
-|------|-------------|----------------|
-| `import { PrismaClient } from "@prisma/client"` | Gets the Prisma tool from the package we installed | Think of it like taking a specific tool out of a toolbox. The `{ }` curly braces mean "I only want this ONE thing from the package." |
-| `const prisma = new PrismaClient()` | Creates a new connection to our database | `new` creates a fresh instance. This is like dialing the phone number to the database. We only want to do this ONCE for the whole app. |
-| `export default prisma` | Shares this connection with all other files | `export default` means "this is the MAIN thing this file provides." Other files can `import prisma from "./config/db.js"` to use it. |
-
-> ⚠️ **Why only ONE Prisma client?** Every `new PrismaClient()` opens a connection pool to the database. If every file created its own, you would quickly run out of connections and your database would crash. By creating it once and sharing it, we use just one efficient connection pool.
-
-```mermaid
-flowchart TD
-    A["db.js\n(Creates ONE Prisma client)"] --> B["authRepository.js\nimport prisma from db.js"]
-    A --> C["classroomRepository.js\nimport prisma from db.js"]
-    A --> D["studentRepository.js\nimport prisma from db.js"]
-    A --> E["attendanceRepository.js\nimport prisma from db.js"]
-```
-
-### ❌ The Problem — The 5000-Line Nightmare
+#### ❌ The Problem — The 5000-Line Nightmare
 
 Imagine if we didn't have `import` and `export`. We would have to write the ENTIRE backend — database logic, user auth, students, teachers, routes — inside a single `server.js` file. It would be 5000 lines long! Finding a bug would be a nightmare. We need a way to split our code into smaller, organized files.
 
-### ✅ The Solution — Modules (The "Locked Room" Analogy)
+#### ✅ The Solution — Modules (The "Locked Room" Analogy)
 
-In Node.js, every `.js` file is like a **"Locked Room"**. 
+In Node.js, every `.js` file is like a **"Locked Room"**.
 
 If you create a function or a variable inside `db.js`, the rest of your app cannot see it or use it. It is locked inside that room.
 
@@ -514,15 +622,95 @@ flowchart LR
     C["authRepository.js\n(Another Room)"] -->|"import prisma"| A
 ```
 
+> ⚠️ **ESM Rule:** In modern JavaScript (ESM), you MUST include the `.js` file extension in your imports. `"../config/db"` will NOT work — it must be `"../config/db.js"`. This is different from CommonJS `require()` which allows omitting extensions.
+
 ---
 
-## 5. 🔐 Step 4 — Auth Repository & Async/Await
+### Create the Database Connection File
 
-Now we start building! We begin with the **Auth system** — login, register, and security.
+#### 📁 File: `src/config/db.js`
 
-We will build it layer by layer: Repository → Service → Controller → Middleware → Routes.
+#### 🚀 FULL CODE (READY TO COPY)
 
-### ❌ The Problem — JavaScript Does NOT Wait!
+```javascript
+// Import PrismaClient from the Prisma package
+import { PrismaClient } from "@prisma/client";
+
+// Create a new Prisma client instance
+const prisma = new PrismaClient();
+
+// Export it so other files can use it
+export default prisma;
+```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `import { PrismaClient } from "@prisma/client"` | Gets the Prisma tool from the package we installed. The `{ }` curly braces mean "I only want this ONE thing from the package." |
+| `const prisma = new PrismaClient()` | Creates a new connection to our database. `new` creates a fresh instance. This is like dialing the phone number to the database. We only want to do this ONCE for the whole app. |
+| `export default prisma` | Shares this connection with all other files. `export default` means "this is the MAIN thing this file provides." Other files can `import prisma from "./config/db.js"` to use it. |
+
+> ⚠️ **Why only ONE Prisma client?** Every `new PrismaClient()` opens a connection pool to the database. If every file created its own, you would quickly run out of connections and your database would crash. By creating it once and sharing it, we use just one efficient connection pool.
+
+```mermaid
+flowchart TD
+    A["db.js\n(Creates ONE Prisma client)"] --> B["authRepository.js\nimport prisma from db.js"]
+    A --> C["classroomRepository.js\nimport prisma from db.js"]
+    A --> D["studentRepository.js\nimport prisma from db.js"]
+    A --> E["attendanceRepository.js\nimport prisma from db.js"]
+```
+
+### 🧪 Phase 2 Test: Can Prisma Talk to Your Database?
+
+```bash
+npx prisma generate
+```
+
+**What to look for:**
+```
+✔ Generated Prisma Client (vX.X.X) to ./node_modules/@prisma/client
+```
+
+✅ If you see this, Phase 2 is complete! Prisma can talk to your database.
+
+| Common Error | Cause | Fix |
+|-------------|-------|-----|
+| `P1001: Can't reach database server` | MySQL is not running | Start MySQL in XAMPP |
+| `Error: schema.prisma not found` | You didn't run `npx prisma init` | Run it from the `backend/` folder |
+| `Error loading .env file` | `.env` file is missing or in wrong location | Make sure `.env` is in `backend/`, not `backend/src/` |
+
+---
+
+## 🔑 Phase 3: The Register Slice (Repository → Service → Controller → Route)
+
+> **Goal:** Build the complete Register feature — from database to URL — and test it in Postman.
+
+We build this slice through ALL the layers so you can see how they connect:
+
+```mermaid
+sequenceDiagram
+    participant P as Postman
+    participant R as authRoutes
+    participant C as authController
+    participant S as authService
+    participant RP as authRepository
+    participant DB as Database
+
+    P->>R: POST /api/auth/register { name, email, password }
+    R->>C: register(req, res)
+    C->>S: registerUser(name, email, password, role)
+    S->>RP: findUserByEmail(email)
+    RP->>DB: SELECT * FROM users WHERE email = ?
+    DB->>RP: null (not found)
+    S->>S: Hash password with bcrypt
+    S->>RP: createUser(name, email, hashedPassword, role)
+    RP->>DB: INSERT INTO users ...
+    DB->>RP: newUser
+    RP->>S: newUser
+    S->>C: { success: true, data: { id, name, email, role } }
+    C->>P: 201 Created + JSON
+```
+
+### Understanding async/await — JavaScript is Impatient!
 
 Before we write our first database query, you need to understand something very important about JavaScript.
 
@@ -544,7 +732,11 @@ flowchart LR
     A -.->|"100ms later..."| D["Database reply arrives\nBut it's too late!"]
 ```
 
-### ✅ The Solution — async/await
+#### 🎬 Scenario: Nimal's Debugging Nightmare
+
+Nimal writes `const user = prisma.user.findUnique(...)` but forgets `await`. The code runs, `user` is `undefined`, and the next line crashes with `Cannot read properties of undefined`. He spends 30 minutes checking his Prisma query, when the real problem is just one missing word: `await`.
+
+#### ✅ The Solution — async/await
 
 `async/await` tells JavaScript: **"WAIT here until this finishes."**
 
@@ -568,27 +760,13 @@ flowchart LR
 2. Add `await` before any slow operation (database queries, API calls)
 3. `await` can ONLY be used inside an `async` function
 
-### Now let's write the Auth Repository
+---
+
+### Layer 1: Auth Repository (The Fridge)
 
 This file ONLY talks to the database. It does NOT know about HTTP, passwords, or tokens.
 
-Create `src/repositories/authRepository.js`:
-
-```javascript
-import prisma from "../config/db.js";
-```
-
-**⏸️ Wait — what does `"../config/db.js"` mean?**
-
-When you import a file, you use a **relative path** — directions from the current file to the target file. This confuses many beginners, so let's break it down:
-
-| Symbol | Meaning | Analogy |
-|--------|---------|---------|
-| `./` | Current folder | "Look in the room I am in right now" |
-| `../` | Go up one folder (parent) | "Go out the door, then look" |
-| `../../` | Go up two folders | "Go out two doors" |
-
-**Example:** We are in `src/repositories/authRepository.js` and want to import `src/config/db.js`:
+**Understanding relative paths:** We are in `src/repositories/authRepository.js` and want to import `src/config/db.js`:
 
 ```
 src/
@@ -598,13 +776,11 @@ src/
 │   └── authRepository.js  ← We are HERE
 ```
 
-```
-Step 1: ../ → Go up from repositories/ to src/
-Step 2: config/ → Go into the config folder
-Step 3: db.js → Find the file
-
-Result: "../config/db.js"
-```
+| Symbol | Meaning | Analogy |
+|--------|---------|---------|
+| `./` | Current folder | "Look in the room I am in right now" |
+| `../` | Go up one folder (parent) | "Go out the door, then look" |
+| `../../` | Go up two folders | "Go out two doors" |
 
 ```mermaid
 flowchart LR
@@ -613,9 +789,9 @@ flowchart LR
     C -->|"db.js = the file"| D["db.js ✅"]
 ```
 
-> ⚠️ **ESM Rule:** In modern JavaScript (ESM), you MUST include the `.js` file extension in your imports. `"../config/db"` will NOT work — it must be `"../config/db.js"`. This is different from CommonJS `require()` which allows omitting extensions.
+#### 📁 File: `src/repositories/authRepository.js`
 
-Now back to the code! Here is the full `authRepository.js`:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import prisma from "../config/db.js";
@@ -676,7 +852,13 @@ export {
 };
 ```
 
-**Prisma methods explained:**
+| Line | Why did we write this? |
+|------|------------------------|
+| `import prisma from "../config/db.js"` | Gets the shared Prisma client from `db.js`. |
+| `prisma.user.findUnique({ where: { email } })` | Finds ONE user by their unique email. Stops searching after finding one. |
+| `prisma.user.create({ data: { ... } })` | Inserts a new row into the `users` table. |
+| `prisma.user.findMany({ select: { ... } })` | Gets ALL users, but only returns the fields we choose. |
+| `export { findUserByEmail, ... }` | Named exports — shares multiple functions. Other files use `import { createUser } from ...`. |
 
 | Prisma Method | What It Does | SQL Equivalent |
 |---------------|-------------|----------------|
@@ -684,29 +866,15 @@ export {
 | `prisma.user.findMany()` | Find ALL matching records | `SELECT * FROM users` |
 | `prisma.user.create()` | Insert a new record | `INSERT INTO users VALUES (...)` |
 
-**Deep dive — what each function does and WHY:**
-
-**`findUserByEmail`** — We use `findUnique` instead of `findMany` because email is a `@unique` field in our Prisma schema. This means there can only be ONE user with that email. `findUnique` is faster because it stops searching after finding one match. Think of it like looking up a phone number — each person has only one, so you stop looking once you find it.
-
-**`findUserById`** — Same idea. The `id` is the primary key (`@id`), which is always unique. We use this later when the JWT token gives us a `userId` and we need to find that user's full info.
-
-**`createUser`** — The `data: { ... }` object tells Prisma exactly what values to put in each column. Notice we pass `hashedPassword`, NOT the plain password. The repository does not know HOW the password was hashed — that is the Service layer's job. The repository only saves what it receives.
-
-**`findAllUsers`** — The `select` option is crucial here. Without `select`, Prisma returns ALL fields including the password hash. By listing only `id: true, name: true, email: true, role: true, createdAt: true`, we explicitly tell Prisma: "Give me ONLY these fields, nothing else." This is a security best practice — never send more data than needed.
-
-**The `export { }` block** — Unlike `export default` (which exports ONE main thing), `export { }` exports MULTIPLE named things. Other files import them like: `import { findUserByEmail, createUser } from "../repositories/authRepository.js"`. The names must match exactly.
-
-> ⚠️ **Security:** In `findAllUsers`, we use `select` to choose which fields to return. We NEVER return the `password` field! If we did, anyone calling this API could see everyone's passwords.
+> ⚠️ **Security:** In `findAllUsers`, we use `select` to choose which fields to return. We NEVER return the `password` field! If we did, anyone calling this API could see everyone's password hashes.
 
 ---
 
-## 6. 🔑 Step 5 — Auth Service: Passwords & JWT
+### Layer 2: Auth Service — Passwords & Hashing (The Chef)
 
-The Service layer handles the **business logic** — the rules and decisions. This is where we deal with password security and login tokens.
+The Service layer handles the **business logic** — the rules and decisions.
 
-### ❌ The Problem — Saving Passwords as Plain Text
-
-Let's say you build a register function and save the password directly:
+#### ❌ The Problem — Saving Passwords as Plain Text
 
 ```javascript
 // ❌ NEVER DO THIS! Saving password as plain text!
@@ -717,21 +885,18 @@ async function registerUser(name, email, password) {
 }
 ```
 
-**What is the disaster?**
-
 ```mermaid
 flowchart TD
-    A["😊 User registers with\npassword: teacher123"] --> B["📦 Database stores:\npassword = teacher123"]
+    A["😊 Nimal registers with\npassword: teacher123"] --> B["📦 Database stores:\npassword = teacher123"]
     B --> C["😈 Hacker breaks into\nyour database"]
     C --> D["💀 Hacker sees ALL passwords\nin plain text!"]
-    D --> E["🔓 Hacker logs in\nas any user"]
+    D --> E["🔓 Hacker logs in\nas Nimal"]
     D --> F["🌐 Hacker tries same password\non Gmail, Facebook, Bank..."]
-    D --> G["📰 Your app is in\nthe news for a data breach"]
 ```
 
 > ⚠️ **Real example:** In 2012, LinkedIn was hacked. 6.5 million passwords were stolen. Many were stored as weak hashes. Users who reused passwords had their other accounts compromised too.
 
-### ✅ The Solution — Hashing with bcrypt
+#### ✅ The Solution — Hashing with bcrypt
 
 **Hashing** is a one-way transformation. You can turn a password into a hash, but you can **NEVER turn a hash back into a password**. It is like a meat grinder — you can turn meat into a burger, but you cannot turn a burger back into meat.
 
@@ -741,11 +906,6 @@ flowchart LR
     B -.->|"❌ IMPOSSIBLE\nto reverse"| A
 ```
 
-```
-Plain Password:  teacher123
-Hashed Password: $2b$10$VxB/Z1jcdUDt2rNG7V6bWenRA0afyXCPPxyMwRJ6RxX7gKWQzkl4e
-```
-
 **What is salting?** A "salt" is random text added to the password before hashing. Even if two users have the same password, their hashes will be different!
 
 ```
@@ -753,80 +913,11 @@ User 1: "teacher123" + random_salt_abc → $2b$10$Abc...
 User 2: "teacher123" + random_salt_xyz → $2b$10$Xyz...  (Different!)
 ```
 
-**How does login work if we can't reverse the hash?**
+#### 📁 File: `src/services/authService.js`
 
-We use `bcrypt.compare()`. It hashes the typed password with the same salt and checks if the result matches:
+For now, we write ONLY the `registerUser` function. We will add `loginUser` in Phase 4.
 
-```mermaid
-flowchart TD
-    A["User types: teacher123"] --> B["bcrypt hashes it\nwith stored salt"]
-    B --> C{"Does new hash\nmatch stored hash?"}
-    C -->|"Yes ✅"| D["Password correct!\nLogin successful"]
-    C -->|"No ❌"| E["Wrong password!\nLogin denied"]
-```
-
-### ❌ The Next Problem — HTTP is Stateless
-
-OK, the user logged in. But HTTP has a problem: **it forgets you immediately**.
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant S as Server
-
-    U->>S: POST /login (email + password)
-    S->>U: ✅ Login successful!
-
-    U->>S: GET /students
-    S->>U: ❌ Who are you?? I don't know you!
-    Note right of S: HTTP forgets you after<br/>every request!
-```
-
-HTTP is like a goldfish — it has no memory. Every request is brand new. The server has no idea that you just logged in 2 seconds ago.
-
-### ✅ The Solution — JWT Tokens (Digital ID Cards)
-
-**JWT** (JSON Web Token) is like a digital ID card. After login, the server creates a token and gives it to you. You show this token with every future request.
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant S as Server
-
-    U->>S: POST /login (email + password)
-    S->>S: Check password ✅
-    S->>S: Create JWT token
-    S->>U: Here's your token: eyJhbG...
-
-    U->>S: GET /students (+ token in header)
-    S->>S: Verify token ✅ — Ah, you're User 1, Admin!
-    S->>U: Here's the student list!
-```
-
-**What does a JWT token look like?**
-
-```
-eyJhbGciOiJIUzI1NiIs.eyJ1c2VySWQiOjEsInJvbGUiOiJhZG1pbiJ9.abc123signature
-
-It has 3 parts separated by dots:
-Part 1: Header    → algorithm info
-Part 2: Payload   → your data: { userId: 1, role: "admin" }
-Part 3: Signature → proof that the token was created by OUR server
-```
-
-> 💡 **Analogy:** JWT is like a concert wristband. When you enter (login), the bouncer checks your ticket and gives you a wristband. After that, you just show your wristband to get into any area. You don't need to show your ticket again.
-
-> 🛠️ **Debugging Tool — jwt.io:** Want to see what is INSIDE a JWT token? Go to [https://jwt.io](https://jwt.io). Paste your token into the "Encoded" box, and it will instantly show you the decoded Header and Payload! This is extremely useful when debugging login problems. For example, you can check: Is the `userId` correct? Is the `role` right? Has the token expired? Bookmark this website — you will use it a lot!
-
-```mermaid
-flowchart LR
-    A["Copy your token\neyJhbGciOiJ..."] -->|"Paste at jwt.io"| B["See decoded data:\nuserId: 1\nrole: admin\nexp: 1714358400"]
-    B --> C["Debug your problems!\nWrong userId? Wrong role?\nToken expired?"]
-```
-
-### Now Let's Write the Auth Service
-
-Create `src/services/authService.js`:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import bcrypt from "bcrypt";
@@ -929,6 +1020,16 @@ export {
 };
 ```
 
+| Line | Why did we write this? |
+|------|------------------------|
+| `import bcrypt from "bcrypt"` | Gets the password hashing tool. bcrypt is slow ON PURPOSE — makes brute-force attacks hard. |
+| `import jwt from "jsonwebtoken"` | Gets the JWT token tool (used in login, Phase 4). |
+| `import { findUserByEmail, createUser, ... }` | Named imports — grab specific functions from the repository. |
+| `await findUserByEmail(email)` | Check if someone already registered with this email. |
+| `const saltRounds = 10` | Sets hashing strength. 10 means bcrypt processes the password 2^10 = 1024 times (~100ms). |
+| `await bcrypt.hash(password, saltRounds)` | Converts plain text into a hash. `await` needed because hashing is CPU-heavy. |
+| `return { success, message, data }` | Consistent response format. Frontend always knows what to expect. |
+
 **Register flow:**
 
 ```mermaid
@@ -940,71 +1041,17 @@ flowchart TD
     E --> F["Return success\n(without password!)"]
 ```
 
-**Login flow:**
-
-```mermaid
-flowchart TD
-    A["User sends email, password"] --> B{"Does user\nexist?"}
-    B -->|"No"| C["Return error:\nInvalid credentials"]
-    B -->|"Yes"| D{"Does password\nmatch hash?"}
-    D -->|"No"| C
-    D -->|"Yes"| E["Create JWT token"]
-    E --> F["Return token + user info"]
-```
-
-**Deep dive — understanding the Auth Service line by line:**
-
-**The imports:**
-- `import bcrypt from "bcrypt"` — This gives us the password hashing tool. We use `bcrypt` because it is specifically designed for passwords. It is slow ON PURPOSE — this makes it much harder for hackers to try millions of passwords quickly.
-- `import jwt from "jsonwebtoken"` — This gives us the JWT token tool. We use it to create and verify login tokens.
-- `import { findUserByEmail, createUser, findAllUsers } from "..."` — We import SPECIFIC functions from the repository using `{ }`. This is called a "named import." We only take what we need, like picking specific items from a shelf.
-
-**The `registerUser` function — key lines explained:**
-
-| Line | What It Does | Why This Way |
-|------|-------------|-------------|
-| `await findUserByEmail(email)` | Checks if someone already registered with this email | We check BEFORE creating. If we skip this and try to create a duplicate, the database throws an ugly error. It is better to check first and return a friendly message. |
-| `const saltRounds = 10` | Sets the strength of the hashing | Higher number = more secure but slower. 10 is the standard. Going above 12 makes registration noticeably slow for users. |
-| `await bcrypt.hash(password, saltRounds)` | Converts plain text password into a hash | `await` is needed because hashing is a CPU-heavy operation. The `10` rounds mean bcrypt will process the password 2^10 = 1024 times. This takes ~100ms — fast for a user, but painfully slow for a hacker trying millions of passwords. |
-| `return { success: true, data: { id, name, email, role } }` | Returns user info WITHOUT the password | We manually pick which fields to return. We NEVER include the password hash in any response, even though it is hashed. |
-
-**The `loginUser` function — key lines explained:**
-
-| Line | What It Does | Why This Way |
-|------|-------------|-------------|
-| `await bcrypt.compare(password, user.password)` | Compares typed password with stored hash | `bcrypt.compare` is the magic — it takes the plain text password, hashes it with the same salt that was used originally, and checks if the result matches. It returns `true` or `false`. You NEVER compare passwords by doing `password === user.password` — that would compare plain text with a hash and always fail! |
-| `const tokenPayload = { userId, role }` | The data we want to store INSIDE the token | We only put the minimum needed info. Do NOT put sensitive data like passwords or email here — anyone can decode a JWT and read the payload (it is only encoded, not encrypted). |
-| `jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "24h" })` | Creates the JWT token | Three arguments: (1) the data to store, (2) the secret key to sign it (from `.env`), (3) options like expiry time. The secret key is like a seal — only OUR server can create tokens with this seal. If anyone changes the token data, the seal breaks and `jwt.verify()` will reject it. |
-
-**The consistent response format:**
-
-Every function returns the same shape: `{ success, message, data }`. This is a design choice that makes the frontend developer's life easier. They always know what to expect:
-
-```
-success = true  → Everything worked. Check "data" for the result.
-success = false → Something went wrong. Check "message" for what happened.
-data = null     → No data to return (used in error cases).
-```
-
-> 💡 **Security tip:** We say "Invalid email or password" for BOTH wrong email and wrong password. This way, a hacker cannot tell if an email exists in our system. If we said "Email not found," the hacker would know which emails are registered.
+> 💡 **Security tip:** We say "Invalid email or password" for BOTH wrong email and wrong password. This way, a hacker cannot tell if an email exists in our system.
 
 ---
 
-## 7. 📡 Step 6 — Auth Controller: HTTP & Error Handling
+### Layer 3: Auth Controller (The Waiter)
 
-The Controller layer handles **HTTP** — it reads the request and sends the response. Before we write it, let's learn what HTTP actually is.
+The Controller reads the HTTP request and sends the HTTP response.
 
-### What is HTTP?
+#### What is HTTP?
 
-HTTP is the language that browsers and servers speak. Every time you visit a website, your browser sends an HTTP **request**, and the server sends back an HTTP **response**.
-
-```mermaid
-flowchart LR
-    A["👩‍💻 Client\n(Browser / Postman)"] -->|"HTTP Request\nGET /api/students"| B["⚙️ Server\n(Our Express API)"]
-    B -->|"HTTP Response\n200 OK + JSON data"| A
-```
-
-**A request has these parts:**
+HTTP is the language that browsers and servers speak.
 
 | Part | Example | Purpose |
 |------|---------|---------|
@@ -1012,13 +1059,6 @@ flowchart LR
 | **URL** | `/api/students/5` | Which resource to access |
 | **Headers** | `Authorization: Bearer token...` | Extra info (like your ID card) |
 | **Body** | `{ "name": "Nimal", "email": "..." }` | Data you are sending |
-
-**A response has these parts:**
-
-| Part | Example | Purpose |
-|------|---------|---------|
-| **Status Code** | 200, 201, 400, 401, 404, 500 | Was it successful or not? |
-| **Body** | `{ "success": true, "data": [...] }` | The data being sent back |
 
 **Common status codes:**
 
@@ -1032,18 +1072,7 @@ flowchart LR
 | `404` | Not Found | Resource does not exist |
 | `500` | Server Error | Something broke on our side |
 
-**How we read data from requests in Express:**
-
-| Source | How to Read | Example |
-|--------|------------|---------|
-| Request body (JSON) | `req.body.email` | Data sent in POST requests |
-| URL parameter | `req.params.id` | `/api/students/5` → `req.params.id = "5"` |
-| Query string | `req.query.date` | `/api/attendance?date=2026-04-28` → `req.query.date` |
-| Headers | `req.headers.authorization` | The JWT token |
-
-### ❌ The Problem — No Error Handling = Server Crash
-
-What if the database is down? What if the user sends bad data? Without error handling, your server **crashes**:
+#### ❌ The Problem — No Error Handling = Server Crash
 
 ```javascript
 // ❌ DANGEROUS! If the database is down, this CRASHES the entire server!
@@ -1063,26 +1092,9 @@ flowchart TD
     E --> F["ALL users get errors\nUntil someone restarts the server"]
 ```
 
-### ✅ The Solution — try/catch
+#### ✅ The Solution — try/catch
 
-`try/catch` is like a safety net. If anything goes wrong inside `try`, the code jumps to `catch` instead of crashing:
-
-```javascript
-// ✅ SAFE! If anything goes wrong, we catch it and send a nice error
-async function getUsers(req, res) {
-  try {
-    const users = await getAllUsers();
-    return res.status(200).json(users);
-  } catch (error) {
-    console.error("Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again.",
-      data: null,
-    });
-  }
-}
-```
+`try/catch` is like a safety net:
 
 ```mermaid
 flowchart TD
@@ -1093,11 +1105,9 @@ flowchart TD
     E --> F["Server keeps running!\nOther users are not affected ✅"]
 ```
 
-> 💡 **Rule:** Every controller function MUST have `try/catch`. This prevents the server from crashing when something goes wrong.
+#### 📁 File: `src/controllers/authController.js`
 
-### Now Let's Write the Auth Controller
-
-Create `src/controllers/authController.js`:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import { registerUser, loginUser, getAllUsers } from "../services/authService.js";
@@ -1210,49 +1220,230 @@ export {
 };
 ```
 
-> 💡 **Notice the pattern:** Every controller function does the same 3 things: (1) Read data from `req`, (2) Call the service, (3) Send `res` with the right status code. Always wrapped in `try/catch`.
+| Line | Why did we write this? |
+|------|------------------------|
+| `req.body.name` | Reads the `name` field from the JSON the client sent. |
+| `if (!name \|\| !email \|\| !password)` | Validates that required fields are present. `!` means "NOT" — empty strings and `undefined` are falsy. |
+| `res.status(201).json(result)` | Sends HTTP 201 (Created) with the result as JSON. |
+| `res.status(400).json(result)` | Sends HTTP 400 (Bad Request) — client sent bad data. |
+| `catch (error)` | If ANYTHING crashes inside `try`, this runs instead — server stays alive. |
 
-**Deep dive — understanding the Auth Controller line by line:**
-
-**`req.body` — The order slip from the customer:**
-
-When the frontend sends a POST request with JSON data, Express puts that data in `req.body`. Think of it like a customer handing a written order to a waiter:
-
-```
-Customer writes: { "name": "Nimal", "email": "nimal@school.com", "password": "teacher123" }
-Customer hands it to the waiter (Express)
-Waiter reads it from the order slip: req.body.name → "Nimal"
-```
-
-We use `const name = req.body.name` instead of destructuring `const { name } = req.body` to keep it explicit and easy to read for beginners.
-
-**The validation check `if (!name || !email || !password)`:**
-
-The `!` symbol means "NOT." In JavaScript, empty strings, `null`, and `undefined` are all "falsy" — they become `false` when checked. So `!name` is `true` when name is missing or empty. We check this BEFORE calling the service because:
-1. It is faster — no need to call the database for bad data.
-2. It gives a better error message — "Name is required" is more helpful than a confusing database error.
-
-**Why different status codes for different results?**
-
-| Situation | Status Code | Reason |
-|-----------|------------|--------|
-| Registration successful | `201 Created` | We created a new resource (user). `201` specifically means "something was created." |
-| Login successful | `200 OK` | We are just returning data, not creating anything new. |
-| Missing fields | `400 Bad Request` | The CLIENT made a mistake (sent incomplete data). 4xx codes always mean "the client did something wrong." |
-| Wrong password | `401 Unauthorized` | The CLIENT failed to prove their identity. |
-| Server crash | `500 Internal Server Error` | The SERVER had a problem. 5xx codes always mean "the server did something wrong." |
-
-**The `try/catch` wrapper:**
-
-Every controller function is wrapped in `try { ... } catch (error) { ... }`. The `try` block runs the normal code. If ANY line inside `try` throws an error (database down, bad query, etc.), JavaScript immediately jumps to the `catch` block. Without this, an unhandled error would crash the entire Node.js process, taking down the server for ALL users.
+> 💡 **Pattern:** Every controller function does 3 things: (1) Read data from `req`, (2) Call the service, (3) Send `res` with the right status code. Always wrapped in `try/catch`.
 
 ---
 
-## 8. 🛡️ Step 7 — Auth Middleware: Protecting Routes
+### Layer 4: Auth Routes (The Front Desk)
+
+#### What is REST?
+
+REST is a set of rules for designing APIs. URLs represent **things** (resources), HTTP methods represent **actions**.
+
+| HTTP Method | Action | Example |
+|-------------|--------|---------|
+| **GET** | Read data | Get all students |
+| **POST** | Create new data | Create a new student |
+| **PUT** | Update existing data | Update a student's name |
+| **DELETE** | Delete data | Delete a student |
+
+#### 📁 File: `src/routes/authRoutes.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
+
+```javascript
+import express from "express";
+const router = express.Router();
+
+import { register, login, getUsers, getMe } from "../controllers/authController.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
+
+// Public routes (no login needed)
+router.post("/register", register);
+router.post("/login", login);
+
+// Protected routes (login needed)
+router.get("/me", verifyToken, getMe);
+
+// Admin only route
+router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
+
+export default router;
+```
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `express.Router()` | Creates a "mini-app" that groups related routes together. |
+| `router.post("/register", register)` | When someone sends POST to `/register`, run the `register` controller function. |
+| `router.get("/me", verifyToken, getMe)` | First run `verifyToken` middleware, THEN run `getMe`. |
+| `export default router` | Shares this router so `server.js` can plug it in. |
+
+> ⚠️ **Note:** The `verifyToken` and `authorizeRoles` imports will show errors because we haven't created the middleware file yet. That's OK — we build it in Phase 5! For now, the Register route works without middleware.
+
+### Wire Up the Register Route in server.js
+
+Update `src/server.js` — add the auth routes import:
+
+Add these lines to your existing `server.js`:
+
+```javascript
+// Add AFTER the existing middleware lines:
+import authRoutes from "./routes/authRoutes.js";
+
+// Add BEFORE the test route:
+app.use("/api/auth", authRoutes);
+```
+
+> ⚠️ **Important:** Since `authRoutes.js` imports from `authMiddleware.js` (which doesn't exist yet), the server will crash if you try to start it now. Create Phase 5's middleware file first (even an empty placeholder), OR temporarily comment out the `verifyToken` imports in `authRoutes.js`. We'll fix this properly in Phase 5.
+
+### 🧪 Phase 3 Test: Register a User!
+
+> ⚠️ Since our routes import middleware that doesn't exist yet, we'll do a combined test after Phase 5. But the **code logic** for Register is complete and correct. If you want to test now, temporarily remove the `verifyToken` and `authorizeRoles` imports and protected routes from `authRoutes.js`, keeping only the public routes.
+
+**Test in Postman (after Phase 5):**
+```
+Method: POST
+URL:    http://localhost:5000/api/auth/register
+Body → raw → JSON:
+```
+```json
+{ "name": "Kavitha Perera", "email": "kavitha@school.com", "password": "mypassword123", "role": "teacher" }
+```
+
+**What to look for:** `201 Created` with `{ "success": true, ... }`
+
+**Try it again with the same email:**
+Expected: `400 Bad Request` — `"A user with this email already exists."`
+
+---
+
+## 🐟 Phase 4: The Login Slice (JWT & Statelessness)
+
+> **Goal:** Understand why HTTP forgets you, build the Login feature, and test it by decoding a token at jwt.io.
+
+### ❌ The Problem — HTTP is Stateless (The Goldfish Memory)
+
+OK, the user logged in. But HTTP has a problem: **it forgets you immediately**.
+
+```mermaid
+sequenceDiagram
+    participant U as Nimal
+    participant S as Server
+
+    U->>S: POST /login (email + password)
+    S->>U: ✅ Login successful!
+
+    U->>S: GET /students
+    S->>U: ❌ Who are you?? I don't know you!
+    Note right of S: HTTP forgets you after<br/>every request!
+```
+
+#### 🎬 Scenario: Nimal's Frustration
+
+Nimal logs in successfully. The server says "Welcome, Nimal!" He clicks "View Students" one second later. The server says "Who are you?" Nimal is confused — he JUST logged in! But HTTP is like a goldfish — it has no memory. Every request is brand new.
+
+### ✅ The Solution — JWT Tokens (Digital ID Cards / Wristbands)
+
+**JWT** (JSON Web Token) is like a concert wristband. After login, the server creates a token and gives it to you. You show this token with every future request.
+
+```mermaid
+sequenceDiagram
+    participant U as Nimal
+    participant S as Server
+
+    U->>S: POST /login (email + password)
+    S->>S: Check password ✅
+    S->>S: Create JWT token
+    S->>U: Here's your token: eyJhbG...
+
+    U->>S: GET /students (+ token in header)
+    S->>S: Verify token ✅ — Ah, you're Nimal, Teacher!
+    S->>U: Here's the student list!
+```
+
+**What does a JWT token look like?**
+
+```
+eyJhbGciOiJIUzI1NiIs.eyJ1c2VySWQiOjEsInJvbGUiOiJhZG1pbiJ9.abc123signature
+
+It has 3 parts separated by dots:
+Part 1: Header    → algorithm info
+Part 2: Payload   → your data: { userId: 1, role: "admin" }
+Part 3: Signature → proof that the token was created by OUR server
+```
+
+> 💡 **Analogy:** JWT is like a concert wristband. When you enter (login), the bouncer checks your ticket and gives you a wristband. After that, you just show your wristband to get into any area. You don't need to show your ticket again.
+
+**How does login verification work if we can't reverse the hash?**
+
+We use `bcrypt.compare()`:
+
+```mermaid
+flowchart TD
+    A["Nimal types: teacher123"] --> B["bcrypt hashes it\nwith stored salt"]
+    B --> C{"Does new hash\nmatch stored hash?"}
+    C -->|"Yes ✅"| D["Password correct!\nLogin successful"]
+    C -->|"No ❌"| E["Wrong password!\nLogin denied"]
+```
+
+**Login flow:**
+
+```mermaid
+flowchart TD
+    A["User sends email, password"] --> B{"Does user\nexist?"}
+    B -->|"No"| C["Return error:\nInvalid credentials"]
+    B -->|"Yes"| D{"Does password\nmatch hash?"}
+    D -->|"No"| C
+    D -->|"Yes"| E["Create JWT token"]
+    E --> F["Return token + user info"]
+```
+
+> 🛠️ **Debugging Tool — jwt.io:** Want to see what is INSIDE a JWT token? Go to [https://jwt.io](https://jwt.io). Paste your token into the "Encoded" box, and it will instantly show you the decoded Header and Payload! This is extremely useful when debugging login problems.
+
+```mermaid
+flowchart LR
+    A["Copy your token\neyJhbGciOiJ..."] -->|"Paste at jwt.io"| B["See decoded data:\nuserId: 1\nrole: admin\nexp: 1714358400"]
+    B --> C["Debug your problems!\nWrong userId? Wrong role?\nToken expired?"]
+```
+
+The `loginUser` function was already written in `authService.js` in Phase 3. The key lines:
+
+| Line | Why did we write this? |
+|------|------------------------|
+| `await bcrypt.compare(password, user.password)` | Hashes the typed password with the same salt and checks if it matches. Returns `true` or `false`. |
+| `const tokenPayload = { userId, role }` | Data stored INSIDE the token. Only put minimum info — anyone can decode a JWT! |
+| `jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "24h" })` | Creates the token. Three args: (1) data, (2) secret key from `.env`, (3) expiry. |
+
+### 🧪 Phase 4 Test: Login and Decode the Token!
+
+**Test in Postman (after Phase 5 when server runs):**
+```
+Method: POST
+URL:    http://localhost:5000/api/auth/login
+Body → raw → JSON:
+```
+```json
+{ "email": "amara@school.com", "password": "admin123" }
+```
+
+**What to look for:**
+- `200 OK` with a `token` field in the response
+- **⭐ COPY THIS TOKEN! You need it for all next tests.**
+- Go to [https://jwt.io](https://jwt.io), paste the token, and see `userId: 1, role: "admin"` in the payload
+
+**Also test with wrong password:**
+```json
+{ "email": "amara@school.com", "password": "wrongpassword" }
+```
+Expected: `401 Unauthorized` — "Invalid email or password."
+
+---
+
+## 🛡️ Phase 5: The Bouncer (Middleware)
+
+> **Goal:** Build `verifyToken` and `authorizeRoles` middleware so we can protect routes. After this phase, the server can finally run!
 
 ### ❌ The Problem — Anyone Can Access Everything!
 
-Right now, if someone sends `GET /api/students`, they get the data — even without logging in. And a teacher could delete classrooms meant for admins only. There is NO protection.
+Right now, if someone sends `GET /api/students`, they get the data — even without logging in.
 
 ```mermaid
 flowchart LR
@@ -1269,25 +1460,39 @@ We need to answer TWO questions for every request:
 
 ### ✅ The Solution — Middleware (Security Guards)
 
-A **middleware** is a function that runs BEFORE the controller. Think of it as a security guard at a door:
+A **middleware** is a function that runs BEFORE the controller:
 
 ```mermaid
-flowchart LR
-    A["Request arrives"] --> B["🛡️ Middleware\n(Security Guard)"]
-    B -->|"Has valid token? ✅"| C["🎮 Controller\n(Let them in)"]
-    B -->|"No token or bad token ❌"| D["REJECTED\n401 Unauthorized"]
+sequenceDiagram
+    participant R as Request
+    participant VT as verifyToken
+    participant AR as authorizeRoles
+    participant C as Controller
+
+    R->>VT: Has Authorization header?
+    VT->>VT: Extract token from "Bearer eyJ..."
+    VT->>VT: jwt.verify() — valid? not expired?
+    VT->>VT: Attach decoded { userId, role } to req.user
+    VT->>AR: next() ✅
+    AR->>AR: Is req.user.role in allowedRoles?
+    AR->>C: next() ✅
+    C->>C: Run the actual logic
 ```
+
+#### 🎬 Scenario: Sanduni Tries to Create a Classroom
+
+Sanduni (a teacher) sends `POST /api/classrooms` with her JWT token. The `verifyToken` middleware checks her token — it's valid ✅. But then `authorizeRoles("admin")` checks her role — she's a "teacher", not an "admin" ❌. She gets `403 Forbidden`. Only Amara (admin) can create classrooms.
 
 **The difference between 401 and 403:**
 
 | Code | Meaning | Analogy |
 |------|---------|---------|
 | `401 Unauthorized` | You are NOT logged in | You don't have a wristband at all |
-| `403 Forbidden` | You ARE logged in but NOT allowed | You have a wristband but it's a General ticket, not VIP |
+| `403 Forbidden` | You ARE logged in but NOT allowed | You have a wristband but it's General, not VIP |
 
-### Now Let's Write the Auth Middleware
+#### 📁 File: `src/middlewares/authMiddleware.js`
 
-Create `src/middlewares/authMiddleware.js`:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import jwt from "jsonwebtoken";
@@ -1353,22 +1558,15 @@ export {
 };
 ```
 
-**Deep dive — understanding the Auth Middleware line by line:**
-
-**`req.headers.authorization`** — HTTP headers are like the envelope of a letter. The letter content is `req.body`, but the envelope has extra information written on it. The `Authorization` header is where the client puts their JWT token. It follows the format `Bearer <token>` (with a space between "Bearer" and the token).
-
-**`authHeader.split(" ")[1]`** — This splits the string by the space character. Example: `"Bearer eyJhbG..."` becomes an array `["Bearer", "eyJhbG..."]`. We take index `[1]` to get just the token part. Think of it like splitting "Hello World" into ["Hello", "World"] and picking the second word.
-
-**`jwt.verify(token, process.env.JWT_SECRET)`** — This does three checks at once:
-1. Is the token format valid? (Not corrupted)
-2. Was it signed with OUR secret key? (Not created by someone else)
-3. Has it expired? (Not older than 24 hours)
-
-If ANY check fails, it throws an error, which our `catch` block handles by returning 401.
-
-**`req.user = decoded`** — This is the most important line. After verifying the token, we get back the decoded payload: `{ userId: 1, role: "admin" }`. We attach it to the `req` object so that the NEXT function in the chain (the controller) can read it. This is how the controller knows WHO is making the request without asking for a password again.
-
-**`authorizeRoles(...allowedRoles)`** — The `...` is called the "rest operator." It collects all arguments into an array. So `authorizeRoles("admin", "teacher")` makes `allowedRoles = ["admin", "teacher"]`. This function RETURNS another function (this pattern is called a "closure"). The inner function checks if `req.user.role` is in the allowed list using `.includes()`. If not, it returns 403 Forbidden.
+| Line | Why did we write this? |
+|------|------------------------|
+| `req.headers.authorization` | Reads the `Authorization` header where the client puts their JWT token. Format: `Bearer <token>`. |
+| `authHeader.split(" ")[1]` | Splits `"Bearer eyJhbG..."` by space into `["Bearer", "eyJhbG..."]`. Takes index `[1]` (the token). |
+| `jwt.verify(token, process.env.JWT_SECRET)` | Checks: (1) Is the token valid? (2) Was it signed with OUR secret? (3) Has it expired? |
+| `req.user = decoded` | Attaches `{ userId: 1, role: "admin" }` to the request so controllers can read it. |
+| `next()` | Tells Express: "I'm done. Continue to the next function in the chain." |
+| `authorizeRoles(...allowedRoles)` | The `...` collects all arguments into an array. `authorizeRoles("admin", "teacher")` → `["admin", "teacher"]`. |
+| `allowedRoles.includes(userRole)` | Checks if the user's role is in the allowed list. |
 
 **How `verifyToken` works step by step:**
 
@@ -1391,164 +1589,129 @@ If ANY check fails, it throws an error, which our `catch` block handles by retur
 
 > ⚠️ **What could go wrong? — Token Expiry**
 >
-> Remember we set `expiresIn: "24h"` when creating the token? After 24 hours, the token **expires**. Here is what happens:
+> Remember we set `expiresIn: "24h"` when creating the token? After 24 hours, the token **expires**:
 >
 > 1. The user logged in yesterday and got a token.
 > 2. Today, they send a request with the same token.
 > 3. `jwt.verify()` sees the token is expired and **throws an error**.
 > 4. The `catch` block runs → sends `401: Token is invalid or expired`.
 > 5. The user must log in again to get a fresh token.
->
-> This is a GOOD thing — it limits the damage if a token is stolen. A hacker who steals a token can only use it until it expires.
->
-> ```mermaid
-> flowchart TD
->     A["User sends expired token"] --> B["jwt.verify() runs"]
->     B --> C["💥 TokenExpiredError thrown!"]
->     C --> D["catch block runs"]
->     D --> E["401: Token is invalid or expired"]
->     E --> F["User must login again\nto get a new token"]
-> ```
 
-> 🛠️ **Debugging Tips — Common Errors You Will See:**
->
-> **Prisma Errors:**
->
-> | Error | What It Means | How to Fix |
-> |-------|--------------|------------|
-> | `Unique constraint failed on the fields: (email)` | You tried to create a user/student with an email that already exists | Use a different email, or check for duplicates first |
-> | `Foreign key constraint failed` | The `teacherId` or `classroomId` you provided does not exist in the database | Make sure the referenced record exists first |
-> | `Invalid prisma.user.findUnique() invocation` | You passed wrong arguments to a Prisma method | Check the field names match your `schema.prisma` |
-> | `P1001: Can't reach database server` | MySQL is not running | Start MySQL in XAMPP / your database tool |
+> 🛠️ **Debugging Tips — Common Errors:**
 >
 > **JWT Errors:**
 >
 > | Error | What It Means | How to Fix |
 > |-------|--------------|------------|
-> | `jwt malformed` | The token string is corrupted or incomplete | Make sure you copy the FULL token from the login response |
-> | `invalid signature` | Token was created with a different secret | Check `JWT_SECRET` in `.env` matches what was used to sign |
+> | `jwt malformed` | The token string is corrupted or incomplete | Copy the FULL token from the login response |
+> | `invalid signature` | Token was created with a different secret | Check `JWT_SECRET` in `.env` |
 > | `jwt expired` | Token is older than 24 hours | Login again to get a fresh token |
 > | `secretOrPrivateKey must have a value` | `JWT_SECRET` is missing from `.env` | Add `JWT_SECRET` to your `.env` file |
+>
+> **Prisma Errors:**
+>
+> | Error | What It Means | How to Fix |
+> |-------|--------------|------------|
+> | `Unique constraint failed on the fields: (email)` | Duplicate email | Use a different email |
+> | `Foreign key constraint failed` | The referenced ID doesn't exist | Create the referenced record first |
+> | `P1001: Can't reach database server` | MySQL is not running | Start MySQL in XAMPP |
+
+### Now Wire Up Everything in server.js
+
+Update `src/server.js` to import auth routes. Since we now have the middleware file, the imports will work:
+
+Add this line after `import cors from "cors";`:
+```javascript
+import authRoutes from "./routes/authRoutes.js";
+```
+
+Add this line before the test route:
+```javascript
+app.use("/api/auth", authRoutes);
+```
+
+### 🧪 Phase 5 Test: The Bouncer in Action!
+
+Start the server:
+```bash
+npm run dev
+```
+
+**Test 1: Register a user**
+```
+Method: POST
+URL:    http://localhost:5000/api/auth/register
+Body:   { "name": "Kavitha Perera", "email": "kavitha@school.com", "password": "mypassword123", "role": "teacher" }
+```
+Expected: `201 Created` ✅
+
+**Test 2: Login as Admin**
+```
+Method: POST
+URL:    http://localhost:5000/api/auth/login
+Body:   { "email": "amara@school.com", "password": "admin123" }
+```
+Expected: `200 OK` with a `token`. **⭐ COPY THIS TOKEN!**
+
+**Test 3: Access /me WITHOUT a token**
+```
+Method: GET
+URL:    http://localhost:5000/api/auth/me
+Headers: (none)
+```
+Expected: `401` — "Access denied. No token provided." ✅ The Bouncer blocked you!
+
+**Test 4: Access /me WITH a token**
+```
+Method: GET
+URL:    http://localhost:5000/api/auth/me
+Headers: Authorization: Bearer <paste-your-token-here>
+```
+Expected: `200 OK` with `{ userId: 1, role: "admin" }` ✅
+
+**Test 5: Access /users as a Teacher**
+Login as `nimal@school.com` / `teacher123`, copy the token, then:
+```
+Method: GET
+URL:    http://localhost:5000/api/auth/users
+Headers: Authorization: Bearer <nimal-token>
+```
+Expected: `403 Forbidden` — "Access denied. You do not have permission." ✅
+
+> 💡 **Tip:** In Postman, click **Authorization** tab → choose **Bearer Token** → paste just the token. Postman adds "Bearer " automatically.
+
+**How to add the token in Postman:**
+```
+✅ Correct: Bearer eyJhbGciOiJIUzI1NiIs...
+❌ Wrong:   BearereyJhbGciOiJIUzI1NiIs...    (no space!)
+❌ Wrong:   eyJhbGciOiJIUzI1NiIs...          (missing "Bearer")
+```
 
 ---
 
-## 9. 🛣️ Step 8 — Auth Routes & REST API Design
+## 🏫 Phase 6: Classroom & Student Slices
 
-### What is REST?
-
-REST stands for **Representational State Transfer**. It is a set of rules for designing APIs. The idea is simple: URLs should represent **things** (resources), and HTTP methods should represent **actions**.
-
-| HTTP Method | Action | Example |
-|-------------|--------|---------|
-| **GET** | Read data | Get all students |
-| **POST** | Create new data | Create a new student |
-| **PUT** | Update existing data | Update a student's name |
-| **DELETE** | Delete data | Delete a student |
-
-**Good REST URLs vs Bad URLs:**
-
-| ❌ Bad URL | ✅ Good REST URL | Why |
-|-----------|-----------------|-----|
-| `/getStudents` | `GET /api/students` | The method (GET) already says "get" |
-| `/createStudent` | `POST /api/students` | The method (POST) already says "create" |
-| `/deleteStudent?id=5` | `DELETE /api/students/5` | The ID goes in the URL path |
-
-### How Express Router Works
-
-Express Router groups related routes together:
+> **Goal:** Build the Classroom and Student systems. Same 4-layer pattern: Repository → Service → Controller → Routes. Then test Admin vs Teacher permissions.
 
 ```mermaid
 flowchart TD
-    A["app.use('/api/auth', authRoutes)"] --> B["POST /api/auth/register → register()"]
-    A --> C["POST /api/auth/login → login()"]
-    A --> D["GET /api/auth/me → verifyToken → getMe()"]
-    A --> E["GET /api/auth/users → verifyToken → authorizeRoles('admin') → getUsers()"]
+    A["Phase 6"] --> B["Classroom System\n4 endpoints"]
+    A --> C["Student System\n4 endpoints"]
+    B --> D["POST /classrooms (Admin only)"]
+    B --> E["GET /classrooms"]
+    B --> F["GET /classrooms/:id"]
+    B --> G["GET /classrooms/teacher/:teacherId"]
+    C --> H["POST /students (Admin+Teacher)"]
+    C --> I["GET /students"]
+    C --> J["GET /students/:id"]
+    C --> K["GET /students/classroom/:classroomId"]
 ```
 
-### Now Let's Write the Auth Routes
+### Classroom System
 
-Create `src/routes/authRoutes.js`:
+#### 📁 File: `src/repositories/classroomRepository.js`
 
-```javascript
-import express from "express";
-const router = express.Router();
-
-import { register, login, getUsers, getMe } from "../controllers/authController.js";
-import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
-
-// Public routes (no login needed)
-router.post("/register", register);
-router.post("/login", login);
-
-// Protected routes (login needed)
-router.get("/me", verifyToken, getMe);
-
-// Admin only route
-router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
-
-export default router;
-```
-
-**How route protection works:**
-
-```
-// Public — anyone can access:
-router.post("/login", login);
-
-// Protected — must be logged in:
-router.get("/me", verifyToken, getMe);
-//                 ↑ middleware runs first
-
-// Admin only — must be logged in AND be admin:
-router.get("/users", verifyToken, authorizeRoles("admin"), getUsers);
-//                   ↑ check token   ↑ check role          ↑ then run function
-```
-
-### Request Lifecycle — Full Picture
-
-Here is what happens for `GET /api/auth/users` (admin getting all users):
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant R as Router
-    participant M as Middleware
-    participant CT as Controller
-    participant S as Service
-    participant RP as Repository
-    participant DB as Database
-
-    C->>R: GET /api/auth/users (with token)
-    R->>M: verifyToken()
-    M->>M: Check JWT token ✅
-    M->>M: authorizeRoles("admin") ✅
-    M->>CT: getUsers(req, res)
-    CT->>S: getAllUsers()
-    S->>RP: findAllUsers()
-    RP->>DB: SELECT id, name, email, role FROM users
-    DB->>RP: [user1, user2, user3]
-    RP->>S: [user1, user2, user3]
-    S->>CT: { success: true, data: [...] }
-    CT->>C: 200 OK + JSON response
-```
-
----
-
-## 10. 🏫 Step 9 — Building the Classroom System
-
-Now we follow the exact same pattern: Repository → Service → Controller → Routes. From here on, you already know the theory. Let's code!
-
-**📂 Files we will create in this step:**
-
-```
-src/
-├── repositories/classroomRepository.js   (Layer 1 — Database)
-├── services/classroomService.js           (Layer 2 — Logic)
-├── controllers/classroomController.js     (Layer 3 — HTTP)
-└── routes/classroomRoutes.js              (Layer 4 — URLs)
-```
-
-### Classroom Repository (`src/repositories/classroomRepository.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import prisma from "../config/db.js";
@@ -1591,15 +1754,19 @@ async function findClassroomsByTeacherId(teacherId) {
 export { createClassroom, findAllClassrooms, findClassroomById, findClassroomsByTeacherId };
 ```
 
-> 💡 **New Prisma concept: `include`** — This is like a JOIN in SQL. `include: { teacher: true }` means "also fetch the teacher for this classroom." Prisma handles the JOIN automatically!
+| Line | Why did we write this? |
+|------|------------------------|
+| `include: { teacher: { select: { ... } } }` | Like a SQL JOIN — also fetch the teacher's info, but only id, name, email (not password!). |
+| `include: { students: true }` | In `findClassroomById`, also fetch all students in that classroom. |
+| `findClassroomsByTeacherId` | Filter classrooms by a specific teacher. |
 
-**Deep dive — understanding `include` and `select` together:**
+> 💡 **`include` = SQL JOIN.** Without it, you get `teacherId: 3` (just a number). With it, you get the full teacher object nested inside.
 
-**`include: { teacher: { select: { id: true, name: true, email: true } } }`** — This tells Prisma: "When you fetch a classroom, also go to the `users` table and get the teacher's info. But I only want the teacher's id, name, and email — not their password or role." Without `include`, you would only get `teacherId: 3` (just a number). With `include`, you get the full teacher object nested inside the classroom.
+---
 
-**Why do we use `include: { students: true }` in `findClassroomById`?** Because when you view ONE specific classroom, you want to see all the students in it. But when listing ALL classrooms, you don't need every student — that would be way too much data. This is a performance choice: only fetch what you need.
+#### 📁 File: `src/services/classroomService.js`
 
-### Classroom Service (`src/services/classroomService.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as classroomRepository from "../repositories/classroomRepository.js";
@@ -1633,7 +1800,18 @@ async function getClassroomsByTeacherId(teacherId) {
 export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacherId };
 ```
 
-### Classroom Controller (`src/controllers/classroomController.js`)
+| Line | Why did we write this? |
+|------|------------------------|
+| `import * as classroomRepository` | Imports ALL exports as one object. Use it like `classroomRepository.createClassroom(...)`. |
+| `if (!classroom)` | The "Early Return" pattern — if not found, return error immediately and stop. |
+
+> 💡 **`import * as` vs `import { }`:** `import * as classroomRepository` grabs EVERYTHING and puts it in a box. It makes it obvious where functions come from: `classroomRepository.createClassroom(...)`.
+
+---
+
+#### 📁 File: `src/controllers/classroomController.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as classroomService from "../services/classroomService.js";
@@ -1688,15 +1866,18 @@ async function getClassroomsByTeacher(req, res) {
 export { createClassroom, getAllClassrooms, getClassroomById, getClassroomsByTeacher };
 ```
 
-> 💡 **`parseInt(req.params.id)`** — URL parameters are always strings. `"/5"` is a string `"5"`. We use `parseInt()` to convert it to a number `5`, because our database expects numbers for IDs.
+| Line | Why did we write this? |
+|------|------------------------|
+| `parseInt(req.params.id)` | URL params are strings. `/5` → `"5"`. `parseInt` converts to number `5` for Prisma. |
+| `res.status(404).json(result)` | 404 = Not Found. The classroom ID doesn't exist. |
 
-**Deep dive — `req.params` (URL Variables):**
+> 💡 **`req.params`** — In `/api/classrooms/5`, Express puts `5` into `req.params.id`. The route is defined as `/:id` — the colon creates a dynamic variable.
 
-Look at the URL: `/api/classrooms/5`. How do we get that `5`? 
-In Express, we define the route with a colon: `/:id`. Express takes whatever is in that position and puts it in `req.params.id`. It is like a variable in the URL. If the URL is `/api/classrooms/apple`, then `req.params.id` would be `"apple"`. That is why `parseInt()` is so important — it converts the string `"5"` to a real number `5` so Prisma can find it in the database.
+---
 
+#### 📁 File: `src/routes/classroomRoutes.js`
 
-### Classroom Routes (`src/routes/classroomRoutes.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import express from "express";
@@ -1712,36 +1893,19 @@ router.get("/teacher/:teacherId", verifyToken, getClassroomsByTeacher);
 export default router;
 ```
 
-**Deep dive — understanding Express Routes:**
-
-**`express.Router()`** — Think of this as a "mini-app." Instead of putting all 100 routes in our main `server.js` file (which would be a huge mess), we group them by category. The `classroomRoutes.js` file only handles classroom-related URLs. We then plug this mini-app into the main server later.
-
-**`router.get("/:id", ...)`** — The colon `:` creates a dynamic URL parameter. It means "match anything here."
-- `/api/classrooms/1` → Matches! `req.params.id` is 1
-- `/api/classrooms/99` → Matches! `req.params.id` is 99
-- `/api/classrooms/new` → Matches! (This is why order matters — put specific routes BEFORE dynamic ones)
-
-**The middleware chain:**
-Look at `router.post("/", verifyToken, authorizeRoles("admin"), createClassroom);`. Express runs these from left to right:
-1. First, `verifyToken` checks the wristband (JWT). If bad, stops here.
-2. Next, `authorizeRoles` checks if they are an admin. If they are a teacher, stops here.
-3. Finally, `createClassroom` does the actual database work.
+| Line | Why did we write this? |
+|------|------------------------|
+| `router.post("/", verifyToken, authorizeRoles("admin"), createClassroom)` | Chain: check token → check admin role → create. Teachers can't create classrooms. |
+| `router.get("/", verifyToken, getAllClassrooms)` | Any logged-in user can view classrooms. |
+| `router.get("/:id", ...)` | The `:id` is a dynamic URL parameter. |
 
 ---
 
-## 11. 👩‍🎓 Step 10 — Building the Student System
+### Student System
 
-**📂 Files we will create in this step:**
+#### 📁 File: `src/repositories/studentRepository.js`
 
-```
-src/
-├── repositories/studentRepository.js     (Layer 1 — Database)
-├── services/studentService.js             (Layer 2 — Logic)
-├── controllers/studentController.js       (Layer 3 — HTTP)
-└── routes/studentRoutes.js                (Layer 4 — URLs)
-```
-
-### Student Repository (`src/repositories/studentRepository.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import prisma from "../config/db.js";
@@ -1776,7 +1940,11 @@ async function findStudentsByClassroomId(classroomId) {
 export { createStudent, findAllStudents, findStudentById, findStudentsByClassroomId };
 ```
 
-### Student Service (`src/services/studentService.js`)
+---
+
+#### 📁 File: `src/services/studentService.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as studentRepository from "../repositories/studentRepository.js";
@@ -1808,18 +1976,11 @@ async function getStudentsByClassroomId(classroomId) {
 export { createStudent, getAllStudents, getStudentById, getStudentsByClassroomId };
 ```
 
-**Deep dive — the "Early Return" pattern:**
+---
 
-Look at `getStudentById`:
-```javascript
-if (!student) { return { success: false, ... }; }
-return { success: true, ... };
-```
-We do NOT use `else` here! Why? Because `return` immediately stops the function. If the student is not found, it returns the error and STOPS. If it doesn't stop, it just continues to the success line. 
+#### 📁 File: `src/controllers/studentController.js`
 
-This is called the **"Early Return"** or "Bouncer" pattern. It is much cleaner than wrapping your whole function in giant `if / else` blocks. Think of it like a bouncer at a club door: if you don't have ID, he kicks you out immediately (`return`). If you do have ID, he doesn't need to say "else you can go in" — you just walk right past him!
-
-### Student Controller (`src/controllers/studentController.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as studentService from "../services/studentService.js";
@@ -1872,19 +2033,15 @@ async function getStudentsByClassroom(req, res) {
 export { createStudent, getAllStudents, getStudentById, getStudentsByClassroom };
 ```
 
-**Deep dive — `import * as` syntax:**
+| Line | Why did we write this? |
+|------|------------------------|
+| `const { name, email, registrationNumber, classroomId } = req.body` | Destructuring — a shortcut to extract multiple fields at once. Same as writing 4 separate `const x = req.body.x` lines. |
 
-At the top of the controller, we used: `import * as studentService from "../services/studentService.js";`
+---
 
-Earlier in Auth, we used: `import { loginUser, registerUser } from ...`
+#### 📁 File: `src/routes/studentRoutes.js`
 
-What is the difference?
-- `{ loginUser }` means "go into the file, grab only this exact function, and bring it here."
-- `* as studentService` means "grab EVERYTHING exported from that file, and put it all inside a big box named `studentService`."
-
-When we want to use a function, we open the box: `studentService.createStudent(...)`. We use this when a file exports a lot of things and we want to keep them organized under one clear name. It makes it obvious that `createStudent` is coming from the service layer, not some local function.
-
-### Student Routes (`src/routes/studentRoutes.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import express from "express";
@@ -1900,23 +2057,100 @@ router.get("/classroom/:classroomId", verifyToken, getStudentsByClassroom);
 export default router;
 ```
 
+| Line | Why did we write this? |
+|------|------------------------|
+| `authorizeRoles("admin", "teacher")` | Both admins AND teachers can add students. |
+
+### Wire Up in server.js
+
+Add these imports and routes to `src/server.js`:
+
+```javascript
+import classroomRoutes from "./routes/classroomRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+
+app.use("/api/classrooms", classroomRoutes);
+app.use("/api/students", studentRoutes);
+```
+
+### 🧪 Phase 6 Test: Admin vs Teacher Permissions!
+
+**Test 1: Get All Classrooms**
+```
+GET http://localhost:5000/api/classrooms  +  Any token
+```
+Expected: `200 OK` with a list of classrooms ✅
+
+**Test 2: Create a Classroom as Admin**
+```
+POST http://localhost:5000/api/classrooms  +  Admin token
+Body: { "name": "Batch 2026 - Data Science", "section": "Afternoon", "teacherId": 2 }
+```
+Expected: `201 Created` ✅
+
+**Test 3: Create a Classroom as Teacher**
+```
+POST http://localhost:5000/api/classrooms  +  Teacher token (Nimal)
+Body: { "name": "Test Class", "section": "Test", "teacherId": 2 }
+```
+Expected: `403 Forbidden` ❌ — Teachers cannot create classrooms!
+
+**Test 4: Get All Students**
+```
+GET http://localhost:5000/api/students  +  Any token
+```
+Expected: `200 OK` ✅
+
+**Test 5: Create a Student**
+```
+POST http://localhost:5000/api/students  +  Token (admin or teacher)
+Body: { "name": "Dilshan Wickramasinghe", "email": "dilshan@student.com", "registrationNumber": "STU-2026-005", "classroomId": 1 }
+```
+Expected: `201 Created` ✅
+
+**Test 6: Get Students by Classroom**
+```
+GET http://localhost:5000/api/students/classroom/1  +  Token
+```
+Expected: `200 OK` with students from Classroom 1 ✅
+
 ---
 
-## 12. 📝 Step 11 — Building the Attendance System
+## 📝 Phase 7: The Attendance Slice (The Final Logic)
 
-This is the most important system. Teachers use it every day to mark attendance.
+> **Goal:** Build the most important feature — marking attendance for a whole classroom at once. Then finalize `server.js` with all routes.
 
-**📂 Files we will create in this step:**
-
+```mermaid
+flowchart TD
+    A["Phase 7"] --> B["Single Attendance\nPOST /attendance"]
+    A --> C["Bulk Attendance\nPOST /attendance/bulk"]
+    A --> D["View by Classroom\nGET /attendance/classroom/:id?date="]
+    A --> E["View by Student\nGET /attendance/student/:id"]
+    A --> F["Final server.js\n(all routes wired up)"]
 ```
-src/
-├── repositories/attendanceRepository.js   (Layer 1 — Database)
-├── services/attendanceService.js           (Layer 2 — Logic)
-├── controllers/attendanceController.js     (Layer 3 — HTTP)
-└── routes/attendanceRoutes.js              (Layer 4 — URLs)
-```
 
-### Attendance Repository (`src/repositories/attendanceRepository.js`)
+### Understanding `req.params` vs `req.query` vs `req.body`
+
+This is the #1 confusion for beginners! When do you use which?
+
+| Express code | Where is the data? | Analogy | When to use it |
+|--------------|-------------------|---------|----------------|
+| `req.body` | In the hidden POST request data | The envelope contents | Sending large data (creating a user, passwords, bulk arrays) |
+| `req.params` | Part of the URL path itself (`/users/5`) | The room number on a door | Identifying a SPECIFIC resource (Get user #5) |
+| `req.query` | After the `?` in the URL (`?date=today`) | The filter options on a shopping site | Searching, filtering, or sorting |
+
+#### 🎬 Scenario: Nimal Marks Attendance
+
+Nimal (teacher) wants to view attendance for his "Web Development" class (ID 1) on April 28. The URL is:
+`GET /api/attendance/classroom/1?date=2026-04-28`
+- `req.params.classroomId` = `1` (WHICH classroom)
+- `req.query.date` = `"2026-04-28"` (WHICH date to filter by)
+
+---
+
+#### 📁 File: `src/repositories/attendanceRepository.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import prisma from "../config/db.js";
@@ -1955,11 +2189,17 @@ async function findExistingAttendance(studentId, date) {
 export { createAttendance, findAttendanceByClassroomAndDate, findAttendanceByStudentId, findExistingAttendance };
 ```
 
-> 💡 **`new Date(date)`** — The date comes as a string like `"2026-04-28"`. We convert it to a JavaScript `Date` object for Prisma.
+| Line | Why did we write this? |
+|------|------------------------|
+| `new Date(date)` | Converts string `"2026-04-28"` to a JavaScript Date object for Prisma. |
+| `orderBy: { date: "desc" }` | Sorts newest first. `"desc"` = descending, `"asc"` = ascending. |
+| `findExistingAttendance` | Checks if a student already has a record for that day (prevents duplicates). |
 
-> 💡 **`orderBy: { date: "desc" }`** — Sorts newest first. `"desc"` = descending, `"asc"` = ascending.
+---
 
-### Attendance Service (`src/services/attendanceService.js`)
+#### 📁 File: `src/services/attendanceService.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as attendanceRepository from "../repositories/attendanceRepository.js";
@@ -2021,21 +2261,12 @@ async function getAttendanceByStudentId(studentId) {
 export { markAttendance, markBulkAttendance, getAttendanceByClassroomAndDate, getAttendanceByStudentId };
 ```
 
-**Deep dive — understanding the Bulk Attendance logic:**
-
-**Why bulk attendance?** A teacher doesn't mark attendance one by one by clicking 30 separate buttons. They mark the whole class at once on a grid and hit "Save." The frontend sends an array (a list) of records.
-
-**The `for` loop:**
-```javascript
-for (let i = 0; i < attendanceList.length; i++) {
-  const item = attendanceList[i];
-  const result = await markAttendance(...);
-}
-```
-This is a standard loop, but notice the `await` inside it. This means the loop PAUSES for each student, waits for the database to finish saving that student, and then moves to the next one. 
-
-**The two arrays (`results` and `errors`):**
-If student #5 fails (maybe they were already marked present today), we do NOT want to crash the whole loop and skip students 6 through 30! Instead, we put the failed student in the `errors` array, and keep going. At the end, we return both lists so the frontend can show the teacher: "29 saved successfully, but Nimal failed."
+| Line | Why did we write this? |
+|------|------------------------|
+| `allowedStatuses.includes(status)` | Only accept "present", "absent", or "late". Reject "sick", "holiday", etc. |
+| `findExistingAttendance` | Prevents marking the same student twice on the same day. |
+| `for` loop with `await` | Processes each student one by one, waiting for each to save. |
+| `results` and `errors` arrays | If student #5 fails, we don't crash — we keep going for students 6-30. |
 
 **Bulk attendance flow:**
 
@@ -2052,7 +2283,11 @@ flowchart TD
     G -->|"No"| H["Return results:\nX saved, Y errors"]
 ```
 
-### Attendance Controller (`src/controllers/attendanceController.js`)
+---
+
+#### 📁 File: `src/controllers/attendanceController.js`
+
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import * as attendanceService from "../services/attendanceService.js";
@@ -2110,25 +2345,17 @@ async function getAttendanceByStudent(req, res) {
 export { markAttendance, markBulkAttendance, getAttendanceByClassroom, getAttendanceByStudent };
 ```
 
-> 💡 **`req.user.userId`** — The `verifyToken` middleware puts the decoded JWT data into `req.user`. So `req.user.userId` is the ID of the logged-in teacher. We use this for the `markedBy` field automatically — the teacher doesn't need to send it!
+| Line | Why did we write this? |
+|------|------------------------|
+| `req.user.userId` | The `verifyToken` middleware puts decoded JWT data into `req.user`. This is the logged-in teacher's ID — we use it for `markedBy` automatically. |
+| `req.query.date` | For `/api/attendance/classroom/1?date=2026-04-28`, `req.query.date` equals `"2026-04-28"`. |
+| `req.body.attendanceList` | The bulk endpoint expects `{ "attendanceList": [ ... ] }` in the body. |
 
-> 💡 **`req.query.date`** — For the URL `/api/attendance/classroom/1?date=2026-04-28`, `req.query.date` equals `"2026-04-28"`. The `?` in a URL starts the "query string."
+---
 
-**Deep dive — `req.params` vs `req.query` vs `req.body`:**
+#### 📁 File: `src/routes/attendanceRoutes.js`
 
-This is the #1 confusion for beginners! When do you use which?
-
-| Express code | Where is the data? | Analogy | When to use it |
-|--------------|-------------------|---------|----------------|
-| `req.body` | In the hidden POST request data | The envelope contents | Sending large data (creating a user, passwords, bulk arrays) |
-| `req.params` | Part of the URL path itself (`/users/5`) | The room number on a door | Identifying a SPECIFIC resource (Get user #5, delete post #10) |
-| `req.query` | After the `?` in the URL (`?date=today`) | The filter options on a shopping site | Searching, filtering, or sorting a LIST of things (Show attendance for THIS date) |
-
-In `getAttendanceByClassroom(req, res)`:
-- We need to know WHICH classroom. That is a specific resource. So we use `req.params.classroomId` (from the URL `/classroom/1`).
-- We need to FILTER by date. So we use `req.query.date` (from `?date=2026-04-28`).
-
-### Attendance Routes (`src/routes/attendanceRoutes.js`)
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 import express from "express";
@@ -2146,65 +2373,13 @@ export default router;
 
 ---
 
-## 13. 🌐 Step 12 — The Main Server File & CORS
+### 🚀 Final server.js — The Complete Version
 
-### ❌ The Problem — Browser Blocks Your Frontend!
+Now that ALL route files exist, update `src/server.js` to its final form:
 
-You build your React app on `http://localhost:3000`. Your API runs on `http://localhost:5000`. You try to call the API from React. But the browser **blocks** the request!
+#### 📁 File: `src/server.js` (Final Version)
 
-```mermaid
-flowchart LR
-    A["React App\nlocalhost:3000"] -->|"Request"| B["Browser\n(Security Check)"]
-    B -->|"❌ BLOCKED!\nDifferent port = different origin"| C["Express API\nlocalhost:5000"]
-```
-
-**Why?** Browsers have a security rule called **CORS** (Cross-Origin Resource Sharing): a website can only talk to the SAME server it came from. Different port = different origin = blocked.
-
-### ✅ The Solution — cors() middleware
-
-The `cors` package tells the browser: "It is OK, allow requests from other origins."
-
-```mermaid
-flowchart LR
-    A["React App\nlocalhost:3000"] -->|"Request"| B["Browser\n(Security Check)"]
-    B -->|"✅ ALLOWED!\ncors() says it's OK"| C["Express API\nlocalhost:5000"]
-```
-
-### Now Let's Create the Server File
-
-But first, one more problem to solve...
-
-### ❌ The Problem — Silent Failures from Missing .env Variables
-
-Imagine a student forgets to add `JWT_SECRET` to their `.env` file. What happens?
-
-```mermaid
-flowchart TD
-    A["Student runs: npm run dev"] --> B["Server starts successfully! ✅"]
-    B --> C["Student thinks everything is fine 😊"]
-    C --> D["Student tries to login..."]
-    D --> E["💥 CRASH: secretOrPrivateKey\nmust have a value"]
-    E --> F["😱 Student spends 30 minutes\ndebugging the wrong file"]
-```
-
-The server starts fine because it doesn't need `JWT_SECRET` at startup — it only needs it when someone actually tries to login. This means the error appears **much later**, in a completely different part of the code. Very confusing for beginners!
-
-### ✅ The Solution — Fail-Fast Validation
-
-**Fail-Fast** means: "If something is wrong, fail IMMEDIATELY with a clear error message." Don't wait until later when it will be confusing.
-
-We add a check at the very top of `server.js`. If required environment variables are missing, the server refuses to start and tells you exactly what is wrong:
-
-```mermaid
-flowchart TD
-    A["Server starts"] --> B{"Are all .env\nvariables present?"}
-    B -->|"Yes ✅"| C["Continue starting...\nServer runs normally"]
-    B -->|"No ❌"| D["console.error: Missing variables!"]
-    D --> E["process.exit(1)\nServer stops immediately"]
-    E --> F["Student sees the error RIGHT AWAY\nand knows exactly what to fix ✅"]
-```
-
-Create `src/server.js`:
+#### 🚀 FULL CODE (READY TO COPY)
 
 ```javascript
 // Step 1: Load environment variables (MUST be first!)
@@ -2262,37 +2437,20 @@ app.listen(PORT, function () {
   console.log("");
   console.log("==============================================");
   console.log("  designHer 2.0 Attendance API");
-  console.log(`  Server is running on http://localhost:${PORT}`);
+  console.log("  Server is running on http://localhost:" + PORT);
   console.log("==============================================");
   console.log("");
 });
 ```
 
-**Line-by-line explanation:**
-
-| Line | What It Does |
-|------|-------------|
+| Line | Why did we write this? |
+|------|------------------------|
 | `import "dotenv/config"` | Loads `.env` file into `process.env`. MUST be first! |
-| `const app = express()` | Creates a new Express application |
-| `app.use(cors())` | Allows cross-origin requests (fixes CORS errors) |
-| `app.use(express.json())` | Makes Express understand JSON bodies (`req.body`) |
-| `app.use("/api/auth", authRoutes)` | All routes in `authRoutes` start with `/api/auth` |
-| `app.listen(PORT, ...)` | Starts the server on port 5000 |
+| Fail-Fast validation | If `JWT_SECRET` or `DATABASE_URL` is missing, the server stops immediately with a clear error instead of crashing later. |
+| `app.use("/api/auth", authRoutes)` | All routes in `authRoutes` start with `/api/auth`. |
+| `app.use("/api/attendance", attendanceRoutes)` | All attendance routes start with `/api/attendance`. |
 
-**Deep dive — The magical `app.use()`:**
-
-In Express, `app.use()` is how you add things to the global middleware pipeline. Every single request that hits your server goes through this pipeline from top to bottom.
-
-**`app.use(cors())`**
-Think of CORS like a bouncer at a club who hates people from other neighborhoods. If the React frontend (living at `localhost:3000`) tries to talk to the Express backend (`localhost:5000`), the browser blocks it because they are from different "neighborhoods" (ports). `cors()` tells the browser: "It is fine, let everyone in."
-
-**`app.use(express.json())`**
-By default, Express is dumb. If a frontend sends `{ "name": "Nimal" }` in a POST request, Express just sees a confusing stream of raw text bytes. `express.json()` intercepts the request, reads the raw text, converts it into a neat JavaScript object, and attaches it to `req.body`. Without this line, `req.body` will always be `undefined`, and your app will break!
-
-**`app.use("/api/auth", authRoutes)`**
-This mounts our "mini-apps" (routers). It tells Express: "If the URL starts with `/api/auth`, stop looking here and hand the request over to the `authRoutes` file to deal with it." This keeps `server.js` perfectly clean no matter how big our app gets!
-
-### How Frontend Will Talk to This Backend
+**How Frontend Will Talk to This Backend:**
 
 ```mermaid
 sequenceDiagram
@@ -2317,180 +2475,23 @@ sequenceDiagram
     R->>U: Shows student list on screen
 ```
 
----
+### 🧪 Phase 7 Test: The Full Attendance System!
 
-## 14. 🚀 Step 13 — Running the Server
-
-### Quick Checklist
-
-- [x] MySQL running with the `attendance_system_db` database (from Day 1)
-- [x] Seed data inserted (from Day 1)
-- [x] `.env` file with your real MySQL password
-- [x] All source code files created
-
-### Install, Generate, and Run
-
-```bash
-npm install
-npx prisma generate
-npm run dev
-```
-
-You should see:
-
-```
-==============================================
-  designHer 2.0 Attendance API
-  Server is running on http://localhost:5000
-==============================================
-```
-
-Open `http://localhost:5000/` in your browser. You should see:
-
-```json
-{ "success": true, "message": "designHer 2.0 Attendance API is running!", "data": null }
-```
-
-### Common Errors and Fixes
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Cannot find module 'express'` | Packages not installed | Run `npm install` |
-| `P1001: Can't reach database server` | MySQL is not running | Start MySQL in XAMPP |
-| `Invalid prisma.user.findUnique() invocation` | Prisma client not generated | Run `npx prisma generate` |
-| `Error: secretOrPrivateKey must have a value` | JWT_SECRET not in `.env` | Check your `.env` file |
-| `Port 5000 is already in use` | Another server running | Change PORT in `.env` to 5001 |
-
----
-
-## 15. 🧪 Step 14 — Testing with Postman
-
-### What is Postman?
-
-Postman is a free tool to test APIs. Instead of building the React frontend first, we use Postman to send HTTP requests and verify our API works.
-
-> 🎯 **Analogy:** Postman is like a phone you use to call the restaurant (our API) and place orders, without going there in person.
-
-**Download:** [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
-
-### Test 1: Server Health Check
-
-```
-Method: GET
-URL:    http://localhost:5000/
-```
-
-Expected: `200 OK` — `{ "success": true, "message": "designHer 2.0 Attendance API is running!" }`
-
-### Test 2: Login as Admin
-
-```
-Method: POST
-URL:    http://localhost:5000/api/auth/login
-Body → raw → JSON:
-```
-```json
-{ "email": "amara@school.com", "password": "admin123" }
-```
-
-Expected: `200 OK` with a `token`. **⭐ COPY THIS TOKEN! You need it for all next tests.**
-
-### Test 3: Login as Teacher
-
-```
-Method: POST
-URL:    http://localhost:5000/api/auth/login
-Body:
-```
-```json
-{ "email": "nimal@school.com", "password": "teacher123" }
-```
-
-### Test 4: Register a New User
-
-```
-Method: POST
-URL:    http://localhost:5000/api/auth/register
-Body:
-```
-```json
-{ "name": "Kavitha Perera", "email": "kavitha@school.com", "password": "mypassword123", "role": "teacher" }
-```
-
-Expected: `201 Created`
-
-### How to Add the JWT Token for Protected Routes
-
-1. Click the **Headers** tab
-2. Key: `Authorization`
-3. Value: `Bearer <paste-your-token-here>`
-
-```
-✅ Correct: Bearer eyJhbGciOiJIUzI1NiIs...
-❌ Wrong:   BearereyJhbGciOiJIUzI1NiIs...    (no space!)
-❌ Wrong:   eyJhbGciOiJIUzI1NiIs...          (missing "Bearer")
-```
-
-> 💡 **Tip:** In Postman, click **Authorization** tab → choose **Bearer Token** → paste just the token. Postman adds "Bearer " automatically.
-
-### Test 5: Get My Info
-
-```
-GET http://localhost:5000/api/auth/me  +  Authorization header
-```
-
-### Test 6: Get All Users (Admin Only)
-
-```
-GET http://localhost:5000/api/auth/users  +  Admin token
-```
-> ⚠️ Try with a teacher token — you get `403 Forbidden`!
-
-### Test 7: Get All Classrooms
-
-```
-GET http://localhost:5000/api/classrooms  +  Token
-```
-
-### Test 8: Create a Classroom (Admin Only)
-
-```
-POST http://localhost:5000/api/classrooms  +  Admin token
-Body:
-```
-```json
-{ "name": "Batch 2026 - Data Science", "section": "Afternoon", "teacherId": 2 }
-```
-
-### Test 9: Get All Students
-
-```
-GET http://localhost:5000/api/students  +  Token
-```
-
-### Test 10: Create a Student
-
-```
-POST http://localhost:5000/api/students  +  Token
-Body:
-```
-```json
-{ "name": "Dilshan Wickramasinghe", "email": "dilshan@student.com", "registrationNumber": "STU-2026-005", "classroomId": 1 }
-```
-
-### Test 11: Mark Attendance
-
+**Test 1: Mark Single Attendance**
 ```
 POST http://localhost:5000/api/attendance  +  Token
-Body:
+Body: { "studentId": 1, "classroomId": 1, "date": "2026-05-01", "status": "present" }
 ```
-```json
-{ "studentId": 1, "classroomId": 1, "date": "2026-05-01", "status": "present" }
+Expected: `201 Created` ✅
+
+**Test 2: Try Marking Same Student Again**
 ```
-> ⚠️ Send the same request again — you get: "Attendance already marked for this student on this date."
+POST http://localhost:5000/api/attendance  +  Token
+Body: { "studentId": 1, "classroomId": 1, "date": "2026-05-01", "status": "absent" }
+```
+Expected: `400` — "Attendance already marked for this student on this date." ✅
 
-### Test 12: Bulk Attendance
-
+**Test 3: Bulk Attendance**
 ```
 POST http://localhost:5000/api/attendance/bulk  +  Token
 Body:
@@ -2503,20 +2504,28 @@ Body:
   ]
 }
 ```
+Expected: `201 Created` with `"2 saved, 0 errors"` ✅
 
-### Test 13: Get Classroom Attendance by Date
-
+**Test 4: Get Classroom Attendance by Date**
 ```
 GET http://localhost:5000/api/attendance/classroom/1?date=2026-04-28  +  Token
 ```
+Expected: `200 OK` with attendance records for that day ✅
 
-### Test 14: Get Student Attendance History
-
+**Test 5: Get Student Attendance History**
 ```
 GET http://localhost:5000/api/attendance/student/1  +  Token
 ```
+Expected: `200 OK` with all of Tharindu's attendance records ✅
 
-### Test 15: Error Cases
+**Test 6: Invalid Status**
+```
+POST http://localhost:5000/api/attendance  +  Token
+Body: { "studentId": 3, "classroomId": 2, "date": "2026-05-01", "status": "sick" }
+```
+Expected: `400` — "Status must be 'present', 'absent', or 'late'." ✅
+
+### Error Cases Summary
 
 | Test | Expected |
 |------|----------|
@@ -2541,12 +2550,22 @@ flowchart TD
 
 ---
 
+### 🧪 Test Credentials (from Day 1 Seed Data)
+
+| Email | Password | Role |
+|-------|----------|------|
+| amara@school.com | admin123 | Admin |
+| nimal@school.com | teacher123 | Teacher |
+| sanduni@school.com | teacher123 | Teacher |
+
+---
+
 ## 🎉 Congratulations! You Did It!
 
 You just built a complete REST API from scratch! Here is what you learned today:
 
 | Topic | What You Learned |
-|-------|-----------------|
+|-------|--------------------|
 | **Environment Variables** | Keeping secrets safe with `.env` (Problem: hardcoded passwords) |
 | **Prisma ORM** | Talking to the database with JavaScript (Problem: raw SQL is painful) |
 | **Async/Await** | Making JavaScript wait for slow operations (Problem: JS is impatient) |
@@ -2560,7 +2579,7 @@ You just built a complete REST API from scratch! Here is what you learned today:
 | **CORS** | Allowing frontend to talk to backend (Problem: browser blocks requests) |
 | **Layered Architecture** | Route → Middleware → Controller → Service → Repository |
 
-> **Next up (Day 3):** We will build the React frontend that connects to this API! We will use `fetch()` to call these endpoints, save the JWT token in localStorage, and build the attendance dashboard.
+> **Next up (Day 3):** We will build the React frontend that connects to this API! We will use Axios to call these endpoints, save the JWT token in localStorage, and build the attendance dashboard.
 
 ---
 
@@ -2595,8 +2614,6 @@ You just built a complete REST API from scratch! Here is what you learned today:
 ---
 
 ## 📋 Quick Prisma Cheat Sheet
-
-Here is a handy reference for the most common Prisma methods. You can come back to this whenever you need to write a database query!
 
 | Prisma Method | What It Does | Example |
 |---------------|-------------|--------|
@@ -2650,6 +2667,18 @@ const students = await prisma.student.findMany({
 ```
 
 > 💡 **Tip:** You CANNOT use `select` and `include` at the same top level. Choose one. But you CAN nest `select` inside `include` as shown above!
+
+---
+
+### Common Errors and Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Cannot find module 'express'` | Packages not installed | Run `npm install` |
+| `P1001: Can't reach database server` | MySQL is not running | Start MySQL in XAMPP |
+| `Invalid prisma.user.findUnique() invocation` | Prisma client not generated | Run `npx prisma generate` |
+| `Error: secretOrPrivateKey must have a value` | JWT_SECRET not in `.env` | Check your `.env` file |
+| `Port 5000 is already in use` | Another server running | Change PORT in `.env` to 5001 |
 
 ---
 
