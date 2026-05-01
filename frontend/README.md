@@ -1194,8 +1194,12 @@ Open `http://localhost:5173` in your browser.
 
 ### 🧪 Test Credentials (from our Day 1 Database Seed)
 Use these exact credentials to log in:
-- **Email:** `amara@school.com` (Teacher)
-- **Password:** `admin123`
+
+| Email              | Password    | Role    |
+|--------------------|-------------|---------|
+| amara@school.com   | admin123    | Admin   |
+| nimal@school.com   | teacher123  | Teacher |
+| priya@school.com   | teacher456  | Teacher |
 
 ### ❌ Common Errors
 
